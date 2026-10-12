@@ -1,0 +1,338 @@
+openapi: 3.1.0
+info:
+  title: OXM Benchmark
+  version: 0.0.1
+  description: API for sending requests to OXM-benchmark benchmark suite.
+  contact:
+    email: example@email.eu
+
+tags:
+  - name: Initial config
+    description: Operations needed before the initial benchmark creation.
+  - name: Benchmark config
+    description: Detailed configuration of benchmark.
+  - name: Run benchmark
+    description: Operations for running and analyzing benchmark runs.
+
+security:
+  - BearerAuth: [ ]
+
+paths:
+  /datasets:
+    get:
+      tags: [ Initial config ]
+      operationId: getDatasets
+      summary: Get all available datasets
+      description: Get all available datasets.
+      responses:
+        '200':
+          description: Successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DatasetArray"
+        '400':
+          description: Bad request.
+
+  /datasets/{datasetId}/queries:
+    get:
+      tags: [ Initial config ]
+      operationId: getQueries
+      summary: Get all query sets prepared in the app for given dataset
+      description: There will probably be only one query set per dataset in our implementation.
+      parameters:
+        - $ref: "#/components/parameters/DatasetId"
+      responses:
+        '200':
+          description: Successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QueriesArray"
+        '400':
+          description: Bad request.
+
+  /benchmarks:
+    post:
+      tags: [ Benchmark config ]
+      operationId: postBenchmark
+      summary: Create new benchmark
+      description: Create new benchmark.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateBecnhmarkCommand"
+      responses:
+        '200':
+          description: Successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BenchmarkInfo"
+        '400':
+          description: Bad request.
+
+  /benchmarks/{benchmarkId}:
+    get:
+      tags: [ Benchmark config ]
+      operationId: getBenchmark
+      summary: Get info about given benchmark
+      description: Get info about given benchmark with analyzation step results.
+      parameters:
+        - $ref: "#/components/parameters/BenchmarkId"
+      responses:
+        '200':
+          description: Successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Benchmark"
+        '400':
+          description: Bad request.
+    
+    put:
+      tags: [ Benchmark config ]
+      operationId: updateBenchmark
+      summary: Update benchmark parameters
+      description: Update data volumes, cardinalities of relationships and value occurrence in data.
+      parameters:
+        - $ref: "#/components/parameters/BenchmarkId"
+      responses:
+        '200': 
+          description: TBD
+
+  /benchmarks/{benchmarkId}/runs:
+    post:
+      tags: [ Run benchmark ]
+      operationId: postBenchmarkRun
+      summary: Run the chosen queries on defined dataset
+      description: Run the chosen queries on defined dataset.
+      parameters:
+        - $ref: "#/components/parameters/BenchmarkId"
+
+  /benchmarks/{benchmarkId}/results:
+    get:
+      tags: [ Run benchmark ]
+      operationId: getBenchmarkResults
+      summary: Get list of results of given benchmark
+      description: Get list of results of given benchmark.
+      parameters:
+        - $ref: "#/components/parameters/BenchmarkId"
+
+  /benchmarks/{benchmarkId}/results/{resultId}:
+    get:
+      tags: [ Run benchmark ]
+      operationId: getBenchmarkResult
+      summary: Get detail result of given run of given benchmark
+      description: Get detail result of given run of given benchmark.
+      parameters:
+        - $ref: "#/components/parameters/BenchmarkId"
+        - $ref: "#/components/parameters/ResultId"
+
+components:
+  schemas:
+    DatasetArray:
+      description: Array of dataset information.
+      type: array
+      items:
+        $ref: "#/components/schemas/Dataset"
+
+    Dataset:
+      description: Dataset information.
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+
+    DatasetDetail:
+      description: Detail dataset info with analyzation step results.
+      type: object
+      allOf:
+        - $ref: "#/components/schemas/Dataset"
+      properties:
+        tables: 
+          description: All tables in given dataset.
+          $ref: "#/components/schemas/TableArray"
+
+    TableArray:
+      description: Array of Tables for given Dataset.
+      type: array
+      items:
+        $ref: "#/components/schemas/Table"
+
+    Table:
+      description: Info about given table in Dataset.
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        columns:
+          description: All columns present in the table.
+          type: array
+          items:
+            $ref: "#/components/schemas/TableColumn"
+
+    TableColumn:
+      description: Info about a table column in given table.
+      type: object
+      required:
+        - tableId
+        - name
+        - type
+      properties:
+        tableId:
+          type: string
+        name:
+          type: string
+        type:
+          type: string
+          enum: [ string, integer, float, date ]
+
+    Operation: 
+      description: Info about an operation executed in a query over some column(s).
+      type: object
+      required: 
+        - name
+        - type
+        - column
+      properties: 
+        name: 
+          type: string
+        type:
+          type: string
+          enum: [ filter, join, sort, count, max ]
+        column:
+          type: array
+          items:
+            $ref: "#/components/schemas/TableColumn"
+
+    Value:
+      description: Info about a value important for an execution of given query over a dataset.
+      type: object
+      required: 
+        - name
+        - type
+        - operation
+        - values
+      properties: 
+        name:
+          type: string
+        type:
+          type: string
+          enum: [ exact, range, larger-than, smaller-than ]
+        operation:
+          $ref: "#/components/schemas/Operation"
+        values:
+          description: "TODO: NEEDS TO BE REDESIGNED !!!!"
+          type: array
+          items:
+            type: string
+
+    QueriesArray:
+      description: Array of Query-sets information.
+      type: array
+      items:
+        $ref: "#/components/schemas/Query"
+
+    Query:
+      description: Query-sets information.
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+
+    CreateBecnhmarkCommand:
+      type: object
+      description: Info about a new benchmark to be created.
+      required: 
+        - name
+        - datasetId
+        - querySetId
+      properties: 
+        name:
+          type: string
+        datasetId:
+          type: string
+        querySetId:
+          type: string
+
+    BenchmarkInfo:
+      type: object
+      description: Info about the newly created benchmark.
+      properties:
+        benchmarkId:
+          type: string
+          description: ID of the newly created benchmark.
+
+    Benchmark:
+      type: object
+      description: Info about analyzed benchmark in app.
+      required: 
+        - id
+        - name
+      properties:
+        id:
+          type: string
+          description: ID of the requested benchmark.
+        name:
+          type: string
+        queries:
+          $ref: "#/components/schemas/QueriesArray"
+        dataset:
+          $ref: "#/components/schemas/DatasetDetail"
+        operations:
+          description: All operations over the whole column(s)
+          type: array
+          items: 
+            $ref: "#/components/schemas/Operation"
+        values:
+          type: array
+          items: 
+            $ref: "#/components/schemas/Value"
+
+
+  parameters:
+    DatasetId:
+      in: path
+      name: datasetId
+      description: ID of required dataset in URL.
+      required: true
+      schema:
+        type: string
+    BenchmarkId:
+      in: path
+      name: benchmarkId
+      description: ID of required benchmark in URL.
+      required: true
+      schema:
+        type: string
+    ResultId:
+      in: path
+      name: resultId
+      description: ID of required benchmark result in URL.
+      required: true
+      schema:
+        type: string
