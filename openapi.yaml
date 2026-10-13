@@ -143,7 +143,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "TBD"
+                $ref: "#/components/schemas/ResultsArray"
         '400':
           description: Bad request.
 
@@ -162,7 +162,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "TBD"
+                $ref: "#/components/schemas/Result"
         '400':
           description: Bad request.
 
@@ -236,7 +236,7 @@ components:
           type: string
         type:
           type: string
-          enum: [ string, integer, float, date ]
+          enum: [ string, integer, float, date, boolean ]
 
     OperationBase:
       description: Common properties for all Operations.
@@ -454,6 +454,64 @@ components:
           $ref: "#/components/schemas/DatasetDetail"
         operations:
           $ref: "#/components/schemas/OperationsArray"
+
+    ResultsArray:
+      description: Array of all Results info for given benchmark.
+      type: array
+      items:
+        $ref: "#/components/schemas/ResultsInfo"
+
+    ResultsInfo:
+      description: Basic info about given run result.
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        started-at:
+          type: string
+          format: date-time
+        finished:
+          type: boolean
+
+    QueryResultsArray:
+      description: Array of results of given query.
+      type: array
+      items:
+        $ref: "#/components/schemas/QueryResult"
+
+    QueryResult:
+      description: Result of one given query.
+      type: object
+      required:
+        - id
+        - name
+        - query
+        - times
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        query:
+          $ref: "#/components/schemas/Query"
+        error:
+          type: string
+        times:
+          type: array
+          items:
+            type: number
+            format: float
+
+    Result:
+      description: Detailed info about run results.
+      allOf:
+        - $ref: "#/components/schemas/ResultsInfo"
+        - type: object
+          properties:
+            results:
+              $ref: "#/components/schemas/QueryResultsArray"
 
   parameters:
     DatasetId:
