@@ -1,10 +1,14 @@
-openapi: 3.1.0
+openapi: 3.0.3
 info:
   title: OXM Benchmark
   version: 0.0.1
   description: API for sending requests to OXM-benchmark benchmark suite.
   contact:
-    email: example@email.eu
+    email: TBD@email.eu
+  license:
+    name: "TBD"
+    url: "TBD"
+  termsOfService: "TBD"
 
 tags:
   - name: Initial config
@@ -63,7 +67,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CreateBecnhmarkCommand"
+              $ref: "#/components/schemas/CreateBenchmarkCommand"
       responses:
         '200':
           description: Successful response.
@@ -100,8 +104,10 @@ paths:
       parameters:
         - $ref: "#/components/parameters/BenchmarkId"
       responses:
-        '200': 
+        '200':
           description: TBD
+        '400':
+          description: Bad request.
 
   /benchmarks/{benchmarkId}/runs:
     post:
@@ -111,6 +117,11 @@ paths:
       description: Run the chosen queries on defined dataset.
       parameters:
         - $ref: "#/components/parameters/BenchmarkId"
+      responses:
+        '200':
+          description: Successfully started run.
+        '400':
+          description: Bad request.
 
   /benchmarks/{benchmarkId}/results:
     get:
@@ -120,6 +131,15 @@ paths:
       description: Get list of results of given benchmark.
       parameters:
         - $ref: "#/components/parameters/BenchmarkId"
+      responses:
+        '200':
+          description: Successfully returned list of results.
+          content:
+            application/json:
+              schema:
+                $ref: "TBD"
+        '400':
+          description: Bad request.
 
   /benchmarks/{benchmarkId}/results/{resultId}:
     get:
@@ -130,6 +150,15 @@ paths:
       parameters:
         - $ref: "#/components/parameters/BenchmarkId"
         - $ref: "#/components/parameters/ResultId"
+      responses:
+        '200':
+          description: Return full results of a given finished run of given benchmark.
+          content:
+            application/json:
+              schema:
+                $ref: "TBD"
+        '400':
+          description: Bad request.
 
 components:
   schemas:
@@ -137,9 +166,9 @@ components:
       description: Array of dataset information.
       type: array
       items:
-        $ref: "#/components/schemas/Dataset"
+        $ref: "#/components/schemas/DatasetInfo"
 
-    Dataset:
+    DatasetInfo:
       description: Dataset information.
       type: object
       required:
@@ -157,14 +186,13 @@ components:
       description: Detail dataset info with analyzation step results.
       type: object
       allOf:
-        - $ref: "#/components/schemas/Dataset"
+        - $ref: "#/components/schemas/DatasetInfo"
       properties:
-        tables: 
-          description: All tables in given dataset.
+        tables:
           $ref: "#/components/schemas/TableArray"
 
     TableArray:
-      description: Array of Tables for given Dataset.
+      description: Array of Tables of given Dataset.
       type: array
       items:
         $ref: "#/components/schemas/Table"
@@ -204,45 +232,81 @@ components:
           type: string
           enum: [ string, integer, float, date ]
 
-    Operation: 
-      description: Info about an operation executed in a query over some column(s).
+    OperationBase:
+      description: Common properties for all Operations.
       type: object
-      required: 
+      required:
+        - id
         - name
-        - type
-        - column
-      properties: 
-        name: 
+      properties:
+        id:
           type: string
-        type:
-          type: string
-          enum: [ filter, join, sort, count, max ]
-        column:
-          type: array
-          items:
-            $ref: "#/components/schemas/TableColumn"
-
-    Value:
-      description: Info about a value important for an execution of given query over a dataset.
-      type: object
-      required: 
-        - name
-        - type
-        - operation
-        - values
-      properties: 
         name:
           type: string
+
+    OperationsArray:
+      description: Array of all operations for given dataset and queries.
+      type: array
+      items:
+        $ref: "#/components/schemas/Operation"
+
+    Operation:
+      description: Info about an operation executed in a query over some column(s).
+      oneOf:
+        - $ref: "#/components/schemas/NestedOperation"
+        - $ref: "#/components/schemas/NodeOperation"
+
+    BinaryNestedOperation:
+      description: Nested operation combining two operations.
+      allOf:
+        - $ref: "#/components/schemas/OperationBase"
+        - $ref: "#/components/schemas/BinaryNestedOperationBase"
+
+    BinaryNestedOperationBase:
+      description: Common properties for all Binary operations.
+      type: object
+      required:
+        - operation1
+        - operation2
+        - type
+      properties:
+        operation1:
+          $ref: "#/components/schemas/Operation"
+        operation2:
+          $ref: "#/components/schemas/Operation"
         type:
           type: string
-          enum: [ exact, range, larger-than, smaller-than ]
+          enum: [ AND, OR ]
+
+    UnaryNestedOperation:
+      description: Nested operation using one additional operation.
+      allOf:
+        - $ref: "#/components/schemas/OperationBase"
+        - $ref: "#/components/schemas/UnaryNestedOperationBase"
+
+    UnaryNestedOperationBase:
+      description: Specific properties for Unary operations.
+      type: object
+      required:
+        - operation
+        - type
+      properties:
         operation:
           $ref: "#/components/schemas/Operation"
-        values:
-          description: "TODO: NEEDS TO BE REDESIGNED !!!!"
-          type: array
-          items:
-            type: string
+        type:
+          type: string
+          enum: [ NOT ]
+
+    NodeOperation:
+      description: Operation not including nested operations.
+      type: object
+
+    NestedOperation:
+      description: Operation including nested operations.
+      type: object
+      oneOf:
+        - $ref: "#/components/schemas/BinaryNestedOperation"
+        - $ref: "#/components/schemas/UnaryNestedOperation"
 
     QueriesArray:
       description: Array of Query-sets information.
@@ -264,14 +328,14 @@ components:
         description:
           type: string
 
-    CreateBecnhmarkCommand:
+    CreateBenchmarkCommand:
       type: object
       description: Info about a new benchmark to be created.
-      required: 
+      required:
         - name
         - datasetId
         - querySetId
-      properties: 
+      properties:
         name:
           type: string
         datasetId:
@@ -290,7 +354,7 @@ components:
     Benchmark:
       type: object
       description: Info about analyzed benchmark in app.
-      required: 
+      required:
         - id
         - name
       properties:
@@ -304,15 +368,7 @@ components:
         dataset:
           $ref: "#/components/schemas/DatasetDetail"
         operations:
-          description: All operations over the whole column(s)
-          type: array
-          items: 
-            $ref: "#/components/schemas/Operation"
-        values:
-          type: array
-          items: 
-            $ref: "#/components/schemas/Value"
-
+          $ref: "#/components/schemas/OperationsArray"
 
   parameters:
     DatasetId:
