@@ -58,3 +58,13 @@ importer:
 ```
 
 Similarly for the rest of the DBs.
+
+## Building the Spring Boot app
+
+To build the project first you need to compile the generated source by running:
+
+```bash
+mvn clean generate-sources
+```
+in root directory. This will generate API endpoints interfaces to be implemented by the code and model for data transfer in the API methods.
+

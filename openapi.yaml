@@ -1,14 +1,14 @@
 openapi: 3.0.3
 info:
-  title: OXM Benchmark
+  title: OXM Benchmark API
   version: 0.0.1
   description: API for sending requests to OXM-benchmark benchmark suite.
   contact:
     email: TBD@email.eu
   license:
     name: "TBD"
-    url: "TBD"
-  termsOfService: "TBD"
+    url: "https://example.com/license"
+  termsOfService: "https://example.com/terms"
 
 tags:
   - name: Initial config
@@ -254,9 +254,9 @@ components:
       description: Array of all operations for given dataset and queries.
       type: array
       items:
-        $ref: "#/components/schemas/Operation"
+        $ref: "#/components/schemas/BenchmarkOperation"
 
-    Operation:
+    BenchmarkOperation:
       description: Info about an operation executed in a query over some column(s).
       oneOf:
         - $ref: "#/components/schemas/NestedOperation"
@@ -277,9 +277,9 @@ components:
         - type
       properties:
         operation1:
-          $ref: "#/components/schemas/Operation"
+          $ref: "#/components/schemas/BenchmarkOperation"
         operation2:
-          $ref: "#/components/schemas/Operation"
+          $ref: "#/components/schemas/BenchmarkOperation"
         type:
           type: string
           enum: [ AND, OR ]
@@ -298,7 +298,7 @@ components:
         - type
       properties:
         operation:
-          $ref: "#/components/schemas/Operation"
+          $ref: "#/components/schemas/BenchmarkOperation"
         type:
           type: string
           enum: [ NOT ]
