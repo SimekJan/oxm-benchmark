@@ -103,9 +103,15 @@ paths:
       description: Update data volumes, cardinalities of relationships and value occurrence in data.
       parameters:
         - $ref: "#/components/parameters/BenchmarkId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OperationsArray"
       responses:
         '200':
-          description: TBD
+          description: Successful response.
         '400':
           description: Bad request.
 
