@@ -216,6 +216,8 @@ components:
           type: string
         description:
           type: string
+        rows:
+          type: number
         columns:
           description: All columns present in the table.
           type: array
@@ -522,6 +524,8 @@ components:
         id:
           type: string
         name:
+          type: string
+        databaseName:
           type: string
         query:
           $ref: "#/components/schemas/Query"
