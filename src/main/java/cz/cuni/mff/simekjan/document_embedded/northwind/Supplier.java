@@ -1,0 +1,31 @@
+package cz.cuni.mff.simekjan.document_embedded.northwind;
+
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.bson.types.ObjectId;
+
+import java.util.ArrayList;
+import java.util.List;
+
+@Data
+@NoArgsConstructor
+public class Supplier {
+
+    public Supplier(Long supplierId, String companyName, String city) {
+        this.supplierId = supplierId;
+        this.id = new ObjectId();
+        this.companyName = companyName;
+        this.city = city;
+        this.products = new ArrayList<>();
+        this.suppliedBy = new ArrayList<>();
+    }
+
+    private ObjectId id;
+
+    private Long supplierId;
+    private String companyName;
+    private String city;
+    private List<ObjectId> suppliedBy;
+
+    private List<ProductSnapshot> products;
+}

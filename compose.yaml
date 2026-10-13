@@ -55,7 +55,7 @@ services:
   generator:
     build: .
     command:
-      - cs.mff.uk.simek.generator.Generator
+      - generator.cz.cuni.mff.simekjan.Generator
     environment:
       CONFIG_FILE: /oxm_config.yaml
     volumes:
@@ -66,7 +66,7 @@ services:
     build: .
     command:
       - -Dorg.slf4j.simpleLogger.defaultLogLevel=warn
-      - cs.mff.uk.simek.importer.Importer
+      - importer.cz.cuni.mff.simekjan.Importer
     environment:
       CONFIG_FILE: /oxm_config.yaml
     volumes:
@@ -79,7 +79,7 @@ services:
   runner:
     build: .
     command:
-      - cs.mff.uk.simek.runner.Runner
+      - runner.cz.cuni.mff.simekjan.Runner
     environment:
       CONFIG_FILE: /oxm_config.yaml
     volumes:
