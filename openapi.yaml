@@ -297,16 +297,95 @@ components:
           type: string
           enum: [ NOT ]
 
-    NodeOperation:
-      description: Operation not including nested operations.
-      type: object
-
     NestedOperation:
       description: Operation including nested operations.
       type: object
       oneOf:
         - $ref: "#/components/schemas/BinaryNestedOperation"
         - $ref: "#/components/schemas/UnaryNestedOperation"
+
+    NodeOperation:
+      description: Operation not including nested operations.
+      type: object
+      oneOf:
+        - $ref: "#/components/schemas/GeneralValueNodeOperation"
+        - $ref: "#/components/schemas/ExactValueNodeOperation"
+
+    ExactValueNodeOperation:
+      description: Operation needing exact value in query.
+      oneOf:
+        - $ref: "#/components/schemas/ExactValueSingleValueOperation"
+        - $ref: "#/components/schemas/ExactValueDoubleValueOperation"
+
+    ExactValueSingleValueOperation:
+      description: Operation with one exact value needed in query.
+      type: object
+      required:
+        - value
+        - column
+        - type
+      properties:
+        value:
+          type: string
+        column:
+          $ref: "#/components/schemas/TableColumn"
+        type:
+          type: string
+          enum: [ MATCH, LESS_THAN, MORE_THAN ]
+
+    ExactValueDoubleValueOperation:
+      description: Operation with two exact values needed in query.
+      type: object
+      required:
+        - value1
+        - value2
+        - column
+        - type
+      properties:
+        value1:
+          type: string
+        value2:
+          type: string
+        column:
+          $ref: "#/components/schemas/TableColumn"
+        type:
+          type: string
+          enum: [ RANGE ]
+
+    GeneralValueNodeOperation:
+      description: Operation not needing exact value in query.
+      oneOf:
+        - $ref: "#/components/schemas/GeneralValueSingleColOperation"
+        - $ref: "#/components/schemas/GeneralValueDoubleColOperation"
+
+    GeneralValueSingleColOperation:
+      description: Operation not needing exact value in query over one column.
+      type: object
+      required:
+        - column
+        - type
+      properties:
+        column:
+          $ref: "#/components/schemas/TableColumn"
+        type:
+          type: string
+          enum: [ SORT, COUNT, MAX ]
+
+    GeneralValueDoubleColOperation:
+      description: Operation not needing exact value in query over two columns.
+      type: object
+      required:
+        - column1
+        - column2
+        - type
+      properties:
+        column1:
+          $ref: "#/components/schemas/TableColumn"
+        column2:
+          $ref: "#/components/schemas/TableColumn"
+        type:
+          type: string
+          enum: [ JOIN ]
 
     QueriesArray:
       description: Array of Query-sets information.
