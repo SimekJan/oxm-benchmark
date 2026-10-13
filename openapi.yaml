@@ -69,7 +69,7 @@ paths:
             schema:
               $ref: "#/components/schemas/CreateBenchmarkCommand"
       responses:
-        '200':
+        '201':
           description: Successful response.
           content:
             application/json:
@@ -182,7 +182,7 @@ components:
         - name
       properties:
         id:
-          type: integer
+          type: string
         name:
           type: string
         description:
@@ -325,6 +325,12 @@ components:
 
     ExactValueSingleValueOperation:
       description: Operation with one exact value needed in query.
+      allOf:
+        - $ref: "#/components/schemas/OperationBase"
+        - $ref: "#/components/schemas/ExactValueSingleValueOperationBase"
+
+    ExactValueSingleValueOperationBase:
+      description: Specific properties for Exact value single value operation.
       type: object
       required:
         - value
@@ -341,6 +347,12 @@ components:
 
     ExactValueDoubleValueOperation:
       description: Operation with two exact values needed in query.
+      allOf:
+        - $ref: "#/components/schemas/OperationBase"
+        - $ref: "#/components/schemas/ExactValueDoubleValueOperationBase"
+
+    ExactValueDoubleValueOperationBase:
+      description: Specific properties for Exact value double value operation.
       type: object
       required:
         - value1
@@ -366,6 +378,12 @@ components:
 
     GeneralValueSingleColOperation:
       description: Operation not needing exact value in query over one column.
+      allOf:
+        - $ref: "#/components/schemas/OperationBase"
+        - $ref: "#/components/schemas/GeneralValueSingleColOperationBase"
+
+    GeneralValueSingleColOperationBase:
+      description: Specific properties for General value single column operations.
       type: object
       required:
         - column
@@ -379,6 +397,12 @@ components:
 
     GeneralValueDoubleColOperation:
       description: Operation not needing exact value in query over two columns.
+      allOf:
+        - $ref: "#/components/schemas/OperationBase"
+        - $ref: "#/components/schemas/GeneralValueDoubleColOperationBase"
+
+    GeneralValueDoubleColOperationBase:
+      description: Specific properties for General value double column operations.
       type: object
       required:
         - column1
@@ -407,7 +431,7 @@ components:
         - name
       properties:
         id:
-          type: integer
+          type: string
         name:
           type: string
         description:
@@ -464,12 +488,17 @@ components:
     ResultsInfo:
       description: Basic info about given run result.
       type: object
+      required:
+        - id
+        - name
+        - startedAt
+        - finished
       properties:
         id:
           type: string
         name:
           type: string
-        started-at:
+        startedAt:
           type: string
           format: date-time
         finished:
@@ -506,6 +535,8 @@ components:
 
     Result:
       description: Detailed info about run results.
+      required:
+        - results
       allOf:
         - $ref: "#/components/schemas/ResultsInfo"
         - type: object
