@@ -23,23 +23,27 @@ flowchart LR
     QUERIES --> V2
     QUERIES --> V3
 
-    subgraph CONFIG["3 · User configuration"]
+    subgraph CONFIG["3 - User configuration and Data generation"]
         ADJUST(["User adjusts number of items, values and cardinalities"])
-    end
-
-    V1 -->|" Filled initial values "| ADJUST
-    V2 -->|" Initial values set to 0 "| ADJUST
-    V3 -->|" Infer necessary schema from queries "| ADJUST
-
-    subgraph EXECUTION["4 · Generation and execution"]
-        direction TD
         GENERATE(["Generate / update dataset"])
         IMPORT(["Import data / changes to DBs"])
-        RUN(["Run queries"])
-        GENERATE --> IMPORT --> RUN
+        ADJUST --> GENERATE
+        GENERATE --> IMPORT
+        IMPORT --> ADJUST
     end
 
-    ADJUST --> GENERATE
+    V1 -->|" Filled initial values "| GENERATE
+    V2 -->|" Initial values set to 0 "| GENERATE
+    V3 -->|" Infer necessary schema from queries "| GENERATE
+
+    subgraph EXECUTION["4 - Execution"]
+        direction TD
+        RUN(["Run queries"])
+        IMPORT --> RUN
+    end
+
+    ADJUST ~~~ RUN
+
     classDef input fill: #DBEAFE, stroke: #2563EB, color: #1E3A8A
     classDef init fill: #EDE9FE, stroke: #7C3AED, color: #4C1D95
     classDef config fill: #222222, stroke: #D97706, color: #78350F
