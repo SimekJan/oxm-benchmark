@@ -52,13 +52,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/QueriesArray"
+                $ref: "#/components/schemas/QueryInfoArray"
         '400':
           description: Bad request.
 
   /benchmarks:
     post:
-      tags: [ Benchmark config ]
+      tags: [ Initial config ]
       operationId: postBenchmark
       summary: Create new benchmark
       description: Create new benchmark.
@@ -74,7 +74,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/BenchmarkInfo"
+                $ref: "#/components/schemas/NewBenchmarkInfo"
         '400':
           description: Bad request.
 
@@ -108,10 +108,74 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/OperationsArray"
+              $ref: "#/components/schemas/OperationArray"
       responses:
         '200':
           description: Successful response.
+        '400':
+          description: Bad request.
+
+  /benchmarks/{benchmarkId}/tables/{tableId}:
+    get:
+      tags: [ Benchmark config ]
+      operationId: getTable
+      summary: Get table detail
+      description: Get benchmark's specific table (of a dataset) based on ID.
+      responses:
+        '200':
+          description: Successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Table"
+        '400':
+          description: Bad request.
+
+  /benchmarks/{benchmarkId}/queries/{queryId}:
+    get:
+      tags: [ Benchmark config ]
+      operationId: getQuery
+      summary: Get query detail
+      description: Get dataset's query operation based on ID.
+      responses:
+        '200':
+          description: Successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QueryDetail"
+        '400':
+          description: Bad request.
+
+  /benchmarks/{benchmarkId}/columns/{columnId}:
+    get:
+      tags: [ Benchmark config ]
+      operationId: getColumn
+      summary: Get column detail
+      description: Get benchmarks's specific column (of a dataset) based on ID.
+      responses:
+        '200':
+          description: Successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TableColumn"
+        '400':
+          description: Bad request.
+
+  /benchmarks/{benchmarkId}/operations/{operationId}:
+    get:
+      tags: [ Benchmark config ]
+      operationId: getOperations
+      summary: Get operation detail
+      description: Get benchmark's specific operation based on ID.
+      responses:
+        '200':
+          description: Successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BenchmarkOperation"
         '400':
           description: Bad request.
 
@@ -171,7 +235,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ResultsArray"
+                $ref: "#/components/schemas/ResultArray"
         '400':
           description: Bad request.
 
@@ -223,16 +287,16 @@ components:
         - $ref: "#/components/schemas/DatasetInfo"
       properties:
         tables:
-          $ref: "#/components/schemas/TableArray"
+          $ref: "#/components/schemas/TableInfoArray"
 
-    TableArray:
-      description: Array of Tables of given Dataset.
+    TableInfoArray:
+      description: Array of basic info about Tables.
       type: array
       items:
-        $ref: "#/components/schemas/Table"
+        $ref: "#/components/schemas/TableBase"
 
-    Table:
-      description: Info about given table in Dataset.
+    TableBase:
+      description: Specific Table fields.
       type: object
       required:
         - id
@@ -244,22 +308,32 @@ components:
           type: string
         description:
           type: string
-        rows:
+        number_of_rows:
           type: number
+
+    Table:
+      description: Info about given table in Dataset.
+      type: object
+      allOf:
+        - $ref: "#/components/schemas/TableBase"
+      properties:
         columns:
           description: All columns present in the table.
           type: array
           items:
-            $ref: "#/components/schemas/TableColumn"
+            $ref: "#/components/schemas/TableColumnBase"
 
-    TableColumn:
-      description: Info about a table column in given table.
+    TableColumnBase:
+      description: Specific fields of table.
       type: object
       required:
+        - id
         - tableId
         - name
         - type
       properties:
+        id:
+          type: string
         tableId:
           type: string
         name:
@@ -267,6 +341,17 @@ components:
         type:
           type: string
           enum: [ string, integer, float, date, boolean ]
+
+    TableColumn:
+      description: Info about a column in given table.
+      type: object
+      allOf:
+        - $ref: "#/components/schemas/TableColumnBase"
+      required:
+        - operations
+      properties:
+        operations:
+          $ref: "#/components/schemas/OperationArray"
 
     OperationBase:
       description: Common properties for all Operations.
@@ -280,7 +365,13 @@ components:
         name:
           type: string
 
-    OperationsArray:
+    OperationBaseArray:
+      description: Array of basic info about Operations.
+      type: array
+      items:
+        $ref: "#/components/schemas/OperationBase"
+
+    OperationArray:
       description: Array of all operations for given dataset and queries.
       type: array
       items:
@@ -370,7 +461,7 @@ components:
         value:
           type: string
         column:
-          $ref: "#/components/schemas/TableColumn"
+          $ref: "#/components/schemas/TableColumnBase"
         type:
           type: string
           enum: [ MATCH, LESS_THAN, MORE_THAN ]
@@ -395,7 +486,7 @@ components:
         value2:
           type: string
         column:
-          $ref: "#/components/schemas/TableColumn"
+          $ref: "#/components/schemas/TableColumnBase"
         type:
           type: string
           enum: [ RANGE ]
@@ -420,7 +511,7 @@ components:
         - type
       properties:
         column:
-          $ref: "#/components/schemas/TableColumn"
+          $ref: "#/components/schemas/TableColumnBase"
         type:
           type: string
           enum: [ SORT, COUNT, MAX ]
@@ -440,21 +531,21 @@ components:
         - type
       properties:
         column1:
-          $ref: "#/components/schemas/TableColumn"
+          $ref: "#/components/schemas/TableColumnBase"
         column2:
-          $ref: "#/components/schemas/TableColumn"
+          $ref: "#/components/schemas/TableColumnBase"
         type:
           type: string
           enum: [ JOIN ]
 
-    QueriesArray:
-      description: Array of Query-sets information.
+    QueryInfoArray:
+      description: Array of Query information.
       type: array
       items:
-        $ref: "#/components/schemas/Query"
+        $ref: "#/components/schemas/QueryInfo"
 
-    Query:
-      description: Query-sets information.
+    QueryBase:
+      description: Basic Query specific fields.
       type: object
       required:
         - id
@@ -466,6 +557,23 @@ components:
           type: string
         description:
           type: string
+
+    QueryInfo:
+      description: Brief Query information.
+      type: object
+      allOf:
+        - $ref: "#/components/schemas/QueryBase"
+
+    QueryDetail:
+      description: Detailed Query information.
+      type: object
+      allOf:
+        - $ref: "#/components/schemas/QueryBase"
+      required:
+        - operations
+      properties:
+        operations:
+          $ref: "#/components/schemas/OperationArray"
 
     CreateBenchmarkCommand:
       type: object
@@ -482,7 +590,7 @@ components:
         querySetId:
           type: string
 
-    BenchmarkInfo:
+    NewBenchmarkInfo:
       type: object
       description: Info about the newly created benchmark.
       properties:
@@ -503,13 +611,11 @@ components:
         name:
           type: string
         queries:
-          $ref: "#/components/schemas/QueriesArray"
+          $ref: "#/components/schemas/QueryInfoArray"
         dataset:
           $ref: "#/components/schemas/DatasetDetail"
-        operations:
-          $ref: "#/components/schemas/OperationsArray"
 
-    ResultsArray:
+    ResultArray:
       description: Array of all Results info for given benchmark.
       type: array
       items:
@@ -534,7 +640,7 @@ components:
         finished:
           type: boolean
 
-    QueryResultsArray:
+    QueryResultArray:
       description: Array of results of given query.
       type: array
       items:
@@ -556,7 +662,7 @@ components:
         databaseName:
           type: string
         query:
-          $ref: "#/components/schemas/Query"
+          $ref: "#/components/schemas/QueryInfo"
         error:
           type: string
         times:
@@ -574,7 +680,7 @@ components:
         - type: object
           properties:
             results:
-              $ref: "#/components/schemas/QueryResultsArray"
+              $ref: "#/components/schemas/QueryResultArray"
 
   parameters:
     DatasetId:
