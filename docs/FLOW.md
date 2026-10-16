@@ -8,6 +8,8 @@ flowchart LR
         SCHEMA(["Schema"])
         CODE_QUERIES["V4 - Queries in code only"]
         CODE_QUERIES -->|" Get native queries "| QUERIES
+        READONLY_DATABASE[("DB with initial dataset")]
+        READONLY_DATABASE -->|" Use as read-only datasource "| DATASET
     end
 
     subgraph INIT["2 - Initialization"]
@@ -30,6 +32,7 @@ flowchart LR
         ADJUST --> GENERATE
         GENERATE --> IMPORT
         IMPORT --> ADJUST
+        VALIDATE(["Validate run params"])
     end
 
     V1 -->|" Filled initial values "| GENERATE
@@ -39,7 +42,8 @@ flowchart LR
     subgraph EXECUTION["4 - Execution"]
         direction TD
         RUN(["Run queries"])
-        IMPORT --> RUN
+        RESULTS(["See results"])
+        IMPORT --> VALIDATE --> RUN --> RESULTS
     end
 
     ADJUST ~~~ RUN
