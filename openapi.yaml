@@ -115,6 +115,34 @@ paths:
         '400':
           description: Bad request.
 
+  /benchmarks/{benchmarkId}/column/{columnId}:
+    delete:
+      tags: [ Benchmark config ]
+      operationId: deleteColumn
+      summary: Remove unused column
+      description: Remove column unused in any query from benchmark execution.
+      parameters:
+        - $ref: "#/components/parameters/BenchmarkId"
+        - $ref: "#/components/parameters/ColumnId"
+      responses:
+        '204':
+          description: Successful response.
+        '400':
+          description: Bad request.
+    post:
+      tags: [ Benchmark config ]
+      operationId: postColumn
+      summary: Re-add unused column
+      description: Re-add column unused in any query to benchmark execution.
+      parameters:
+        - $ref: "#/components/parameters/BenchmarkId"
+        - $ref: "#/components/parameters/ColumnId"
+      responses:
+        '204':
+          description: Successful response.
+        '400':
+          description: Bad request.
+
   /benchmarks/{benchmarkId}/runs:
     post:
       tags: [ Run benchmark ]
@@ -560,6 +588,13 @@ components:
       in: path
       name: benchmarkId
       description: ID of required benchmark in URL.
+      required: true
+      schema:
+        type: string
+    ColumnId:
+      in: path
+      name: columnId
+      description: ID of required column in existing table in URL.
       required: true
       schema:
         type: string
