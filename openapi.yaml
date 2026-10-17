@@ -39,13 +39,13 @@ paths:
           description: Bad request.
 
   /datasets/{datasetId}/queries:
+    parameters:
+      - $ref: "#/components/parameters/DatasetId"
     get:
       tags: [ Initial config ]
       operationId: getQueries
       summary: Get all query sets prepared in the app for given dataset
       description: There will probably be only one query set per dataset in our implementation.
-      parameters:
-        - $ref: "#/components/parameters/DatasetId"
       responses:
         '200':
           description: Successful response.
@@ -79,13 +79,13 @@ paths:
           description: Bad request.
 
   /benchmarks/{benchmarkId}:
+    parameters:
+      - $ref: "#/components/parameters/BenchmarkId"
     get:
       tags: [ Benchmark config ]
       operationId: getBenchmark
       summary: Get info about given benchmark
       description: Get info about given benchmark with analyzation step results.
-      parameters:
-        - $ref: "#/components/parameters/BenchmarkId"
       responses:
         '200':
           description: Successful response.
@@ -101,8 +101,6 @@ paths:
       operationId: updateBenchmark
       summary: Update benchmark parameters
       description: Update data volumes, cardinalities of relationships and value occurrence in data.
-      parameters:
-        - $ref: "#/components/parameters/BenchmarkId"
       requestBody:
         required: true
         content:
@@ -116,6 +114,9 @@ paths:
           description: Bad request.
 
   /benchmarks/{benchmarkId}/tables/{tableId}:
+    parameters:
+      - $ref: "#/components/parameters/BenchmarkId"
+      - $ref: "#/components/parameters/TableId"
     get:
       tags: [ Benchmark config ]
       operationId: getTable
@@ -132,6 +133,9 @@ paths:
           description: Bad request.
 
   /benchmarks/{benchmarkId}/queries/{queryId}:
+    params:
+      - $ref: "#/components/parameters/BenchmarkId"
+      - $ref: "#/components/parameters/QueryId"
     get:
       tags: [ Benchmark config ]
       operationId: getQuery
@@ -147,23 +151,10 @@ paths:
         '400':
           description: Bad request.
 
-  /benchmarks/{benchmarkId}/columns/{columnId}:
-    get:
-      tags: [ Benchmark config ]
-      operationId: getColumn
-      summary: Get column detail
-      description: Get benchmarks's specific column (of a dataset) based on ID.
-      responses:
-        '200':
-          description: Successful response.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/TableColumn"
-        '400':
-          description: Bad request.
-
   /benchmarks/{benchmarkId}/operations/{operationId}:
+    parameters:
+      - $ref: "#/components/parameters/BenchmarkId"
+      - $ref: "#/components/parameters/BenchmarkOperationId"
     get:
       tags: [ Benchmark config ]
       operationId: getOperations
@@ -179,15 +170,29 @@ paths:
         '400':
           description: Bad request.
 
-  /benchmarks/{benchmarkId}/column/{columnId}:
+  /benchmarks/{benchmarkId}/columns/{columnId}:
+    parameters:
+      - $ref: "#/components/parameters/BenchmarkId"
+      - $ref: "#/components/parameters/ColumnId"
+    get:
+      tags: [ Benchmark config ]
+      operationId: getColumn
+      summary: Get column detail
+      description: Get benchmarks's specific column (of a dataset) based on ID.
+      responses:
+        '200':
+          description: Successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TableColumn"
+        '400':
+          description: Bad request.
     delete:
       tags: [ Benchmark config ]
       operationId: deleteColumn
       summary: Remove unused column
       description: Remove column unused in any query from benchmark execution.
-      parameters:
-        - $ref: "#/components/parameters/BenchmarkId"
-        - $ref: "#/components/parameters/ColumnId"
       responses:
         '204':
           description: Successful response.
@@ -198,9 +203,6 @@ paths:
       operationId: postColumn
       summary: Re-add unused column
       description: Re-add column unused in any query to benchmark execution.
-      parameters:
-        - $ref: "#/components/parameters/BenchmarkId"
-        - $ref: "#/components/parameters/ColumnId"
       responses:
         '204':
           description: Successful response.
@@ -208,13 +210,13 @@ paths:
           description: Bad request.
 
   /benchmarks/{benchmarkId}/runs:
+    parameters:
+      - $ref: "#/components/parameters/BenchmarkId"
     post:
       tags: [ Run benchmark ]
       operationId: postBenchmarkRun
       summary: Run the chosen queries on defined dataset
       description: Run the chosen queries on defined dataset.
-      parameters:
-        - $ref: "#/components/parameters/BenchmarkId"
       responses:
         '200':
           description: Successfully started run.
@@ -222,13 +224,13 @@ paths:
           description: Bad request.
 
   /benchmarks/{benchmarkId}/results:
+    parameters:
+      - $ref: "#/components/parameters/BenchmarkId"
     get:
       tags: [ Run benchmark ]
       operationId: getBenchmarkResults
       summary: Get list of results of given benchmark
       description: Get list of results of given benchmark.
-      parameters:
-        - $ref: "#/components/parameters/BenchmarkId"
       responses:
         '200':
           description: Successfully returned list of results.
@@ -240,14 +242,14 @@ paths:
           description: Bad request.
 
   /benchmarks/{benchmarkId}/results/{resultId}:
+    parameters:
+      - $ref: "#/components/parameters/BenchmarkId"
+      - $ref: "#/components/parameters/ResultId"
     get:
       tags: [ Run benchmark ]
       operationId: getBenchmarkResult
       summary: Get detail result of given run of given benchmark
       description: Get detail result of given run of given benchmark.
-      parameters:
-        - $ref: "#/components/parameters/BenchmarkId"
-        - $ref: "#/components/parameters/ResultId"
       responses:
         '200':
           description: Return full results of a given finished run of given benchmark.
@@ -690,6 +692,7 @@ components:
       required: true
       schema:
         type: string
+        format: uuid
     BenchmarkId:
       in: path
       name: benchmarkId
@@ -697,6 +700,31 @@ components:
       required: true
       schema:
         type: string
+        format: uuid
+    QueryId:
+      in: path
+      name: queryId
+      description: ID of required query in URL.
+      required: true
+      schema:
+        type: string
+        format: uuid
+    TableId:
+      in: path
+      name: tableId
+      description: ID of required table in URL.
+      required: true
+      schema:
+        type: string
+        format: uuid
+    BenchmarkOperationId:
+      in: path
+      name: operationId
+      description: ID of required operation in URL.
+      required: true
+      schema:
+        type: string
+        format: uuid
     ColumnId:
       in: path
       name: columnId
@@ -704,6 +732,7 @@ components:
       required: true
       schema:
         type: string
+        format: uuid
     ResultId:
       in: path
       name: resultId
@@ -711,3 +740,4 @@ components:
       required: true
       schema:
         type: string
+        format: uuid
