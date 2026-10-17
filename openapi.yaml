@@ -133,7 +133,7 @@ paths:
           description: Bad request.
 
   /benchmarks/{benchmarkId}/queries/{queryId}:
-    params:
+    parameters:
       - $ref: "#/components/parameters/BenchmarkId"
       - $ref: "#/components/parameters/QueryId"
     get:
@@ -188,23 +188,19 @@ paths:
                 $ref: "#/components/schemas/TableColumn"
         '400':
           description: Bad request.
-    delete:
+    patch:
       tags: [ Benchmark config ]
-      operationId: deleteColumn
-      summary: Remove unused column
-      description: Remove column unused in any query from benchmark execution.
+      operationId: changeUnusedColumnVisibility
+      summary: Change unused column visibility
+      description: Remove or add column to/from unused in any query from benchmark execution.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PatchColumnVisibilityCommand"
       responses:
-        '204':
-          description: Successful response.
-        '400':
-          description: Bad request.
-    post:
-      tags: [ Benchmark config ]
-      operationId: postColumn
-      summary: Re-add unused column
-      description: Re-add column unused in any query to benchmark execution.
-      responses:
-        '204':
+        '200':
           description: Successful response.
         '400':
           description: Bad request.
@@ -262,6 +258,15 @@ paths:
 
 components:
   schemas:
+    PatchColumnVisibilityCommand:
+      description: Command with info for unused column to be change to in/visible to generator.
+      type: object
+      required:
+        - hide
+      properties:
+        hide:
+          type: boolean
+
     DatasetArray:
       description: Array of dataset information.
       type: array
@@ -333,6 +338,7 @@ components:
         - tableId
         - name
         - type
+        - unused
       properties:
         id:
           type: string
@@ -343,6 +349,26 @@ components:
         type:
           type: string
           enum: [ string, integer, float, date, boolean ]
+      oneOf:
+        - properties:
+            unused:
+              type: boolean
+              enum: [ false ]
+        - required:
+            - hidden
+          properties:
+            unused:
+              type: boolean
+              enum: [ true ]
+            hidden:
+              type: boolean
+      example:
+        id: EXAMPLE_COLUMN_ID
+        tableId: EXAMPLE_TABLE_ID
+        name: EXAMPLE_COLUMN_NAME
+        type: string
+        unused: true
+        hidden: false
 
     TableColumn:
       description: Info about a column in given table.
@@ -367,12 +393,6 @@ components:
         name:
           type: string
 
-    OperationBaseArray:
-      description: Array of basic info about Operations.
-      type: array
-      items:
-        $ref: "#/components/schemas/OperationBase"
-
     OperationArray:
       description: Array of all operations for given dataset and queries.
       type: array
@@ -381,18 +401,24 @@ components:
 
     BenchmarkOperation:
       description: Info about an operation executed in a query over some column(s).
-      oneOf:
-        - $ref: "#/components/schemas/NestedOperation"
-        - $ref: "#/components/schemas/NodeOperation"
+      allOf:
+        - $ref: "#/components/schemas/OperationBase"
+        - oneOf:
+            - $ref: "#/components/schemas/NestedOperation"
+            - $ref: "#/components/schemas/NodeOperation"
+      example:
+        id: EXAMPLE_OPERATION_ID
+        name: EXAMPLE_OPERATION
+        type: MATCH
+        value: 42
+        column:
+          id: EXAMPLE_COLUMN_ID
+          tableId: EXAMPLE_TABLE_ID
+          type: integer
+          name: MATCH_INT
 
     BinaryNestedOperation:
       description: Nested operation combining two operations.
-      allOf:
-        - $ref: "#/components/schemas/OperationBase"
-        - $ref: "#/components/schemas/BinaryNestedOperationBase"
-
-    BinaryNestedOperationBase:
-      description: Common properties for all Binary operations.
       type: object
       required:
         - operation1
@@ -409,12 +435,6 @@ components:
 
     UnaryNestedOperation:
       description: Nested operation using one additional operation.
-      allOf:
-        - $ref: "#/components/schemas/OperationBase"
-        - $ref: "#/components/schemas/UnaryNestedOperationBase"
-
-    UnaryNestedOperationBase:
-      description: Specific properties for Unary operations.
       type: object
       required:
         - operation
@@ -432,6 +452,8 @@ components:
       oneOf:
         - $ref: "#/components/schemas/BinaryNestedOperation"
         - $ref: "#/components/schemas/UnaryNestedOperation"
+      discriminator:
+        propertyName: type
 
     NodeOperation:
       description: Operation not including nested operations.
@@ -448,12 +470,6 @@ components:
 
     ExactValueSingleValueOperation:
       description: Operation with one exact value needed in query.
-      allOf:
-        - $ref: "#/components/schemas/OperationBase"
-        - $ref: "#/components/schemas/ExactValueSingleValueOperationBase"
-
-    ExactValueSingleValueOperationBase:
-      description: Specific properties for Exact value single value operation.
       type: object
       required:
         - value
@@ -470,12 +486,6 @@ components:
 
     ExactValueDoubleValueOperation:
       description: Operation with two exact values needed in query.
-      allOf:
-        - $ref: "#/components/schemas/OperationBase"
-        - $ref: "#/components/schemas/ExactValueDoubleValueOperationBase"
-
-    ExactValueDoubleValueOperationBase:
-      description: Specific properties for Exact value double value operation.
       type: object
       required:
         - value1
@@ -501,12 +511,6 @@ components:
 
     GeneralValueSingleColOperation:
       description: Operation not needing exact value in query over one column.
-      allOf:
-        - $ref: "#/components/schemas/OperationBase"
-        - $ref: "#/components/schemas/GeneralValueSingleColOperationBase"
-
-    GeneralValueSingleColOperationBase:
-      description: Specific properties for General value single column operations.
       type: object
       required:
         - column
@@ -520,12 +524,6 @@ components:
 
     GeneralValueDoubleColOperation:
       description: Operation not needing exact value in query over two columns.
-      allOf:
-        - $ref: "#/components/schemas/OperationBase"
-        - $ref: "#/components/schemas/GeneralValueDoubleColOperationBase"
-
-    GeneralValueDoubleColOperationBase:
-      description: Specific properties for General value double column operations.
       type: object
       required:
         - column1
