@@ -95,23 +95,6 @@ paths:
                 $ref: "#/components/schemas/Benchmark"
         '400':
           description: Bad request.
-    
-    put:
-      tags: [ Benchmark config ]
-      operationId: updateBenchmark
-      summary: Update benchmark parameters
-      description: Update data volumes, cardinalities of relationships and value occurrence in data.
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/OperationArray"
-      responses:
-        '200':
-          description: Successful response.
-        '400':
-          description: Bad request.
 
   /benchmarks/{benchmarkId}/tables/{tableId}:
     parameters:
@@ -170,6 +153,26 @@ paths:
         '400':
           description: Bad request.
 
+  /benchmarks/{benchmarkId}/operations/exact-value/{operationId}:
+    parameters:
+      - $ref: "#/components/parameters/BenchmarkId"
+      - $ref: "#/components/parameters/BenchmarkOperationId"
+    put:
+      tags: [ Benchmark config ]
+      operationId: updateOperation
+      summary: Update exact value operation
+      description: Update exact value operation's value(s).
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateOperationExactValueCommand"
+      responses:
+        '200':
+          description: Successful response.
+        '400':
+          description: Bad request.
+
   /benchmarks/{benchmarkId}/columns/{columnId}:
     parameters:
       - $ref: "#/components/parameters/BenchmarkId"
@@ -188,6 +191,31 @@ paths:
                 $ref: "#/components/schemas/TableColumn"
         '400':
           description: Bad request.
+
+  /benchmarks/{benchmarkId}/columns/{columnId}/values:
+    parameters:
+      - $ref: "#/components/parameters/BenchmarkId"
+      - $ref: "#/components/parameters/ColumnId"
+    put:
+      tags: [ Benchmark config ]
+      operationId: updateColumn
+      summary: Update column values
+      description: Update column values distribution, count and other statistic.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TableColumnValuesInfo"
+      responses:
+        '200':
+          description: Successful response.
+        '400':
+          description: Bad request.
+
+  /benchmarks/{benchmarkId}/columns/unused/{columnId}:
+    parameters:
+      - $ref: "#/components/parameters/BenchmarkId"
+      - $ref: "#/components/parameters/ColumnId"
     patch:
       tags: [ Benchmark config ]
       operationId: changeUnusedColumnVisibility
@@ -258,6 +286,38 @@ paths:
 
 components:
   schemas:
+
+    UpdateOperationExactValueCommand:
+      description: Data used to update exact value operation's value(s).
+      oneOf:
+        - type: object
+          required:
+            - value
+          properties:
+            value:
+              oneOf:
+                - type: string
+                - type: integer
+                - type: number
+                - type: boolean
+        - type: object
+          required:
+            - value1
+            - value2
+          properties:
+            value1:
+              oneOf:
+                - type: string
+                - type: integer
+                - type: number
+                - type: boolean
+            value2:
+              oneOf:
+                - type: string
+                - type: integer
+                - type: number
+                - type: boolean
+
     PatchColumnVisibilityCommand:
       description: Command with info for unused column to be change to in/visible to generator.
       type: object
@@ -292,9 +352,10 @@ components:
       type: object
       allOf:
         - $ref: "#/components/schemas/DatasetInfo"
-      properties:
-        tables:
-          $ref: "#/components/schemas/TableInfoArray"
+        - type: object
+          properties:
+            tables:
+              $ref: "#/components/schemas/TableInfoArray"
 
     TableInfoArray:
       description: Array of basic info about Tables.
@@ -323,12 +384,13 @@ components:
       type: object
       allOf:
         - $ref: "#/components/schemas/TableBase"
-      properties:
-        columns:
-          description: All columns present in the table.
-          type: array
-          items:
-            $ref: "#/components/schemas/TableColumnBase"
+        - type: object
+          properties:
+            columns:
+              description: All columns present in the table.
+              type: array
+              items:
+                $ref: "#/components/schemas/TableColumnBase"
 
     TableColumnBase:
       description: Specific fields of table.
@@ -375,11 +437,63 @@ components:
       type: object
       allOf:
         - $ref: "#/components/schemas/TableColumnBase"
+        - type: object
+          required:
+            - operations
+            - info
+          properties:
+            operations:
+              $ref: "#/components/schemas/NodeOperationArray"
+            info:
+              $ref: "#/components/schemas/TableColumnValuesInfo"
+
+    TableColumnValuesInfo:
+      description: Detail info about values present in given column.
+      type: object
       required:
-        - operations
+        - numberOfValues
+        - numberOfUniqueValues
+        - indexed
+        - uniqueValues
       properties:
-        operations:
-          $ref: "#/components/schemas/OperationArray"
+        numberOfValues:
+          type: integer
+        numberOfUniqueValues:
+          type: integer
+        indexed:
+          type: boolean
+        uniqueValues:
+          type: boolean
+        closeToUnique:
+          description: Needs to be discussed if needed or useful and it's definition.
+          type: boolean
+        percentiles:
+          type: array
+          description: Values at each 10th percentile of the column's distribution.
+          items:
+            oneOf:
+              - type: string
+              - type: integer
+              - type: number
+        valuesDistribution:
+          type: array
+          items:
+            type: object
+            properties:
+              value:
+                oneOf:
+                  - type: string
+                  - type: integer
+                  - type: number
+                  - type: boolean
+              count:
+                type: integer
+      example:
+        numberOfValues: 5000
+        numberOfUniqueValues: 5000
+        indexed: false
+        uniqueValues: true
+        percentiles: [ 0, 500, 1000, 1500, 2000, 2500, 3500, 5000, 8000, 20000, 50000 ]
 
     OperationBase:
       description: Common properties for all Operations.
@@ -393,11 +507,14 @@ components:
         name:
           type: string
 
-    OperationArray:
-      description: Array of all operations for given dataset and queries.
+    NodeOperationArray:
+      description: Array of all node operations for given column.
       type: array
       items:
-        $ref: "#/components/schemas/BenchmarkOperation"
+        type: object
+        allOf:
+          - $ref: "#/components/schemas/OperationBase"
+          - $ref: "#/components/schemas/NodeOperation"
 
     BenchmarkOperation:
       description: Info about an operation executed in a query over some column(s).
@@ -520,7 +637,7 @@ components:
           $ref: "#/components/schemas/TableColumnBase"
         type:
           type: string
-          enum: [ SORT, COUNT, MAX ]
+          enum: [ SORT, COUNT, EXTREME ]
 
     GeneralValueDoubleColOperation:
       description: Operation not needing exact value in query over two columns.
@@ -569,11 +686,12 @@ components:
       type: object
       allOf:
         - $ref: "#/components/schemas/QueryBase"
-      required:
-        - operations
-      properties:
-        operations:
-          $ref: "#/components/schemas/OperationArray"
+        - type: object
+          required:
+            - operations
+          properties:
+            operations:
+              $ref: "#/components/schemas/BenchmarkOperation"
 
     CreateBenchmarkCommand:
       type: object
