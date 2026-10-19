@@ -444,8 +444,10 @@ components:
           properties:
             operations:
               $ref: "#/components/schemas/NodeOperationArray"
-            info:
+            valuesInfo:
               $ref: "#/components/schemas/TableColumnValuesInfo"
+            relationshipsInfo:
+              $ref: "#/components/schemas/TableColumnRelationshipsInfo"
 
     TableColumnValuesInfo:
       description: Detail info about values present in given column.
@@ -455,6 +457,7 @@ components:
         - numberOfUniqueValues
         - indexed
         - uniqueValues
+        - valueDistribution
       properties:
         numberOfValues:
           type: integer
@@ -467,9 +470,39 @@ components:
         closeToUnique:
           description: Needs to be discussed if needed or useful and it's definition.
           type: boolean
+        valueDistribution:
+          $ref: "#/components/schemas/ValueDistribution"
+      example:
+        numberOfValues: 5000
+        numberOfUniqueValues: 5000
+        indexed: false
+        uniqueValues: true
+        valueDistribution:
+          percentiles: [ 0, 500, 1000, 1500, 2000, 2500, 3500, 5000, 8000, 20000, 50000 ]
+
+    TableColumnRelationshipsInfo:
+      description: Detail info about connections (relationships) present for given column.
+      type: object
+      properties:
+        foreignColumnId:
+          type: string
+          format: uuid
+        numberOfForeignValues:
+          type: integer
+        relationshipType:
+          description: Types one-to-one and many-to-one don't need distributions at all.
+          type: string
+          enum: [ one-to-one, one-to-many, many-to-one, many-to-many ]
+        valueDistribution:
+          $ref: "#/components/schemas/ValueDistribution"
+
+    ValueDistribution:
+      description: Distribution of values count in percentiles or dictionary distribution based on number of unique values.
+      type: object
+      properties:
         percentiles:
           type: array
-          description: Values at each 10th percentile of the column's distribution.
+          description: Values at each 10th percentile of the column's distribution. This includes min, median and max by design (0th, 5th and 10th value).
           items:
             oneOf:
               - type: string
@@ -488,12 +521,6 @@ components:
                   - type: boolean
               count:
                 type: integer
-      example:
-        numberOfValues: 5000
-        numberOfUniqueValues: 5000
-        indexed: false
-        uniqueValues: true
-        percentiles: [ 0, 500, 1000, 1500, 2000, 2500, 3500, 5000, 8000, 20000, 50000 ]
 
     OperationBase:
       description: Common properties for all Operations.
@@ -501,11 +528,14 @@ components:
       required:
         - id
         - name
+        - resultsCount
       properties:
         id:
           type: string
         name:
           type: string
+        resultsCount:
+          type: integer
 
     NodeOperationArray:
       description: Array of all node operations for given column.
@@ -526,6 +556,7 @@ components:
       example:
         id: EXAMPLE_OPERATION_ID
         name: EXAMPLE_OPERATION
+        resultsCount: 1234
         type: MATCH
         value: 42
         column:
