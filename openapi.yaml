@@ -57,6 +57,22 @@ paths:
           description: Bad request.
 
   /benchmarks:
+    get:
+      tags: [ Initial config ]
+      operationId: getAllBenchmarks
+      summary: Get all Benchmarks
+      description: Get all benchmarks in the running application.
+      responses:
+        '200':
+          description: Return benchmark info data.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/BenchmarkBase"
+        '400':
+          description: Bad request.
     post:
       tags: [ Initial config ]
       operationId: postBenchmark
@@ -70,11 +86,7 @@ paths:
               $ref: "#/components/schemas/CreateBenchmarkCommand"
       responses:
         '201':
-          description: Successful response.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/NewBenchmarkInfo"
+          $ref: "#/components/responses/SimpleIdResponse"
         '400':
           description: Bad request.
 
@@ -271,39 +283,61 @@ paths:
   /benchmarks/{benchmarkId}/runs:
     parameters:
       - $ref: "#/components/parameters/BenchmarkId"
+    get:
+      tags: [ Run benchmark ]
+      operationId: getAllRuns
+      summary: Get all runs for a benchmark
+      description: Get all run infos for a given benchmark.
+      responses:
+        '200':
+          description: Returns all runs for given benchmark.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/BenchmarkRun"
+        '400':
+          description: Bad request.
     post:
       tags: [ Run benchmark ]
       operationId: postBenchmarkRun
       summary: Run the chosen queries on defined dataset
       description: Run the chosen queries on defined dataset.
       responses:
-        '200':
-          description: Successfully started run.
+        '201':
+          $ref: "#/components/responses/SimpleIdResponse"
         '400':
           description: Bad request.
 
-  /benchmarks/{benchmarkId}/results:
+  /benchmark/{benchmarkId}/runs/failed/{runId}/rerun:
     parameters:
       - $ref: "#/components/parameters/BenchmarkId"
-    get:
+      - $ref: "#/components/parameters/RunId"
+    post:
       tags: [ Run benchmark ]
-      operationId: getBenchmarkResults
-      summary: Get list of results of given benchmark
-      description: Get list of results of given benchmark.
+      operationId: rerunBenchmark
+      summary: Rerun failed benchmark
+      description: Run failed benchmark run again or continue in it's execution from last successful batch.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                rerunMode:
+                  type: string
+                  enum: [ continue, startOver ]
       responses:
-        '200':
-          description: Successfully returned list of results.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ResultArray"
+        '201':
+          $ref: "#/components/responses/SimpleIdResponse"
         '400':
           description: Bad request.
 
-  /benchmarks/{benchmarkId}/results/{resultId}:
+  /benchmarks/{benchmarkId}/runs/{runId}/results:
     parameters:
       - $ref: "#/components/parameters/BenchmarkId"
-      - $ref: "#/components/parameters/ResultId"
+      - $ref: "#/components/parameters/RunId"
     get:
       tags: [ Run benchmark ]
       operationId: getBenchmarkResult
@@ -808,17 +842,9 @@ components:
         querySetId:
           type: string
 
-    NewBenchmarkInfo:
+    BenchmarkBase:
+      description: Specific fields for basic benchmark info.
       type: object
-      description: Info about the newly created benchmark.
-      properties:
-        benchmarkId:
-          type: string
-          description: ID of the newly created benchmark.
-
-    Benchmark:
-      type: object
-      description: Info about analyzed benchmark in app.
       required:
         - id
         - name
@@ -828,16 +854,37 @@ components:
           description: ID of the requested benchmark.
         name:
           type: string
-        queries:
-          $ref: "#/components/schemas/QueryInfoArray"
-        dataset:
-          $ref: "#/components/schemas/DatasetDetail"
 
-    ResultArray:
-      description: Array of all Results info for given benchmark.
-      type: array
-      items:
-        $ref: "#/components/schemas/ResultsInfo"
+    Benchmark:
+      description: Info about analyzed benchmark in app.
+      allOf:
+        - $ref: "#/components/schemas/BenchmarkBase"
+        - type: object
+          properties:
+            queries:
+              $ref: "#/components/schemas/QueryInfoArray"
+            dataset:
+              $ref: "#/components/schemas/DatasetDetail"
+
+    BenchmarkRun:
+      description: Detailed information about a given benchmark's run.
+      type: object
+      required:
+        - id
+        - benchmarkId
+        - status
+      properties:
+        id:
+          type: string
+          format: uuid
+        benchmarkId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [ running, finished, failed ]
+        errorInfo:
+          type: string
 
     ResultsInfo:
       description: Basic info about given run result.
@@ -917,6 +964,14 @@ components:
       schema:
         type: string
         format: uuid
+    RunId:
+      in: path
+      name: runId
+      description: ID of required run in URL.
+      required: true
+      schema:
+        type: string
+        format: uuid
     QueryId:
       in: path
       name: queryId
@@ -957,3 +1012,15 @@ components:
       schema:
         type: string
         format: uuid
+
+  responses:
+    SimpleIdResponse:
+      description: Response for returning single id in uuid format.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
