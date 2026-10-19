@@ -114,6 +114,21 @@ paths:
                 $ref: "#/components/schemas/Table"
         '400':
           description: Bad request.
+    put:
+      tags: [ Benchmark config ]
+      operationId: updateTableSize
+      summary: Update table size
+      description: Update table entities count.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateTableSizeCommand"
+      responses:
+        '200':
+          description: Successful response.
+        '400':
+          description: Bad request.
 
   /benchmarks/{benchmarkId}/queries/{queryId}:
     parameters:
@@ -198,14 +213,34 @@ paths:
       - $ref: "#/components/parameters/ColumnId"
     put:
       tags: [ Benchmark config ]
-      operationId: updateColumn
+      operationId: updateColumnValues
       summary: Update column values
-      description: Update column values distribution, count and other statistic.
+      description: Update column values distribution, indexing, count and other statistic.
       requestBody:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/TableColumnValuesInfo"
+              $ref: "#/components/schemas/UpdateTableColumnValuesCommand"
+      responses:
+        '200':
+          description: Successful response.
+        '400':
+          description: Bad request.
+
+  /benchmarks/{benchmarkId}/columns/{columnId}/relationships:
+    parameters:
+      - $ref: "#/components/parameters/BenchmarkId"
+      - $ref: "#/components/parameters/ColumnId"
+    put:
+      tags: [ Benchmark config ]
+      operationId: updateColumnRelationships
+      summary: Update column relationships
+      description: Update column relationships distribution and other statistic.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateTableColumnRelationshipsCommand"
       responses:
         '200':
           description: Successful response.
@@ -286,6 +321,39 @@ paths:
 
 components:
   schemas:
+
+    UpdateTableSizeCommand:
+      description: Command for updating number of entities in given table.
+      type: object
+      properties:
+        size:
+          type: integer
+
+    UpdateTableColumnValuesCommand:
+      description: Command for updating statistics for values in given column.
+      type: object
+      properties:
+        numberOfUniqueValues:
+          type: integer
+        indexed:
+          type: boolean
+        uniqueValues:
+          type: boolean
+        valueDistribution:
+          $ref: "#/components/schemas/ValueDistribution"
+        distribution:
+          type: string
+          enum: [ normal, exponential, uniform ]
+
+    UpdateTableColumnRelationshipsCommand:
+      description: Command for updating statistics for relationships in given column.
+      type: object
+      properties:
+        valueDistribution:
+          $ref: "#/components/schemas/ValueDistribution"
+        distribution:
+          type: string
+          enum: [ normal, exponential, logarithmic, uniform ]
 
     UpdateOperationExactValueCommand:
       description: Data used to update exact value operation's value(s).
@@ -472,13 +540,14 @@ components:
           type: boolean
         valueDistribution:
           $ref: "#/components/schemas/ValueDistribution"
+        percentiles:
+          $ref: "#/components/schemas/Percentiles"
       example:
         numberOfValues: 5000
         numberOfUniqueValues: 5000
         indexed: false
         uniqueValues: true
-        valueDistribution:
-          percentiles: [ 0, 500, 1000, 1500, 2000, 2500, 3500, 5000, 8000, 20000, 50000 ]
+        percentiles: [ 0, 500, 1000, 1500, 2000, 2500, 3500, 5000, 8000, 20000, 50000 ]
 
     TableColumnRelationshipsInfo:
       description: Detail info about connections (relationships) present for given column.
@@ -495,32 +564,32 @@ components:
           enum: [ one-to-one, one-to-many, many-to-one, many-to-many ]
         valueDistribution:
           $ref: "#/components/schemas/ValueDistribution"
+        percentiles:
+          $ref: "#/components/schemas/Percentiles"
 
     ValueDistribution:
       description: Distribution of values count in percentiles or dictionary distribution based on number of unique values.
-      type: object
-      properties:
-        percentiles:
-          type: array
-          description: Values at each 10th percentile of the column's distribution. This includes min, median and max by design (0th, 5th and 10th value).
-          items:
+      type: array
+      items:
+        type: object
+        properties:
+          value:
             oneOf:
               - type: string
               - type: integer
               - type: number
-        valuesDistribution:
-          type: array
-          items:
-            type: object
-            properties:
-              value:
-                oneOf:
-                  - type: string
-                  - type: integer
-                  - type: number
-                  - type: boolean
-              count:
-                type: integer
+              - type: boolean
+          count:
+            type: integer
+
+    Percentiles:
+      type: array
+      description: Values at each 10th percentile of the column's distribution. This includes min, median and max by design (0th, 5th and 10th value).
+      items:
+        oneOf:
+          - type: string
+          - type: integer
+          - type: number
 
     OperationBase:
       description: Common properties for all Operations.
