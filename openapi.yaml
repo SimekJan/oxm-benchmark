@@ -302,11 +302,26 @@ paths:
     post:
       tags: [ Run benchmark ]
       operationId: postBenchmarkRun
-      summary: Run the chosen queries on defined dataset
-      description: Run the chosen queries on defined dataset.
+      summary: Create a new ready run
+      description: Create a run in ready state (to be validated) from the chosen queries on defined dataset.
       responses:
         '201':
           $ref: "#/components/responses/SimpleIdResponse"
+        '400':
+          description: Bad request.
+
+  /benchmark/{benchmarkId}/runs/ready/{runId}:
+    parameters:
+      - $ref: "#/components/parameters/BenchmarkId"
+      - $ref: "#/components/parameters/RunId"
+    post:
+      tags: [ Run benchmark ]
+      operationId: startBenchmarkRun
+      summary: Start benchmark run
+      description: Start prepared benchmark run in ready state.
+      responses:
+        '201':
+          description: Successfully started.
         '400':
           description: Bad request.
 
@@ -882,7 +897,7 @@ components:
           format: uuid
         status:
           type: string
-          enum: [ running, finished, failed ]
+          enum: [ ready, running, finished, failed ]
         errorInfo:
           type: string
 
