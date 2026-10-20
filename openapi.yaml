@@ -689,13 +689,13 @@ components:
       required:
         - operation1
         - operation2
-        - type
+        - operationType
       properties:
         operation1:
           $ref: "#/components/schemas/BenchmarkOperation"
         operation2:
           $ref: "#/components/schemas/BenchmarkOperation"
-        type:
+        operationType:
           type: string
           enum: [ AND, OR ]
 
@@ -704,11 +704,11 @@ components:
       type: object
       required:
         - operation
-        - type
+        - operationType
       properties:
         operation:
           $ref: "#/components/schemas/BenchmarkOperation"
-        type:
+        operationType:
           type: string
           enum: [ NOT ]
 
@@ -718,8 +718,6 @@ components:
       oneOf:
         - $ref: "#/components/schemas/BinaryNestedOperation"
         - $ref: "#/components/schemas/UnaryNestedOperation"
-      discriminator:
-        propertyName: type
 
     NodeOperation:
       description: Operation not including nested operations.
@@ -740,13 +738,13 @@ components:
       required:
         - value
         - column
-        - type
+        - operationType
       properties:
         value:
           type: string
         column:
           $ref: "#/components/schemas/TableColumnBase"
-        type:
+        operationType:
           type: string
           enum: [ MATCH, LESS_THAN, MORE_THAN ]
 
@@ -757,7 +755,7 @@ components:
         - value1
         - value2
         - column
-        - type
+        - operationType
       properties:
         value1:
           type: string
@@ -765,7 +763,7 @@ components:
           type: string
         column:
           $ref: "#/components/schemas/TableColumnBase"
-        type:
+        operationType:
           type: string
           enum: [ RANGE ]
 
@@ -780,11 +778,11 @@ components:
       type: object
       required:
         - column
-        - type
+        - operationType
       properties:
         column:
           $ref: "#/components/schemas/TableColumnBase"
-        type:
+        operationType:
           type: string
           enum: [ SORT, COUNT, EXTREME ]
 
@@ -794,13 +792,13 @@ components:
       required:
         - column1
         - column2
-        - type
+        - operationType
       properties:
         column1:
           $ref: "#/components/schemas/TableColumnBase"
         column2:
           $ref: "#/components/schemas/TableColumnBase"
-        type:
+        operationType:
           type: string
           enum: [ JOIN ]
 

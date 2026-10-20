@@ -1,6 +1,7 @@
 package cz.cuni.mff.simekjan.relational;
 
-import javax.persistence.criteria.*;
+import jakarta.persistence.criteria.*;
+
 import java.util.List;
 
 import cz.cuni.mff.simekjan.relational.northwind.Customer;
@@ -8,11 +9,11 @@ import cz.cuni.mff.simekjan.relational.northwind.Order;
 
 import org.hibernate.cfg.Configuration;
 
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.EntityManager;
 
 public class CriteriaExample {
-    public static void main(String[] args) {
+    static void main(String[] args) {
 
         Configuration cfg = new Configuration();
         cfg.configure();
