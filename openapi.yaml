@@ -11,12 +11,26 @@ info:
   termsOfService: "https://example.com/terms"
 
 tags:
+  - name: Dataset
+    description: Endpoints to display datasets present in the benchmark framework.
+  - name: Benchmark
+    description: Endpoints to manage benchmarks present in the benchmark framework.
+  - name: Table
+    description: Endpoints to show and update tables in benchmark during config.
+  - name: Query
+    description: Endpoints to display query info during config.
+  - name: Operation
+    description: Endpoints to show and update operations in benchmark during config.
+  - name: Column
+    description: Endpoints to show and update columns in benchmark during config.
+  - name: Run
+    description: Endpoints to start and manage benchmark runs.
   - name: Initial config
-    description: Operations needed before the initial benchmark creation.
+    description: Endpoints needed before the initial benchmark creation.
   - name: Benchmark config
     description: Detailed configuration of benchmark.
   - name: Run benchmark
-    description: Operations for running and analyzing benchmark runs.
+    description: Endpoints for running and analyzing benchmark runs.
 
 security:
   - BearerAuth: [ ]
@@ -24,7 +38,7 @@ security:
 paths:
   /datasets:
     get:
-      tags: [ Initial config ]
+      tags: [ Dataset, Initial config ]
       operationId: getDatasets
       summary: Get all available datasets
       description: Get all available datasets.
@@ -42,7 +56,7 @@ paths:
     parameters:
       - $ref: "#/components/parameters/DatasetId"
     get:
-      tags: [ Initial config ]
+      tags: [ Dataset, Initial config ]
       operationId: getQueries
       summary: Get all query sets prepared in the app for given dataset
       description: There will probably be only one query set per dataset in our implementation.
@@ -58,7 +72,7 @@ paths:
 
   /benchmarks:
     get:
-      tags: [ Initial config ]
+      tags: [ Benchmark, Initial config ]
       operationId: getAllBenchmarks
       summary: Get all Benchmarks
       description: Get all benchmarks in the running application.
@@ -74,7 +88,7 @@ paths:
         '400':
           description: Bad request.
     post:
-      tags: [ Initial config ]
+      tags: [ Benchmark, Initial config ]
       operationId: postBenchmark
       summary: Create new benchmark
       description: Create new benchmark.
@@ -94,7 +108,7 @@ paths:
     parameters:
       - $ref: "#/components/parameters/BenchmarkId"
     get:
-      tags: [ Benchmark config ]
+      tags: [ Benchmark, Benchmark config ]
       operationId: getBenchmark
       summary: Get info about given benchmark
       description: Get info about given benchmark with analyzation step results.
@@ -108,12 +122,11 @@ paths:
         '400':
           description: Bad request.
 
-  /benchmarks/{benchmarkId}/tables/{tableId}:
+  /tables/{tableId}:
     parameters:
-      - $ref: "#/components/parameters/BenchmarkId"
       - $ref: "#/components/parameters/TableId"
     get:
-      tags: [ Benchmark config ]
+      tags: [ Table, Benchmark config ]
       operationId: getTable
       summary: Get table detail
       description: Get benchmark's specific table (of a dataset) based on ID.
@@ -127,7 +140,7 @@ paths:
         '400':
           description: Bad request.
     put:
-      tags: [ Benchmark config ]
+      tags: [ Table, Benchmark config ]
       operationId: updateTableSize
       summary: Update table size
       description: Update table entities count.
@@ -142,12 +155,11 @@ paths:
         '400':
           description: Bad request.
 
-  /benchmarks/{benchmarkId}/queries/{queryId}:
+  /queries/{queryId}:
     parameters:
-      - $ref: "#/components/parameters/BenchmarkId"
       - $ref: "#/components/parameters/QueryId"
     get:
-      tags: [ Benchmark config ]
+      tags: [ Query, Benchmark config ]
       operationId: getQuery
       summary: Get query detail
       description: Get dataset's query operation based on ID.
@@ -161,12 +173,11 @@ paths:
         '400':
           description: Bad request.
 
-  /benchmarks/{benchmarkId}/operations/{operationId}:
+  /operations/{operationId}:
     parameters:
-      - $ref: "#/components/parameters/BenchmarkId"
       - $ref: "#/components/parameters/BenchmarkOperationId"
     get:
-      tags: [ Benchmark config ]
+      tags: [ Operation, Benchmark config ]
       operationId: getOperations
       summary: Get operation detail
       description: Get benchmark's specific operation based on ID.
@@ -180,12 +191,11 @@ paths:
         '400':
           description: Bad request.
 
-  /benchmarks/{benchmarkId}/operations/exact-value/{operationId}:
+  /operations/exact-value/{operationId}:
     parameters:
-      - $ref: "#/components/parameters/BenchmarkId"
       - $ref: "#/components/parameters/BenchmarkOperationId"
     put:
-      tags: [ Benchmark config ]
+      tags: [ Operation, Benchmark config ]
       operationId: updateOperation
       summary: Update exact value operation
       description: Update exact value operation's value(s).
@@ -200,12 +210,11 @@ paths:
         '400':
           description: Bad request.
 
-  /benchmarks/{benchmarkId}/columns/{columnId}:
+  /columns/{columnId}:
     parameters:
-      - $ref: "#/components/parameters/BenchmarkId"
       - $ref: "#/components/parameters/ColumnId"
     get:
-      tags: [ Benchmark config ]
+      tags: [ Column, Benchmark config ]
       operationId: getColumn
       summary: Get column detail
       description: Get benchmarks's specific column (of a dataset) based on ID.
@@ -219,12 +228,11 @@ paths:
         '400':
           description: Bad request.
 
-  /benchmarks/{benchmarkId}/columns/{columnId}/values:
+  /columns/{columnId}/values:
     parameters:
-      - $ref: "#/components/parameters/BenchmarkId"
       - $ref: "#/components/parameters/ColumnId"
     put:
-      tags: [ Benchmark config ]
+      tags: [ Column, Benchmark config ]
       operationId: updateColumnValues
       summary: Update column values
       description: Update column values distribution, indexing, count and other statistic.
@@ -239,12 +247,11 @@ paths:
         '400':
           description: Bad request.
 
-  /benchmarks/{benchmarkId}/columns/{columnId}/relationships:
+  /columns/{columnId}/relationships:
     parameters:
-      - $ref: "#/components/parameters/BenchmarkId"
       - $ref: "#/components/parameters/ColumnId"
     put:
-      tags: [ Benchmark config ]
+      tags: [ Column, Benchmark config ]
       operationId: updateColumnRelationships
       summary: Update column relationships
       description: Update column relationships distribution and other statistic.
@@ -259,12 +266,11 @@ paths:
         '400':
           description: Bad request.
 
-  /benchmarks/{benchmarkId}/columns/unused/{columnId}:
+  /columns/unused/{columnId}:
     parameters:
-      - $ref: "#/components/parameters/BenchmarkId"
       - $ref: "#/components/parameters/ColumnId"
     patch:
-      tags: [ Benchmark config ]
+      tags: [ Column, Benchmark config ]
       operationId: changeUnusedColumnVisibility
       summary: Change unused column visibility
       description: Remove or add column to/from unused in any query from benchmark execution.
@@ -280,11 +286,9 @@ paths:
         '400':
           description: Bad request.
 
-  /benchmarks/{benchmarkId}/runs:
-    parameters:
-      - $ref: "#/components/parameters/BenchmarkId"
+  /runs:
     get:
-      tags: [ Run benchmark ]
+      tags: [ Run, Run benchmark ]
       operationId: getAllRuns
       summary: Get all runs for a benchmark
       description: Get all run infos for a given benchmark.
@@ -300,7 +304,7 @@ paths:
         '400':
           description: Bad request.
     post:
-      tags: [ Run benchmark ]
+      tags: [ Run, Run benchmark ]
       operationId: postBenchmarkRun
       summary: Create a new ready run
       description: Create a run in ready state (to be validated) from the chosen queries on defined dataset.
@@ -310,12 +314,11 @@ paths:
         '400':
           description: Bad request.
 
-  /benchmark/{benchmarkId}/runs/ready/{runId}:
+  /runs/ready/{runId}:
     parameters:
-      - $ref: "#/components/parameters/BenchmarkId"
       - $ref: "#/components/parameters/RunId"
     post:
-      tags: [ Run benchmark ]
+      tags: [ Run, Run benchmark ]
       operationId: startBenchmarkRun
       summary: Start benchmark run
       description: Start prepared benchmark run in ready state.
@@ -325,12 +328,11 @@ paths:
         '400':
           description: Bad request.
 
-  /benchmark/{benchmarkId}/runs/failed/{runId}/rerun:
+  /runs/failed/{runId}/rerun:
     parameters:
-      - $ref: "#/components/parameters/BenchmarkId"
       - $ref: "#/components/parameters/RunId"
     post:
-      tags: [ Run benchmark ]
+      tags: [ Run, Run benchmark ]
       operationId: rerunBenchmark
       summary: Rerun failed benchmark
       description: Run failed benchmark run again or continue in it's execution from last successful batch.
@@ -349,12 +351,11 @@ paths:
         '400':
           description: Bad request.
 
-  /benchmarks/{benchmarkId}/runs/{runId}/results:
+  /runs/{runId}/results:
     parameters:
-      - $ref: "#/components/parameters/BenchmarkId"
       - $ref: "#/components/parameters/RunId"
     get:
-      tags: [ Run benchmark ]
+      tags: [ Run, Run benchmark ]
       operationId: getBenchmarkResult
       summary: Get detail result of given run of given benchmark
       description: Get detail result of given run of given benchmark.
@@ -485,10 +486,15 @@ components:
       type: object
       required:
         - id
+        - datasetId
         - name
       properties:
         id:
           type: string
+          format: uuid
+        datasetId:
+          type: string
+          format: uuid
         name:
           type: string
         description:
@@ -521,8 +527,10 @@ components:
       properties:
         id:
           type: string
+          format: uuid
         tableId:
           type: string
+          format: uuid
         name:
           type: string
         type:
@@ -650,6 +658,7 @@ components:
       properties:
         id:
           type: string
+          format: uuid
         name:
           type: string
         resultsCount:
@@ -817,6 +826,7 @@ components:
       properties:
         id:
           type: string
+          format: uuid
         name:
           type: string
         description:
