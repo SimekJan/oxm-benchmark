@@ -7,13 +7,16 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import lombok.Data;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
 import java.util.UUID;
 
-@Getter
+@Data
+@NoArgsConstructor
 @Entity
 @Table(name = "dataset_queries")
 public class QueryEntity {
@@ -31,7 +34,4 @@ public class QueryEntity {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "dataset_id", nullable = false)
     private DatasetEntity dataset;
-
-    protected QueryEntity() {
-    }
 }
