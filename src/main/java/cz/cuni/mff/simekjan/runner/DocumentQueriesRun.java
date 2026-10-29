@@ -1,7 +1,7 @@
 package cz.cuni.mff.simekjan.runner;
 
-import cz.cuni.mff.simekjan.document.queries.basic.*;
-import cz.cuni.mff.simekjan.document.queries.complex.*;
+// import cz.cuni.mff.simekjan.document.queries.basic.*;
+// import cz.cuni.mff.simekjan.document.queries.complex.*;
 
 import java.util.List;
 
@@ -10,6 +10,7 @@ import java.util.List;
  */
 public class DocumentQueriesRun implements QueriesRun {
 
+    /*
     private static final Query01_select_indexed q1 = new Query01_select_indexed();
     private static final Query02_select_non_indexed q2 = new Query02_select_non_indexed();
     private static final Query03_range_query_indexed q3 = new Query03_range_query_indexed();
@@ -39,8 +40,10 @@ public class DocumentQueriesRun implements QueriesRun {
     private static final C_Query8_multi_join cq8 = new C_Query8_multi_join();
     private static final C_Query9_subquery cq9 = new C_Query9_subquery();
     private static final C_Query10_employee_report cq10 = new C_Query10_employee_report();
+    */
 
     private static final List<RunnableQuery> documentQueries = List.of(
+        /*
         new BoundedQuery<>(q1_params, q1::run),
         new BoundedQuery<>(q2_params, q2::run),
         new BoundedQuery<>(q3_params, q3::run),
@@ -70,6 +73,7 @@ public class DocumentQueriesRun implements QueriesRun {
         new BoundedQuery<>(qx_no_params, cq8::run),
         new BoundedQuery<>(qx_no_params, cq9::run),
         new BoundedQuery<>(cq10_params, cq10::run)
+        */
     );
 
     /**

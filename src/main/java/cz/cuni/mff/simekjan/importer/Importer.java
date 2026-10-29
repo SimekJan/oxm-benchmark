@@ -29,22 +29,22 @@ public class Importer {
         System.out.println(dbsUsed);
 
         if (dbsUsed.contains("mongo")) {
-            MongoImporter.run();
+            // MongoImporter.run();
             System.out.println("Data imported to MongoDB.");
         }
 
         if (dbsUsed.contains("mongoEmbedded")) {
-            EmbeddedMongoImporter.run();
+            // EmbeddedMongoImporter.run();
             System.out.print("Data imported to MongoDB in embedded schema.");
         }
 
         if (dbsUsed.contains("neo4j")) {
-            Neo4jImporter.run();
+            // Neo4jImporter.run();
             System.out.println("Data imported to Neo4j.");
         }
 
         if (dbsUsed.contains("postgres")) {
-            PostgresImporter.run();
+            // PostgresImporter.run();
             System.out.println("Data imported to PostgreSQL.");
         }
     }

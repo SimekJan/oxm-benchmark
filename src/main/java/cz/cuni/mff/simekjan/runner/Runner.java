@@ -4,8 +4,8 @@ import cz.cuni.mff.simekjan.ConfigLoader;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import cz.cuni.mff.simekjan.generator.Generator;
-import cz.cuni.mff.simekjan.graph.Neo4jSessionManager;
-import cz.cuni.mff.simekjan.relational.HibernateSessionManager;
+// import cz.cuni.mff.simekjan.graph.Neo4jSessionManager;
+// import cz.cuni.mff.simekjan.relational.HibernateSessionManager;
 import lombok.extern.slf4j.Slf4j;
 
 import java.nio.file.Path;
@@ -102,7 +102,7 @@ public class Runner {
             // Measurement
             for (int i = 0; i < numberOfRuns; i++) {
                 // For emptying caches
-                Neo4jSessionManager.getSession().clear();
+                // Neo4jSessionManager.getSession().clear();
 
                 results.add(runAll(run.getQueries()));
             }
@@ -126,7 +126,7 @@ public class Runner {
             // Measurement
             for (int i = 0; i < numberOfRuns; i++) {
                 // For emptying caches
-                HibernateSessionManager.getSession().clear();
+                // HibernateSessionManager.getSession().clear();
 
                 results.add(runAll(run.getQueries()));
             }
