@@ -51,6 +51,22 @@ paths:
                 $ref: "#/components/schemas/DatasetArray"
         '400':
           description: Bad request.
+    post:
+      tags: [ Dataset, Initial config ]
+      operationId: postDataset
+      summary: Create new dataset
+      description: Create new dataset in the app.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateDatasetCommand"
+      responses:
+        '202':
+          $ref: "#/components/responses/SimpleIdResponse"
+        '400':
+          description: Bad request.
 
   /datasets/{datasetId}/queries:
     parameters:
@@ -445,6 +461,90 @@ components:
         hide:
           type: boolean
 
+    CreateDatasetCommand:
+      description: Info about a new dataset to be created.
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+      oneOf:
+        - required:
+            - schema
+          properties:
+            schema:
+              $ref: "#/components/schemas/DatasetSchema"
+        - properties:
+            TBD:
+              type: string
+
+    DatasetSchema:
+      description: Dataset schema definition.
+      type: object
+      required:
+        - tables
+        - relationships
+      properties:
+        tables:
+          type: array
+          items:
+            type: object
+            required:
+              - name
+              - columns
+            properties:
+              name:
+                type: string
+              columns:
+                type: array
+                items:
+                  type: object
+                  required:
+                    - name
+                    - datatype
+                  properties:
+                    name:
+                      type: string
+                    datatype:
+                      type: string
+                      enum: [ string, boolean, integer, float, date ]
+                    indexed:
+                      type: boolean
+                    isKey:
+                      type: boolean
+                    optional:
+                      type: boolean
+        relationships:
+          type: array
+          items:
+            type: object
+            required:
+              - name
+              - fromTable
+              - fromColumn
+              - toTable
+              - toColumn
+              - relationshipType
+            properties:
+              name:
+                type: string
+              fromTable:
+                type: string
+              fromColumn:
+                type: string
+              toTable:
+                type: string
+              toColumn:
+                type: string
+              relationshipType:
+                type: string
+                enum: [ one-to-one, one-to-many, many-to-one, many-to-many ]
+              embeddable:
+                type: boolean
+
     DatasetArray:
       description: Array of dataset information.
       type: array
@@ -460,6 +560,7 @@ components:
       properties:
         id:
           type: string
+          format: uuid
         name:
           type: string
         description:
