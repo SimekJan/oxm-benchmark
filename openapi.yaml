@@ -462,24 +462,29 @@ components:
           type: boolean
 
     CreateDatasetCommand:
-      description: Info about a new dataset to be created.
+      oneOf:
+        - $ref: "#/components/schemas/CreateDatasetFromSchemaCommand"
+      discriminator:
+        propertyName: creationType
+        mapping:
+          schema: "#/components/schemas/CreateDatasetFromSchemaCommand"
+
+    CreateDatasetFromSchemaCommand:
       type: object
       required:
+        - creationType
         - name
+        - schema
       properties:
+        creationType:
+          type: string
+          enum: [ schema ]
         name:
           type: string
         description:
           type: string
-      oneOf:
-        - required:
-            - schema
-          properties:
-            schema:
-              $ref: "#/components/schemas/DatasetSchema"
-        - properties:
-            TBD:
-              type: string
+        schema:
+          $ref: "#/components/schemas/DatasetSchema"
 
     DatasetSchema:
       description: Dataset schema definition.

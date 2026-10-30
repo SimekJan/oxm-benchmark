@@ -1,12 +1,12 @@
 package cz.cuni.mff.simekjan.application.dataset;
 
 import cz.cuni.mff.simekjan.api.DatasetApi;
-import cz.cuni.mff.simekjan.model.DatasetInfo;
-import cz.cuni.mff.simekjan.model.QueryInfo;
+import cz.cuni.mff.simekjan.model.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 public class DatasetController implements DatasetApi {
@@ -22,7 +22,19 @@ public class DatasetController implements DatasetApi {
     }
 
     @Override
-    public ResponseEntity<List<QueryInfo>> getQueries(String datasetId) {
+    public ResponseEntity<List<QueryInfo>> getQueries(UUID datasetId) {
         return ResponseEntity.ok(datasetService.getQueries(datasetId));
+    }
+
+    @Override
+    public ResponseEntity<PostDataset202Response> postDataset(CreateDatasetFromSchemaCommand body) {
+        if (body.getSchema() == null) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        // TODO: finish this method
+        // Process the dataset creation logic here
+
+        return ResponseEntity.ok(new PostDataset202Response());
     }
 }

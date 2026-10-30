@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @Transactional(readOnly = true)
@@ -33,7 +34,7 @@ public class DatasetService {
             .toList();
     }
 
-    public List<QueryInfo> getQueries(String datasetId) {
+    public List<QueryInfo> getQueries(UUID datasetId) {
         return queryRepository.findAllByDataset_IdOrderByNameAsc(datasetId)
             .stream()
             .map(query -> {

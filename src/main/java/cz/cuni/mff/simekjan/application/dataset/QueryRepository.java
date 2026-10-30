@@ -7,5 +7,5 @@ import java.util.UUID;
 
 public interface QueryRepository extends JpaRepository<QueryEntity, UUID> {
 
-    List<QueryEntity> findAllByDataset_IdOrderByNameAsc(String datasetId);
+    List<QueryEntity> findAllByDataset_IdOrderByNameAsc(UUID datasetId);
 }
