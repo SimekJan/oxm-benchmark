@@ -1,5 +1,7 @@
 # OXM-benchmark 
 
+See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the application component names, responsibilities, and current implementation boundaries.
+
 ## Running the experiment
 ```bash
 # first run this to compile JAR file, or after changing Java code

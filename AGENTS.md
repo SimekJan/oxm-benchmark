@@ -23,6 +23,8 @@ The Docker workflow is defined in `compose.yaml`:
 
 ## Architecture and data flow
 
+For the application component boundaries and current versus intended responsibilities of the **Main App** and **Executor**, use [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) as the architecture reference. The benchmark pipeline below describes existing repository behavior; it does not redefine those application components.
+
 The key execution pattern is:
 
 1. `generator/` creates CSV/JSON files under `data/`.
