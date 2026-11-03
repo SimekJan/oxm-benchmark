@@ -86,6 +86,26 @@ paths:
         '400':
           description: Bad request.
 
+  /datasets/{datasetId}/status:
+    parameters:
+      - $ref: "#/components/parameters/DatasetId"
+    get:
+      tags: [ Dataset, Initial config ]
+      operationId: getDatasetRuntimeStatus
+      summary: Get dataset runtime status
+      description: Get the build and runtime status of the generated application for a dataset.
+      responses:
+        '200':
+          description: Current dataset runtime status.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DatasetRuntimeStatus"
+        '404':
+          description: Dataset not found.
+        '503':
+          description: Executor is unavailable.
+
   /benchmarks:
     get:
       tags: [ Benchmark, Initial config ]
@@ -569,6 +589,24 @@ components:
         name:
           type: string
         description:
+          type: string
+        runtimeStatus:
+          type: string
+          enum: [ BUILDING, READY, FAILED ]
+
+    DatasetRuntimeStatus:
+      type: object
+      required:
+        - datasetId
+        - status
+      properties:
+        datasetId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [ BUILDING, READY, FAILED ]
+        message:
           type: string
 
     DatasetDetail:

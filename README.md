@@ -68,3 +68,8 @@ mvn clean generate-sources
 ```
 in root directory. This will generate API endpoints interfaces to be implemented by the code and model for data transfer in the API methods.
 
+## Dynamic dataset executor
+
+The Compose stack includes an `executor` service on port `8081`. The main application sends each schema to this service when creating a dataset. The executor generates Java entity classes, compiles them in a dataset-specific directory under `data/executor`, and starts a separate supervised JVM process. Build and runtime status is available from `GET /datasets/{datasetId}/status` (`BUILDING`, `READY`, or `FAILED`).
+
+Dataset schemas and executor status are persisted so the main application can report state and the executor can rebuild its generated processes after restart. The generated runtime currently exposes only readiness and schema inspection endpoints. Existing column/table configuration routes in the public API describe benchmark distributions and sizes, not individual record CRUD; forwarding those configuration changes to regenerate records and connecting benchmark query execution to generated runtimes remain to be implemented.

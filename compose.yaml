@@ -52,6 +52,19 @@ services:
       retries: 20
       start_period: 5s
 
+  executor:
+    build: .
+    command:
+      - cz.cuni.mff.simekjan.executor.ExecutorApplication
+    environment:
+      SERVER_PORT: 8081
+      EXECUTOR_DATA_DIR: /data/executor
+      EXECUTOR_BUILD_CONCURRENCY: 2
+    ports:
+      - "8081:8081"
+    volumes:
+      - ./data/executor:/data/executor
+
   generator:
     build: .
     command:

@@ -27,14 +27,30 @@ public class DatasetController implements DatasetApi {
     }
 
     @Override
+    public ResponseEntity<DatasetRuntimeStatus> getDatasetRuntimeStatus(UUID datasetId) {
+        try {
+            return ResponseEntity.ok(datasetService.getRuntimeStatus(datasetId));
+        } catch (DatasetService.DatasetNotFoundException exception) {
+            return ResponseEntity.notFound().build();
+        } catch (DatasetService.ExecutorUnavailableException exception) {
+            return ResponseEntity.status(503).build();
+        }
+    }
+
+    @Override
     public ResponseEntity<PostDataset202Response> postDataset(CreateDatasetFromSchemaCommand body) {
-        if (body.getSchema() == null) {
+        if (body == null || body.getSchema() == null) {
             return ResponseEntity.badRequest().build();
         }
 
-        // TODO: finish this method
-        // Process the dataset creation logic here
-
-        return ResponseEntity.ok(new PostDataset202Response());
+        try {
+            PostDataset202Response response = new PostDataset202Response();
+            response.setId(datasetService.createDataset(body));
+            return ResponseEntity.accepted().body(response);
+        } catch (DatasetService.ExecutorUnavailableException exception) {
+            return ResponseEntity.status(503).build();
+        } catch (IllegalArgumentException exception) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 }
