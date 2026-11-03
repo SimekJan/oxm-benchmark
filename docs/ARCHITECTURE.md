@@ -18,6 +18,8 @@ flowchart TD
 
 The Main App is the API-facing application. The external client calls its API; client implementation and behavior are outside this project's scope. The Main App owns API handling and dataset metadata. It orchestrates dataset runtime creation by asking the Executor to build and start a JVM for the dataset, then uses that runtime to apply data updates and run queries against the selected databases.
 
+See [MAIN_APP.md](MAIN_APP.md) for the planned internal Spring workflow and its relationship to OpenAPI operations.
+
 ## Executor
 
 The Executor is a separate service called by the Main App. It prepares and launches the dataset-specific JVM runtime from a schema or entity Java classes. The runtime is intended to connect to the selected databases, create the tables represented by its entities, and manage the connections used for updates and query runs. The Main App invokes runtime operations; the Executor builds and supervises the runtime.
