@@ -12,6 +12,15 @@ flowchart TD
     Executor -->|Build and launch| Runtime[Dataset JVM runtime]
     MainApp -->|Data updates and query runs| Runtime
     Runtime -->|Create tables and manage connections| Databases
+
+    classDef container stroke:#2563EB,stroke-width:1.5px
+    classDef external stroke:#64748B,stroke-width:1.5px
+    classDef docker stroke:#82CAFF,stroke-width:1.5px
+    classDef runtime stroke:#151B54,stroke-width:1.5px
+    class MainApp,Executor,Databases container
+    class Client external
+    class Compose docker
+    class Runtime runtime
 ```
 
 ## Main App (Spring Boot)

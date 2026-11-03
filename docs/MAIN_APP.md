@@ -30,6 +30,13 @@ flowchart TD
     Runtime -->|Results and timings| Runner
     Runner --> API
     API -->|Status or results when requested| Client
+
+    classDef external stroke:#64748B,stroke-width:1.5px
+    classDef mainApp stroke:#2563EB,stroke-width:1.5px
+    classDef execution stroke:#D97706,stroke-width:1.5px
+    class Client,Databases external
+    class API,Analyzer,Generator,Runner,Metadata mainApp
+    class Executor,Runtime execution
 ```
 
 ### 1. Accept and Analyze
