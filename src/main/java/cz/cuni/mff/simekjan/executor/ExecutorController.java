@@ -2,6 +2,7 @@ package cz.cuni.mff.simekjan.executor;
 
 import cz.cuni.mff.simekjan.model.CreateDatasetFromSchemaCommand;
 import cz.cuni.mff.simekjan.model.DatasetRuntimeStatus;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -12,15 +13,12 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.UUID;
 
+@RequiredArgsConstructor
 @RestController
 @RequestMapping("/internal/datasets")
 public class ExecutorController {
 
     private final DatasetBuildService datasetBuildService;
-
-    public ExecutorController(DatasetBuildService datasetBuildService) {
-        this.datasetBuildService = datasetBuildService;
-    }
 
     @PostMapping("/{datasetId}")
     public ResponseEntity<DatasetRuntimeStatus> createDataset(
