@@ -6,10 +6,6 @@ import com.sun.net.httpserver.HttpServer;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
 
@@ -21,16 +17,10 @@ public final class DatasetRuntimeMain {
     static void main(String[] args) throws Exception {
         Map<String, String> arguments = arguments(args);
         int port = Integer.parseInt(required(arguments, "port"));
-        String schema = Files.readString(Path.of(required(arguments, "schema")), StandardCharsets.UTF_8);
-        List<String> generatedClasses = List.of(required(arguments, "classes").split(","));
-        for (String generatedClass : generatedClasses) {
-            Class.forName(generatedClass, true, DatasetRuntimeMain.class.getClassLoader());
-        }
 
         HttpServer server = HttpServer.create(new InetSocketAddress(port), 0);
         server.setExecutor(Executors.newCachedThreadPool());
         server.createContext("/health", exchange -> respond(exchange, 200, "{\"status\":\"READY\"}"));
-        server.createContext("/schema", exchange -> respond(exchange, 200, schema));
         Runtime.getRuntime().addShutdownHook(new Thread(() -> server.stop(0)));
         server.start();
     }

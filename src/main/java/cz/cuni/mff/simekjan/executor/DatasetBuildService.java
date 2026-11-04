@@ -1,9 +1,7 @@
 package cz.cuni.mff.simekjan.executor;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import cz.cuni.mff.simekjan.model.CreateDatasetFromSchemaCommand;
 import cz.cuni.mff.simekjan.model.DatasetRuntimeStatus;
-import cz.cuni.mff.simekjan.model.DatasetSchema;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import org.slf4j.Logger;
@@ -27,8 +25,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
@@ -41,7 +41,6 @@ public class DatasetBuildService {
     private static final int STARTUP_TIMEOUT_SECONDS = 30;
 
     private final ObjectMapper objectMapper;
-    private final DatasetSourceGenerator sourceGenerator = new DatasetSourceGenerator();
     private final Path dataDirectory;
     private final Executor buildExecutor;
     private final Map<UUID, DatasetRuntimeStatus> statuses = new ConcurrentHashMap<>();
@@ -69,30 +68,74 @@ public class DatasetBuildService {
         }
     }
 
-    public DatasetRuntimeStatus submit(UUID datasetId, CreateDatasetFromSchemaCommand command) {
-        if (command == null || command.getSchema() == null) {
-            throw new IllegalArgumentException("Dataset schema is required");
+    public synchronized void uploadSources(UUID datasetId, String sourceType, JavaSourceBundle bundle) {
+        if (!"entities".equals(sourceType) && !"queries".equals(sourceType)) {
+            throw new IllegalArgumentException("Unsupported Java source type");
         }
-        DatasetSourceGenerator.validateSchema(command.getSchema());
+        if (bundle == null || bundle.files() == null || bundle.files().isEmpty()) {
+            throw new IllegalArgumentException("At least one Java source file is required");
+        }
         Path directory = datasetDirectory(datasetId);
-        if (Files.exists(directory.resolve("request.json"))) {
+        if (Files.exists(directory.resolve("start.requested"))) {
+            throw new IllegalArgumentException("Java sources cannot be changed after runtime startup is requested");
+        }
+
+        Path sourceRoot = directory.resolve(sourceType);
+        Set<Path> destinations = new HashSet<>();
+        for (JavaSourceBundle.JavaSourceFile file : bundle.files()) {
+            if (file == null || file.path() == null || file.content() == null || file.content().isBlank()) {
+                throw new IllegalArgumentException("Each Java source file must have a path and non-empty content");
+            }
+            Path relativePath;
+            try {
+                relativePath = Path.of(file.path());
+            } catch (RuntimeException exception) {
+                throw new IllegalArgumentException("Invalid Java source path", exception);
+            }
+            Path destination = sourceRoot.resolve(relativePath).normalize();
+            if (relativePath.isAbsolute() || !destination.startsWith(sourceRoot)
+                || !file.path().endsWith(".java") || !destinations.add(destination)) {
+                throw new IllegalArgumentException("Java source paths must be unique relative .java paths");
+            }
+        }
+
+        try {
+            clearDirectory(sourceRoot);
+            for (JavaSourceBundle.JavaSourceFile file : bundle.files()) {
+                Path destination = sourceRoot.resolve(file.path()).normalize();
+                Files.createDirectories(destination.getParent());
+                Files.writeString(destination, file.content(), StandardCharsets.UTF_8);
+            }
+        } catch (IOException exception) {
+            throw new IllegalStateException("Could not persist uploaded Java sources", exception);
+        }
+    }
+
+    public synchronized DatasetRuntimeStatus start(UUID datasetId) {
+        Path directory = datasetDirectory(datasetId);
+        Path entitySources = directory.resolve("entities");
+        Path querySources = directory.resolve("queries");
+        if (!(containsJavaSources(entitySources) && containsJavaSources(querySources))) {
+            throw new IllegalArgumentException("Entity and query Java sources must both be uploaded before startup");
+        }
+        if (Files.exists(directory.resolve("start.requested"))) {
             DatasetRuntimeStatus existing = getStatus(datasetId);
             if (existing != null) {
                 return existing;
             }
-            throw new IllegalStateException("Dataset runtime already exists without a readable status");
+            throw new IllegalStateException("Dataset startup was already requested without a readable status");
         }
 
         try {
             Files.createDirectories(directory);
-            objectMapper.writeValue(directory.resolve("request.json").toFile(), command);
+            Files.createFile(directory.resolve("start.requested"));
         } catch (IOException exception) {
-            throw new IllegalStateException("Could not persist dataset build request", exception);
+            throw new IllegalStateException("Could not persist dataset startup request", exception);
         }
 
         DatasetRuntimeStatus status = newStatus(datasetId, "BUILDING", "Build queued");
         saveStatus(status);
-        buildExecutor.execute(() -> buildAndStart(datasetId, command));
+        buildExecutor.execute(() -> buildAndStart(datasetId));
         return status;
     }
 
@@ -113,7 +156,7 @@ public class DatasetBuildService {
 
         Process process = processes.get(datasetId);
         if (status.getStatus() == DatasetRuntimeStatus.StatusEnum.READY && process != null && !process.isAlive()) {
-            status = newStatus(datasetId, "FAILED", "Generated application process exited");
+            status = newStatus(datasetId, "FAILED", "Uploaded application process exited");
             saveStatus(status);
         }
         return status;
@@ -135,36 +178,32 @@ public class DatasetBuildService {
     }
 
     private void recoverDataset(Path directory) {
-        Path requestPath = directory.resolve("request.json");
-        if (!Files.isRegularFile(requestPath)) {
+        Path startRequest = directory.resolve("start.requested");
+        if (!Files.isRegularFile(startRequest)) {
             return;
         }
         try {
             UUID datasetId = UUID.fromString(directory.getFileName().toString());
-            CreateDatasetFromSchemaCommand command =
-                objectMapper.readValue(requestPath.toFile(), CreateDatasetFromSchemaCommand.class);
-            DatasetRuntimeStatus status = newStatus(datasetId, "BUILDING", "Restarting generated application");
+            DatasetRuntimeStatus status = newStatus(datasetId, "BUILDING", "Restarting uploaded application");
             saveStatus(status);
-            buildExecutor.execute(() -> buildAndStart(datasetId, command));
-        } catch (IllegalArgumentException | IOException exception) {
-            LOGGER.error("Could not restore executor dataset from {}", requestPath, exception);
+            buildExecutor.execute(() -> buildAndStart(datasetId));
+        } catch (IllegalArgumentException exception) {
+            LOGGER.error("Could not restore executor dataset from {}", startRequest, exception);
         }
     }
 
-    private void buildAndStart(UUID datasetId, CreateDatasetFromSchemaCommand command) {
+    private void buildAndStart(UUID datasetId) {
         Path datasetDirectory = datasetDirectory(datasetId);
         try {
-            Path sourceDirectory = datasetDirectory.resolve("generated-sources");
             Path classesDirectory = datasetDirectory.resolve("classes");
-            Files.createDirectories(sourceDirectory);
             clearDirectory(classesDirectory);
             Files.createDirectories(classesDirectory);
 
-            List<String> generatedClasses =
-                sourceGenerator.generate(datasetId, command.getSchema(), sourceDirectory);
-            compile(sourceDirectory, classesDirectory);
-            Path schemaPath = datasetDirectory.resolve("schema.json");
-            objectMapper.writeValue(schemaPath.toFile(), command.getSchema());
+            List<Path> sourceDirectories = List.of(
+                datasetDirectory.resolve("entities"),
+                datasetDirectory.resolve("queries")
+            );
+            compile(sourceDirectories, classesDirectory);
             int port = reservePort();
             Path logPath = datasetDirectory.resolve("runtime.log");
             String classpath = System.getProperty("java.class.path")
@@ -174,20 +213,18 @@ public class DatasetBuildService {
                 javaPath.toString(),
                 "-cp", classpath,
                 DatasetRuntimeMain.class.getName(),
-                "--port", Integer.toString(port),
-                "--schema", schemaPath.toString(),
-                "--classes", String.join(",", generatedClasses)
+                "--port", Integer.toString(port)
             ).redirectErrorStream(true)
                 .redirectOutput(logPath.toFile())
                 .start();
             processes.put(datasetId, process);
 
             waitForReady(process, port, logPath);
-            DatasetRuntimeStatus status = newStatus(datasetId, "READY", "Generated application is ready");
+            DatasetRuntimeStatus status = newStatus(datasetId, "READY", "Uploaded application is ready");
             status.setMessage(status.getMessage() + " (port " + port + ")");
             saveStatus(status);
         } catch (IOException | RuntimeException exception) {
-            LOGGER.error("Failed to build or start generated application for dataset {}", datasetId, exception);
+            LOGGER.error("Failed to build or start uploaded application for dataset {}", datasetId, exception);
             Process process = processes.remove(datasetId);
             if (process != null) {
                 process.destroyForcibly();
@@ -203,18 +240,20 @@ public class DatasetBuildService {
         }
     }
 
-    private static void compile(Path sourceDirectory, Path classesDirectory) throws IOException {
+    private static void compile(List<Path> sourceDirectories, Path classesDirectory) throws IOException {
         JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
         if (compiler == null) {
-            throw new IllegalStateException("A JDK is required to compile generated dataset classes");
+            throw new IllegalStateException("A JDK is required to compile uploaded Java sources");
         }
 
-        List<Path> sourcePaths;
-        try (var paths = Files.walk(sourceDirectory)) {
-            sourcePaths = paths.filter(path -> path.toString().endsWith(".java")).toList();
+        List<Path> sourcePaths = new ArrayList<>();
+        for (Path sourceDirectory : sourceDirectories) {
+            try (var paths = Files.walk(sourceDirectory)) {
+                sourcePaths.addAll(paths.filter(path -> path.toString().endsWith(".java")).toList());
+            }
         }
         if (sourcePaths.isEmpty()) {
-            throw new IllegalStateException("No Java entity classes were generated");
+            throw new IllegalStateException("No Java source files were uploaded");
         }
 
         DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
@@ -234,7 +273,7 @@ public class DatasetBuildService {
                     .map(DatasetBuildService::formatDiagnostic)
                     .reduce((first, second) -> first + System.lineSeparator() + second)
                     .orElse("Unknown Java compiler error");
-                throw new IllegalArgumentException("Generated entity compilation failed: " + errors);
+                throw new IllegalArgumentException("Uploaded Java source compilation failed: " + errors);
             }
         }
     }
@@ -254,7 +293,7 @@ public class DatasetBuildService {
         URI healthUri = URI.create("http://127.0.0.1:" + port + "/health");
         while (System.nanoTime() < deadline) {
             if (!process.isAlive()) {
-                throw new IllegalStateException("Generated application exited; see " + logPath);
+                throw new IllegalStateException("Uploaded application exited; see " + logPath);
             }
             try {
                 HttpURLConnection connection = (HttpURLConnection) healthUri.toURL().openConnection();
@@ -269,7 +308,7 @@ public class DatasetBuildService {
                 Thread.sleep(100);
             }
         }
-        throw new IllegalStateException("Generated application did not become ready; see " + logPath);
+        throw new IllegalStateException("Uploaded application did not become ready; see " + logPath);
     }
 
     private Path datasetDirectory(UUID datasetId) {
@@ -278,6 +317,17 @@ public class DatasetBuildService {
             throw new IllegalArgumentException("Invalid dataset identifier");
         }
         return directory;
+    }
+
+    private static boolean containsJavaSources(Path directory) {
+        if (!Files.isDirectory(directory)) {
+            return false;
+        }
+        try (var paths = Files.walk(directory)) {
+            return paths.anyMatch(path -> path.toString().endsWith(".java"));
+        } catch (IOException exception) {
+            throw new IllegalStateException("Could not inspect uploaded Java sources", exception);
+        }
     }
 
     private void saveStatus(DatasetRuntimeStatus status) {

@@ -1,6 +1,5 @@
 package cz.cuni.mff.simekjan.executor;
 
-import cz.cuni.mff.simekjan.model.CreateDatasetFromSchemaCommand;
 import cz.cuni.mff.simekjan.model.DatasetRuntimeStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -20,13 +19,36 @@ public class ExecutorController {
 
     private final DatasetBuildService datasetBuildService;
 
-    @PostMapping("/{datasetId}")
-    public ResponseEntity<DatasetRuntimeStatus> createDataset(
+    @PostMapping("/{datasetId}/entities")
+    public ResponseEntity<Void> uploadEntitySources(
         @PathVariable UUID datasetId,
-        @RequestBody CreateDatasetFromSchemaCommand command
+        @RequestBody JavaSourceBundle bundle
     ) {
         try {
-            return ResponseEntity.accepted().body(datasetBuildService.submit(datasetId, command));
+            datasetBuildService.uploadSources(datasetId, "entities", bundle);
+            return ResponseEntity.ok().build();
+        } catch (IllegalArgumentException exception) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @PostMapping("/{datasetId}/queries")
+    public ResponseEntity<Void> uploadQuerySources(
+        @PathVariable UUID datasetId,
+        @RequestBody JavaSourceBundle bundle
+    ) {
+        try {
+            datasetBuildService.uploadSources(datasetId, "queries", bundle);
+            return ResponseEntity.ok().build();
+        } catch (IllegalArgumentException exception) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @PostMapping("/{datasetId}/start")
+    public ResponseEntity<DatasetRuntimeStatus> startDataset(@PathVariable UUID datasetId) {
+        try {
+            return ResponseEntity.accepted().body(datasetBuildService.start(datasetId));
         } catch (IllegalArgumentException exception) {
             return ResponseEntity.badRequest().build();
         }
