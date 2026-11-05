@@ -16,10 +16,10 @@ flowchart LR
     end
 
     INFERRED_SCHEMA(["Schema"])
-    INFERRED_OPERATIONS(["Operations"])
+    INFERRED_METADATA(["Metadata"])
     INITIAL_DATA(["Passed initial data (if any)"])
     SCHEMA_ANALYSER --> INFERRED_SCHEMA
-    SCHEMA_ANALYSER --> INFERRED_OPERATIONS
+    SCHEMA_ANALYSER --> INFERRED_METADATA
     SCHEMA_ANALYSER --> INITIAL_DATA
 
     subgraph SCHEMA_INFER["1 - Input analysis and metadata inferation"]
@@ -35,7 +35,7 @@ flowchart LR
 
     INFERRED_SCHEMA --> GENERATE
     INITIAL_DATA --> GENERATE
-    INFERRED_OPERATIONS <--> ADJUST
+    INFERRED_METADATA <--> ADJUST
 
     subgraph ZIP_PROJECT["Zip of user's project"]
         QUERIES_IN_CODE([Queries implemented in given OXMs])
@@ -77,5 +77,6 @@ flowchart LR
     style SCHEMA_INFER fill: #000000, stroke: #5027f1
     style CONFIG fill: #000000, stroke: #FCD34D
     style EXECUTION fill: #000000, stroke: #197629
+    style OUTPUTS fill: #000000, stroke: #93C5FD
     style ZIP_PROJECT fill: #111111, stroke: #222222
 ```
