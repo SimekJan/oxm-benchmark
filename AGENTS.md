@@ -23,7 +23,7 @@ The Docker workflow is defined in `compose.yaml`:
 
 ## Architecture and data flow
 
-For the application component boundaries and current versus intended responsibilities of the **Main App** and **Executor**, use [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) as the architecture reference. The benchmark pipeline below describes existing repository behavior; it does not redefine those application components.
+For the intended single-app architecture and Main App responsibilities, use [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). The benchmark pipeline below describes existing repository behavior; it remains separate from the Main App workflow.
 
 The key execution pattern is:
 

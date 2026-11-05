@@ -1,50 +1,73 @@
-# Application Components
+# Application Architecture
 
-The intended application has two in-scope components: the **Main App** and the **Executor**. Docker Compose is the runtime harness for the Main App, Executor, and selected database services. The client that operates the Main App through its API is external and out of scope. Databases are runtime dependencies, not application components.
+The application consists of one Spring Boot app. The external client calls the app's API; selected databases are dependencies, not additional application components. 
+
+## Main App Workflow
+
+The Main App's API coordinates analysis, dataset generation, query execution, and metadata storage within the same application. Generation and query execution operate directly against the selected databases.
 
 ```mermaid
 flowchart TD
-    Compose[Docker Compose harness] --> MainApp[Main App<br/>Spring Boot]
-    Compose --> Executor[Executor<br/>separate service]
-    Compose --> Databases[(Selected databases)]
-    Client[External client<br/>out of scope] -->|API| MainApp
-    MainApp -->|Request runtime creation| Executor
-    Executor -->|Build and launch| Runtime[Dataset JVM runtime]
-    MainApp -->|Data updates and query runs| Runtime
-    Runtime -->|Create tables and manage connections| Databases
+    
+    subgraph SPRING_BOOT_APP["Spring Boot application"]
+        API[Spring Boot API]
+        Analyzer[Analyzer]
+        DatasetWorkbench[Dataset Workbench]
+        Generator[Generator]
+        Metadata[(SQLite metadata)]
+    end
 
-    classDef container stroke:#2563EB,stroke-width:1.5px
+    RunInputs([Zipped app with entities and queries])
+    Runner[Runner]
+
+    RunInputs --> Runner
+
+    Client[External client] -->|API requests| API
+
+    API -->|Dataset definitions| Analyzer
+    API <--> DatasetWorkbench
+    API -->|Generate data| Generator
+
+    Analyzer --> DatasetWorkbench
+    Analyzer -->|Save analyzed schema| Metadata
+    
+    DatasetWorkbench -->|Schema, distributions + optional initial data| Generator
+    DatasetWorkbench <-->|Update distributions| Metadata
+    
+    Generator -->|Generated records| DataFiles[CSV or JSON files]
+    Generator -->|Generated records| Databases[(Selected databases / repositories)]
+    Generator -->|Uses metadata| Metadata
+    
+    Runner -->|Execute queries| Databases
+
+    Metadata ~~~ Databases
+    Metadata ~~~ DataFiles
+
     classDef external stroke:#64748B,stroke-width:1.5px
-    classDef docker stroke:#82CAFF,stroke-width:1.5px
-    classDef runtime stroke:#151B54,stroke-width:1.5px
-    class MainApp,Executor,Databases container
-    class Client external
-    class Compose docker
-    class Runtime runtime
+    classDef mainApp stroke:#2563EB,stroke-width:1.5px
+    class Client,Databases external
+    class API,Analyzer,Generator,Runner,Metadata,DatasetWorkbench mainApp
 ```
 
-## Main App (Spring Boot)
+### Responsibilities
 
-The Main App is the API-facing application. The external client calls its API; client implementation and behavior are outside this project's scope. The Main App owns API handling and dataset metadata. In the intended workflow, it sends the Java source files for a dataset to the Executor together as one bundle, then makes a separate request to build and start the runtime from those uploaded sources. That second request does not carry the schema or source bundle in its body. The Main App can obtain runtime status from the Executor and uses a started runtime for data updates and query runs against the selected databases.
+- The **API** implements the OpenAPI contract, accepts client commands, coordinates internal services, and returns status or results.
+- The **metadata store** holds dataset and workflow metadata. Generated benchmark records belong in the selected database repositories.
+- The **Dataset Definition & Profiling module** accepts dataset definitions in multiple formats, analyzes their structure, and lets users review and edit the resulting metadata on demand. Its **Analyzer** handles definition analysis and can profile supplied sample data to infer distributions and relationships. Possible future name can be **Dataset Workbench**.
+- On an explicit user command, the **Dataset Definition & Profiling module** sends the complete metadata to the Generator: schema, distributions, and optional initial data.
+- The **Generator** has one responsibility: generate dataset records from the supplied schema and distributions, optionally incorporating initial data, and either write the result as CSV or JSON files or save it directly to the selected databases.
+- The **Runner** executes queries against the selected databases, measures execution time, and collects per-query results. Needs Zipped ready project as input. Not decided exactly how will be connected to the rest of the app.
 
-See [MAIN_APP.md](MAIN_APP.md) for the planned internal Spring workflow and its relationship to OpenAPI operations.
+### Workflow
 
-## Executor
+1. **Accept and analyze.** The API receives dataset information and OXM/query definitions. The Analyzer validates them and prepares definitions for the internal generation and query workflows. The exact validation and preparation responsibilities remain to be detailed.
+2. **Generate or update records.** The Generator applies client-provided benchmark settings directly to the selected database repositories. The dataset is ready for benchmarking after required generation work completes successfully.
+3. **Run queries and return results.** The Runner executes queries against the selected databases, collects measurements and per-query results, and makes completed results available through the API.
 
-**Intended design:** The Executor receives the dataset's Java source files together as one bundle. A separate request tells it to compile those uploaded sources and build and start the dataset-specific JVM runtime; that request carries neither a schema nor the source bundle in its body. The Executor supervises the runtime and makes its status available to the Main App. The required source files and bundle format are open design decisions.
+## Docker Compose Harness and Scope
 
-**Current implementation:** The Main App sends a schema to the Executor in a create request. The Executor generates Java entity classes from that schema, compiles them, and starts a supervised JVM process. This is not the intended upload-then-build workflow described above.
+Docker Compose starts the Main App and selected database services. The client remains external and calls the Main App API.
 
-The runtime is intended to connect to the selected databases, create the tables represented by its entities, and manage the connections used for updates and query runs; those database responsibilities are not implemented yet.
-
-## Docker Compose Harness
-
-Compose starts the Main App, Executor, and selected database services together. The client remains outside the Compose application boundary and calls the Main App API.
-
-## Scope Boundaries
-
-- The **Main App** owns the public API and application-level dataset metadata.
-- The **Main App** orchestrates runtime creation and uses the resulting runtime for dataset updates and query runs.
-- The **Executor** is intended to compile uploaded Java sources, build and supervise the dataset-specific JVM, and expose its status to the Main App. Its current implementation instead generates entity sources from a schema; database connectivity and table lifecycle responsibilities are not implemented yet.
-- The **client** is an external API consumer, not an application component in this architecture.
-- The **selected databases** are external dependencies, not additional application components. They are started by Docker as containers or connection to them is added by user in `oxm_config.yaml` before the whole app starts.
+- The **Main App** owns the public API, application-level dataset metadata, generation workflow, and query-run workflow.
+- The **client** is an external API consumer, not an application component.
+- The **selected databases** are external dependencies. They can be started by Docker or configured in `oxm_config.yaml` before the app starts.

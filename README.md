@@ -1,6 +1,6 @@
 # OXM-benchmark 
 
-See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the application component names, responsibilities, and current implementation boundaries.
+See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the intended application architecture and Main App workflow. The implementation details below describe current runtime behavior.
 
 ## Running the experiment
 ```bash
