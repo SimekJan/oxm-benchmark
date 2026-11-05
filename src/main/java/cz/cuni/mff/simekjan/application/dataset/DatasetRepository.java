@@ -6,6 +6,4 @@ import java.util.List;
 import java.util.UUID;
 
 public interface DatasetRepository extends JpaRepository<DatasetEntity, UUID> {
-
-    List<DatasetEntity> findAllByOrderByNameAsc();
 }

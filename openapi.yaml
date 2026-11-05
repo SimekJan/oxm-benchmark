@@ -85,6 +85,41 @@ paths:
                 $ref: "#/components/schemas/QueryInfoArray"
         '400':
           description: Bad request.
+    post:
+      tags: [ Dataset, Initial config ]
+      operationId: postQuerySet
+      summary: Create new query set for given dataset
+      description: Create new query set for given dataset in the app.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateQuerySetCommand"
+      responses:
+        '202':
+          $ref: "#/components/responses/SimpleIdResponse"
+        '400':
+          description: Bad request.
+
+  /datasets/{datasetId}/queries/{queryId}:
+    parameters:
+      - $ref: "#/components/parameters/DatasetId"
+      - $ref: "#/components/parameters/QueryId"
+    get:
+      tags: [ Dataset, Benchmark config ]
+      operationId: getQuery
+      summary: Get query detail
+      description: Get dataset's query operation based on ID.
+      responses:
+        '200':
+          description: Successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QueryDetail"
+        '400':
+          description: Bad request.
 
   /datasets/{datasetId}/status:
     parameters:
@@ -188,24 +223,6 @@ paths:
       responses:
         '200':
           description: Successful response.
-        '400':
-          description: Bad request.
-
-  /queries/{queryId}:
-    parameters:
-      - $ref: "#/components/parameters/QueryId"
-    get:
-      tags: [ Query, Benchmark config ]
-      operationId: getQuery
-      summary: Get query detail
-      description: Get dataset's query operation based on ID.
-      responses:
-        '200':
-          description: Successful response.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/QueryDetail"
         '400':
           description: Bad request.
 
@@ -505,6 +522,33 @@ components:
           type: string
         schema:
           $ref: "#/components/schemas/DatasetSchema"
+
+    CreateQuerySetCommand:
+      description: Command containing the query files to add to a dataset.
+      type: object
+      required:
+        - files
+      properties:
+        files:
+          type: array
+          items:
+            type: object
+            required:
+              - name
+              - format
+              - content
+            properties:
+              name:
+                type: string
+              format:
+                $ref: "#/components/schemas/QueryFileFormat"
+              content:
+                type: string
+
+    QueryFileFormat:
+      description: Supported source formats for query files.
+      type: string
+      enum: [ .java, .sql ]
 
     DatasetSchema:
       description: Dataset schema definition.

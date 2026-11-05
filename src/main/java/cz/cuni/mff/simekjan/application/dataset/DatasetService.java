@@ -1,50 +1,28 @@
 package cz.cuni.mff.simekjan.application.dataset;
 
+import cz.cuni.mff.simekjan.application.column.ColumnEntity;
+import cz.cuni.mff.simekjan.application.table.TableEntity;
 import cz.cuni.mff.simekjan.model.DatasetInfo;
 import cz.cuni.mff.simekjan.model.DatasetRuntimeStatus;
 import cz.cuni.mff.simekjan.model.QueryInfo;
 import cz.cuni.mff.simekjan.model.CreateDatasetFromSchemaCommand;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
 
+@RequiredArgsConstructor
 @Service
 @Transactional(readOnly = true)
 public class DatasetService {
 
     private final DatasetRepository datasetRepository;
     private final QueryRepository queryRepository;
-    private final ObjectMapper objectMapper;
-    private final ExecutorClient executorClient;
-
-    public DatasetService(
-        DatasetRepository datasetRepository,
-        QueryRepository queryRepository,
-        ObjectMapper objectMapper,
-        ExecutorClient executorClient
-    ) {
-        this.datasetRepository = datasetRepository;
-        this.queryRepository = queryRepository;
-        this.objectMapper = objectMapper;
-        this.executorClient = executorClient;
-    }
 
     public List<DatasetInfo> getDatasets() {
-        return datasetRepository.findAllByOrderByNameAsc()
-            .stream()
-            .map(dataset -> {
-                DatasetInfo info = new DatasetInfo(dataset.getId(), dataset.getName());
-                info.setDescription(dataset.getDescription());
-                if (dataset.getRuntimeStatus() != null) {
-                    info.setRuntimeStatus(DatasetInfo.RuntimeStatusEnum.fromValue(dataset.getRuntimeStatus()));
-                }
-                return info;
-            })
-            .toList();
+        return null;
     }
 
     @Transactional(noRollbackFor = ExecutorUnavailableException.class)
@@ -57,40 +35,35 @@ public class DatasetService {
         dataset.setName(command.getName());
         dataset.setDescription(command.getDescription());
         dataset.setRuntimeStatus("BUILDING");
-        try {
-            dataset.setSchemaJson(objectMapper.writeValueAsString(command.getSchema()));
-        } catch (JsonProcessingException exception) {
-            throw new IllegalArgumentException("Dataset schema could not be serialized", exception);
+
+        for (var tableSchema : command.getSchema().getTables()) {
+            TableEntity table = new TableEntity();
+            table.setId(UUID.randomUUID());
+            table.setName(tableSchema.getName());
+            table.setDataset(dataset);
+
+            for (var columnSchema : tableSchema.getColumns()) {
+                ColumnEntity column = new ColumnEntity();
+                column.setId(UUID.randomUUID());
+                column.setName(columnSchema.getName());
+                column.setDatatype(columnSchema.getDatatype().getValue());
+                column.setIndexed(columnSchema.getIndexed());
+                column.setPartOfKey(columnSchema.getIsKey());
+                column.setOptional(columnSchema.getOptional());
+                column.setTable(table);
+                table.getColumns().add(column);
+            }
+
+            dataset.getTables().add(table);
         }
 
         datasetRepository.saveAndFlush(dataset);
-        try {
-            DatasetRuntimeStatus status = executorClient.createDataset(datasetId, command);
-            updateRuntimeStatus(dataset, status);
-            datasetRepository.saveAndFlush(dataset);
-        } catch (ExecutorClient.ExecutorRequestException exception) {
-            dataset.setRuntimeStatus("FAILED");
-            dataset.setRuntimeMessage(exception.getMessage());
-            datasetRepository.saveAndFlush(dataset);
-            throw new ExecutorUnavailableException(exception);
-        }
-
         return datasetId;
     }
 
     @Transactional
     public DatasetRuntimeStatus getRuntimeStatus(UUID datasetId) {
-        DatasetEntity dataset = datasetRepository.findById(datasetId)
-            .orElseThrow(() -> new DatasetNotFoundException(datasetId));
-        DatasetRuntimeStatus status;
-        try {
-            status = executorClient.getStatus(datasetId);
-        } catch (ExecutorClient.ExecutorRequestException exception) {
-            throw new ExecutorUnavailableException(exception);
-        }
-        updateRuntimeStatus(dataset, status);
-        datasetRepository.saveAndFlush(dataset);
-        return status;
+        return null;
     }
 
     public List<QueryInfo> getQueries(UUID datasetId) {
@@ -111,11 +84,6 @@ public class DatasetService {
         if (command.getSchema().getTables() == null || command.getSchema().getTables().isEmpty()) {
             throw new IllegalArgumentException("Dataset schema must contain at least one table");
         }
-    }
-
-    private static void updateRuntimeStatus(DatasetEntity dataset, DatasetRuntimeStatus status) {
-        dataset.setRuntimeStatus(status.getStatus().getValue());
-        dataset.setRuntimeMessage(status.getMessage());
     }
 
     public static class DatasetNotFoundException extends RuntimeException {

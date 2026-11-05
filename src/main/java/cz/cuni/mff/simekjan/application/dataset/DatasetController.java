@@ -2,19 +2,18 @@ package cz.cuni.mff.simekjan.application.dataset;
 
 import cz.cuni.mff.simekjan.api.DatasetApi;
 import cz.cuni.mff.simekjan.model.*;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 import java.util.UUID;
 
+@RequiredArgsConstructor
 @RestController
 public class DatasetController implements DatasetApi {
-    private final DatasetService datasetService;
 
-    public DatasetController(DatasetService datasetService) {
-        this.datasetService = datasetService;
-    }
+    private final DatasetService datasetService;
 
     @Override
     public ResponseEntity<List<DatasetInfo>> getDatasets() {
@@ -24,6 +23,11 @@ public class DatasetController implements DatasetApi {
     @Override
     public ResponseEntity<List<QueryInfo>> getQueries(UUID datasetId) {
         return ResponseEntity.ok(datasetService.getQueries(datasetId));
+    }
+
+    @Override
+    public ResponseEntity<QueryDetail> getQuery(UUID datasetId, UUID queryId) {
+        return null;
     }
 
     @Override
@@ -52,5 +56,10 @@ public class DatasetController implements DatasetApi {
         } catch (IllegalArgumentException exception) {
             return ResponseEntity.badRequest().build();
         }
+    }
+
+    @Override
+    public ResponseEntity<PostDataset202Response> postQuerySet(UUID datasetId, CreateQuerySetCommand createQuerySetCommand) {
+        return null;
     }
 }
