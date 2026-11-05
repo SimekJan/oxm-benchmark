@@ -25,10 +25,10 @@ flowchart TD
     Client[External client] -->|API requests| API
 
     API -->|Dataset definitions| Analyzer
-    API <--> DatasetWorkbench
+    API <-->|Updates to data| DatasetWorkbench
     API -->|Generate data| Generator
 
-    Analyzer --> DatasetWorkbench
+    Analyzer -->|Uniform DB schema| DatasetWorkbench
     Analyzer -->|Save analyzed schema| Metadata
     
     DatasetWorkbench -->|Schema, distributions + optional initial data| Generator
