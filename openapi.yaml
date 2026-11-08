@@ -101,6 +101,8 @@ paths:
           $ref: "#/components/responses/SimpleIdResponse"
         '400':
           description: Bad request.
+        '501':
+          description: Query sets for the provided file format are not implemented.
 
   /datasets/{datasetId}/queries/{queryId}:
     parameters:

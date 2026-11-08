@@ -7,6 +7,9 @@ import cz.cuni.mff.simekjan.application.table.TableEntity;
 import cz.cuni.mff.simekjan.model.DatasetInfo;
 import cz.cuni.mff.simekjan.model.DatasetRuntimeStatus;
 import cz.cuni.mff.simekjan.model.QueryInfo;
+import cz.cuni.mff.simekjan.model.CreateQuerySetCommand;
+import cz.cuni.mff.simekjan.model.CreateQuerySetCommandFilesInner;
+import cz.cuni.mff.simekjan.model.QueryFileFormat;
 import cz.cuni.mff.simekjan.model.CreateDatasetFromDatabaseCommand;
 import cz.cuni.mff.simekjan.model.CreateDatasetFromFileCommand;
 import cz.cuni.mff.simekjan.model.CreateDatasetFromSchemaCommand;
@@ -119,6 +122,35 @@ public class DatasetService {
             .toList();
     }
 
+    public UUID createQuerySet(UUID datasetId, CreateQuerySetCommand command) {
+        if (command == null || command.getFiles() == null || command.getFiles().isEmpty()) {
+            throw new IllegalArgumentException("At least one query file is required");
+        }
+
+        UUID querySetId = UUID.randomUUID();
+        for (CreateQuerySetCommandFilesInner file : command.getFiles()) {
+            if (file == null || file.getName() == null || file.getName().isBlank()
+                || file.getFormat() == null || file.getContent() == null) {
+                throw new IllegalArgumentException("Query files must have a name, format, and content");
+            }
+
+            if (file.getFormat() == QueryFileFormat._SQL) {
+                createSqlQuery(datasetId, querySetId, file);
+            } else {
+                createJavaQuery(datasetId, querySetId, file);
+            }
+        }
+        return querySetId;
+    }
+
+    private void createSqlQuery(UUID datasetId, UUID querySetId, CreateQuerySetCommandFilesInner file) {
+        throw new QuerySetCreationNotSupportedException(QueryFileFormat._SQL.getValue());
+    }
+
+    private void createJavaQuery(UUID datasetId, UUID querySetId, CreateQuerySetCommandFilesInner file) {
+        throw new QuerySetCreationNotSupportedException(QueryFileFormat._JAVA.getValue());
+    }
+
     private static void validateSchema(CreateDatasetFromSchemaCommand command) {
         if (command == null || command.getSchema() == null) {
             throw new IllegalArgumentException("Dataset schema is required");
@@ -207,6 +239,12 @@ public class DatasetService {
     public static class DatasetCreationNotSupportedException extends RuntimeException {
         public DatasetCreationNotSupportedException(String creationType) {
             super("Dataset creation type is not implemented: " + creationType);
+        }
+    }
+
+    public static class QuerySetCreationNotSupportedException extends RuntimeException {
+        public QuerySetCreationNotSupportedException(String format) {
+            super("Query set creation is not implemented for file format: " + format);
         }
     }
 }

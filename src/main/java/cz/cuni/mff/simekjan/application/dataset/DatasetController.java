@@ -79,6 +79,14 @@ public class DatasetController implements DatasetApi {
 
     @Override
     public ResponseEntity<PostDataset202Response> postQuerySet(UUID datasetId, CreateQuerySetCommand createQuerySetCommand) {
-        return null;
+        try {
+            PostDataset202Response response = new PostDataset202Response();
+            response.setId(datasetService.createQuerySet(datasetId, createQuerySetCommand));
+            return ResponseEntity.accepted().body(response);
+        } catch (DatasetService.QuerySetCreationNotSupportedException exception) {
+            return ResponseEntity.status(501).build();
+        } catch (IllegalArgumentException exception) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 }
