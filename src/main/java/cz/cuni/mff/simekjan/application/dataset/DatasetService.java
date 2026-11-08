@@ -43,6 +43,7 @@ public class DatasetService {
         dataset.setId(datasetId);
         dataset.setName(command.getName());
         dataset.setDescription(command.getDescription());
+        dataset.setSchemaReady(true);
         dataset.setRuntimeStatus("BUILDING");
 
         Map<String, TableEntity> tablesByName = new HashMap<>();
@@ -90,6 +91,7 @@ public class DatasetService {
     }
 
     public UUID createDatasetWithoutSchema(CreateDatasetWithoutSchemaCommand command) {
+        // Set schemaReady to false for datasets without schema
         throw new DatasetCreationNotSupportedException("none");
     }
 

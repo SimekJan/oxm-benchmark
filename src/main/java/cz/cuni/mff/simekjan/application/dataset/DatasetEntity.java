@@ -11,6 +11,7 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
@@ -33,6 +34,10 @@ public class DatasetEntity {
     private String name;
 
     private String description;
+
+    @Column(nullable = false)
+    @ColumnDefault("true")
+    private boolean schemaReady = true;
 
     @OneToMany(mappedBy = "dataset", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<TableEntity> tables = new ArrayList<>();
