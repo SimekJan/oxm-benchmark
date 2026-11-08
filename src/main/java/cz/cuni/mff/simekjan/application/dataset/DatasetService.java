@@ -5,7 +5,10 @@ import cz.cuni.mff.simekjan.application.table.TableEntity;
 import cz.cuni.mff.simekjan.model.DatasetInfo;
 import cz.cuni.mff.simekjan.model.DatasetRuntimeStatus;
 import cz.cuni.mff.simekjan.model.QueryInfo;
+import cz.cuni.mff.simekjan.model.CreateDatasetFromDatabaseCommand;
+import cz.cuni.mff.simekjan.model.CreateDatasetFromFileCommand;
 import cz.cuni.mff.simekjan.model.CreateDatasetFromSchemaCommand;
+import cz.cuni.mff.simekjan.model.CreateDatasetWithoutSchemaCommand;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,7 +29,7 @@ public class DatasetService {
     }
 
     @Transactional(noRollbackFor = ExecutorUnavailableException.class)
-    public UUID createDataset(CreateDatasetFromSchemaCommand command) {
+    public UUID createDatasetFromSchema(CreateDatasetFromSchemaCommand command) {
         validateSchema(command);
         UUID datasetId = UUID.randomUUID();
 
@@ -61,6 +64,18 @@ public class DatasetService {
         return datasetId;
     }
 
+    public UUID createDatasetWithoutSchema(CreateDatasetWithoutSchemaCommand command) {
+        throw new DatasetCreationNotSupportedException("none");
+    }
+
+    public UUID createDatasetFromDatabase(CreateDatasetFromDatabaseCommand command) {
+        throw new DatasetCreationNotSupportedException("database");
+    }
+
+    public UUID createDatasetFromFile(CreateDatasetFromFileCommand command) {
+        throw new DatasetCreationNotSupportedException("file");
+    }
+
     @Transactional
     public DatasetRuntimeStatus getRuntimeStatus(UUID datasetId) {
         return null;
@@ -78,6 +93,9 @@ public class DatasetService {
     }
 
     private static void validateSchema(CreateDatasetFromSchemaCommand command) {
+        if (command == null || command.getSchema() == null) {
+            throw new IllegalArgumentException("Dataset schema is required");
+        }
         if (command.getName() == null || command.getName().isBlank()) {
             throw new IllegalArgumentException("Dataset name must not be blank");
         }
@@ -95,6 +113,12 @@ public class DatasetService {
     public static class ExecutorUnavailableException extends RuntimeException {
         public ExecutorUnavailableException(Throwable cause) {
             super("Dataset executor is unavailable", cause);
+        }
+    }
+
+    public static class DatasetCreationNotSupportedException extends RuntimeException {
+        public DatasetCreationNotSupportedException(String creationType) {
+            super("Dataset creation type is not implemented: " + creationType);
         }
     }
 }

@@ -500,11 +500,26 @@ components:
 
     CreateDatasetCommand:
       oneOf:
+        - $ref: "#/components/schemas/CreateDatasetWithoutSchemaCommand"
         - $ref: "#/components/schemas/CreateDatasetFromSchemaCommand"
+        - $ref: "#/components/schemas/CreateDatasetFromDatabaseCommand"
+        - $ref: "#/components/schemas/CreateDatasetFromFileCommand"
       discriminator:
         propertyName: creationType
         mapping:
+          none: "#/components/schemas/CreateDatasetWithoutSchemaCommand"
           schema: "#/components/schemas/CreateDatasetFromSchemaCommand"
+          database: "#/components/schemas/CreateDatasetFromDatabaseCommand"
+          file: "#/components/schemas/CreateDatasetFromFileCommand"
+
+    CreateDatasetWithoutSchemaCommand:
+      type: object
+      required:
+        - creationType
+      properties:
+        creationType:
+          type: string
+          pattern: '^none$'
 
     CreateDatasetFromSchemaCommand:
       type: object
@@ -515,13 +530,35 @@ components:
       properties:
         creationType:
           type: string
-          enum: [ schema ]
+          pattern: '^schema$'
         name:
           type: string
         description:
           type: string
         schema:
           $ref: "#/components/schemas/DatasetSchema"
+
+    CreateDatasetFromDatabaseCommand:
+      type: object
+      required:
+        - creationType
+      properties:
+        creationType:
+          type: string
+          pattern: '^database$'
+        TBD:
+          type: string
+
+    CreateDatasetFromFileCommand:
+      type: object
+      required:
+        - creationType
+      properties:
+        creationType:
+          type: string
+          pattern: '^file$'
+        TBD:
+          type: string
 
     CreateQuerySetCommand:
       description: Command containing the query files to add to a dataset.
