@@ -1,4 +1,4 @@
-package cz.cuni.mff.simekjan.application.dataset;
+package cz.cuni.mff.simekjan.application.query;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 

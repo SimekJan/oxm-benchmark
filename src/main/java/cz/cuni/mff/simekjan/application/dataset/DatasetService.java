@@ -1,19 +1,18 @@
 package cz.cuni.mff.simekjan.application.dataset;
 
 import cz.cuni.mff.simekjan.application.column.ColumnEntity;
+import cz.cuni.mff.simekjan.application.query.QueryService;
 import cz.cuni.mff.simekjan.application.relationship.RelationshipEntity;
 import cz.cuni.mff.simekjan.application.relationship.RelationshipType;
 import cz.cuni.mff.simekjan.application.table.TableEntity;
 import cz.cuni.mff.simekjan.model.DatasetInfo;
 import cz.cuni.mff.simekjan.model.DatasetRuntimeStatus;
-import cz.cuni.mff.simekjan.model.QueryInfo;
-import cz.cuni.mff.simekjan.model.CreateQuerySetCommand;
-import cz.cuni.mff.simekjan.model.CreateQuerySetCommandFilesInner;
-import cz.cuni.mff.simekjan.model.QueryFileFormat;
 import cz.cuni.mff.simekjan.model.CreateDatasetFromDatabaseCommand;
 import cz.cuni.mff.simekjan.model.CreateDatasetFromFileCommand;
 import cz.cuni.mff.simekjan.model.CreateDatasetFromSchemaCommand;
 import cz.cuni.mff.simekjan.model.CreateDatasetWithoutSchemaCommand;
+import cz.cuni.mff.simekjan.model.CreateQuerySetCommand;
+import cz.cuni.mff.simekjan.model.QueryInfo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,7 +30,7 @@ import java.util.UUID;
 public class DatasetService {
 
     private final DatasetRepository datasetRepository;
-    private final QueryRepository queryRepository;
+    private final QueryService queryService;
 
     public List<DatasetInfo> getDatasets() {
         return null;
@@ -112,43 +111,11 @@ public class DatasetService {
     }
 
     public List<QueryInfo> getQueries(UUID datasetId) {
-        return queryRepository.findAllByDataset_IdOrderByNameAsc(datasetId)
-            .stream()
-            .map(query -> {
-                QueryInfo info = new QueryInfo(query.getId(), query.getName());
-                info.setDescription(query.getDescription());
-                return info;
-            })
-            .toList();
+        return queryService.getQueries(datasetId);
     }
 
     public UUID createQuerySet(UUID datasetId, CreateQuerySetCommand command) {
-        if (command == null || command.getFiles() == null || command.getFiles().isEmpty()) {
-            throw new IllegalArgumentException("At least one query file is required");
-        }
-
-        UUID querySetId = UUID.randomUUID();
-        for (CreateQuerySetCommandFilesInner file : command.getFiles()) {
-            if (file == null || file.getName() == null || file.getName().isBlank()
-                || file.getFormat() == null || file.getContent() == null) {
-                throw new IllegalArgumentException("Query files must have a name, format, and content");
-            }
-
-            if (file.getFormat() == QueryFileFormat._SQL) {
-                createSqlQuery(datasetId, querySetId, file);
-            } else {
-                createJavaQuery(datasetId, querySetId, file);
-            }
-        }
-        return querySetId;
-    }
-
-    private void createSqlQuery(UUID datasetId, UUID querySetId, CreateQuerySetCommandFilesInner file) {
-        throw new QuerySetCreationNotSupportedException(QueryFileFormat._SQL.getValue());
-    }
-
-    private void createJavaQuery(UUID datasetId, UUID querySetId, CreateQuerySetCommandFilesInner file) {
-        throw new QuerySetCreationNotSupportedException(QueryFileFormat._JAVA.getValue());
+        return queryService.createQuerySet(datasetId, command);
     }
 
     private static void validateSchema(CreateDatasetFromSchemaCommand command) {
@@ -242,9 +209,4 @@ public class DatasetService {
         }
     }
 
-    public static class QuerySetCreationNotSupportedException extends RuntimeException {
-        public QuerySetCreationNotSupportedException(String format) {
-            super("Query set creation is not implemented for file format: " + format);
-        }
-    }
 }

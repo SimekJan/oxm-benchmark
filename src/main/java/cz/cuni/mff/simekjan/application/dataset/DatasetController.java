@@ -1,6 +1,7 @@
 package cz.cuni.mff.simekjan.application.dataset;
 
 import cz.cuni.mff.simekjan.api.DatasetApi;
+import cz.cuni.mff.simekjan.application.query.QueryService.QuerySetCreationNotImplementedException;
 import cz.cuni.mff.simekjan.model.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -83,7 +84,7 @@ public class DatasetController implements DatasetApi {
             PostDataset202Response response = new PostDataset202Response();
             response.setId(datasetService.createQuerySet(datasetId, createQuerySetCommand));
             return ResponseEntity.accepted().body(response);
-        } catch (DatasetService.QuerySetCreationNotSupportedException exception) {
+        } catch (QuerySetCreationNotImplementedException exception) {
             return ResponseEntity.status(501).build();
         } catch (IllegalArgumentException exception) {
             return ResponseEntity.badRequest().build();
