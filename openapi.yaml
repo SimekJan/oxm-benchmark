@@ -72,7 +72,7 @@ paths:
     parameters:
       - $ref: "#/components/parameters/DatasetId"
     get:
-      tags: [ Dataset, Initial config ]
+      tags: [ Dataset, Query, Initial config ]
       operationId: getQueries
       summary: Get all query sets prepared in the app for given dataset
       description: There will probably be only one query set per dataset in our implementation.
@@ -86,7 +86,7 @@ paths:
         '400':
           description: Bad request.
     post:
-      tags: [ Dataset, Initial config ]
+      tags: [ Dataset, Query, Initial config ]
       operationId: postQuerySet
       summary: Create new query set for given dataset
       description: Create new query set for given dataset in the app.
@@ -107,7 +107,7 @@ paths:
       - $ref: "#/components/parameters/DatasetId"
       - $ref: "#/components/parameters/QueryId"
     get:
-      tags: [ Dataset, Benchmark config ]
+      tags: [ Dataset, Query, Benchmark config ]
       operationId: getQuery
       summary: Get query detail
       description: Get dataset's query operation based on ID.
@@ -648,8 +648,6 @@ components:
               relationshipType:
                 type: string
                 enum: [ one-to-one, one-to-many, many-to-one, many-to-many ]
-              embeddable:
-                type: boolean
 
     DatasetArray:
       description: Array of dataset information.

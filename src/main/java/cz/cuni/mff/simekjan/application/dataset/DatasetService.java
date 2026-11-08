@@ -1,6 +1,8 @@
 package cz.cuni.mff.simekjan.application.dataset;
 
 import cz.cuni.mff.simekjan.application.column.ColumnEntity;
+import cz.cuni.mff.simekjan.application.relationship.RelationshipEntity;
+import cz.cuni.mff.simekjan.application.relationship.RelationshipType;
 import cz.cuni.mff.simekjan.application.table.TableEntity;
 import cz.cuni.mff.simekjan.model.DatasetInfo;
 import cz.cuni.mff.simekjan.model.DatasetRuntimeStatus;
@@ -13,7 +15,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 @RequiredArgsConstructor
@@ -39,11 +45,13 @@ public class DatasetService {
         dataset.setDescription(command.getDescription());
         dataset.setRuntimeStatus("BUILDING");
 
+        Map<String, TableEntity> tablesByName = new HashMap<>();
         for (var tableSchema : command.getSchema().getTables()) {
             TableEntity table = new TableEntity();
             table.setId(UUID.randomUUID());
             table.setName(tableSchema.getName());
             table.setDataset(dataset);
+            tablesByName.put(tableSchema.getName(), table);
 
             for (var columnSchema : tableSchema.getColumns()) {
                 ColumnEntity column = new ColumnEntity();
@@ -58,6 +66,23 @@ public class DatasetService {
             }
 
             dataset.getTables().add(table);
+        }
+
+        for (var relationshipSchema : command.getSchema().getRelationships()) {
+            RelationshipEntity relationship = new RelationshipEntity();
+            relationship.setId(UUID.randomUUID());
+            relationship.setName(relationshipSchema.getName());
+            relationship.setRelationshipType(RelationshipType.fromValue(
+                relationshipSchema.getRelationshipType().getValue()
+            ));
+            relationship.setDataset(dataset);
+            relationship.setSourceColumn(resolveColumn(
+                tablesByName, relationshipSchema.getFromTable(), relationshipSchema.getFromColumn(), "source"
+            ));
+            relationship.setTargetColumn(resolveColumn(
+                tablesByName, relationshipSchema.getToTable(), relationshipSchema.getToColumn(), "target"
+            ));
+            dataset.getRelationships().add(relationship);
         }
 
         datasetRepository.saveAndFlush(dataset);
@@ -102,6 +127,67 @@ public class DatasetService {
         if (command.getSchema().getTables() == null || command.getSchema().getTables().isEmpty()) {
             throw new IllegalArgumentException("Dataset schema must contain at least one table");
         }
+        if (command.getSchema().getRelationships() == null) {
+            throw new IllegalArgumentException("Dataset schema relationships must not be null");
+        }
+        Set<String> tableNames = new HashSet<>();
+        for (var table : command.getSchema().getTables()) {
+            if (table == null || table.getName() == null || table.getName().isBlank()) {
+                throw new IllegalArgumentException("Table names must not be blank");
+            }
+            if (!tableNames.add(table.getName())) {
+                throw new IllegalArgumentException("Table names must be unique: " + table.getName());
+            }
+
+            Set<String> columnNames = new HashSet<>();
+            if (table.getColumns() == null) {
+                throw new IllegalArgumentException("Table columns must not be null: " + table.getName());
+            }
+            for (var column : table.getColumns()) {
+                if (column == null || column.getName() == null || column.getName().isBlank()) {
+                    throw new IllegalArgumentException("Column names must not be blank in table: " + table.getName());
+                }
+                if (!columnNames.add(column.getName())) {
+                    throw new IllegalArgumentException(
+                        "Column names must be unique in table " + table.getName() + ": " + column.getName()
+                    );
+                }
+            }
+        }
+        for (var relationship : command.getSchema().getRelationships()) {
+            if (relationship == null || relationship.getName() == null || relationship.getName().isBlank()) {
+                throw new IllegalArgumentException("Relationship names must not be blank");
+            }
+            if (relationship.getRelationshipType() == null) {
+                throw new IllegalArgumentException("Relationship type is required: " + relationship.getName());
+            }
+            if (relationship.getFromTable() == null || relationship.getFromTable().isBlank()
+                || relationship.getFromColumn() == null || relationship.getFromColumn().isBlank()
+                || relationship.getToTable() == null || relationship.getToTable().isBlank()
+                || relationship.getToColumn() == null || relationship.getToColumn().isBlank()) {
+                throw new IllegalArgumentException("Relationship endpoints are required: " + relationship.getName());
+            }
+        }
+    }
+
+    private static ColumnEntity resolveColumn(
+        Map<String, TableEntity> tablesByName,
+        String tableName,
+        String columnName,
+        String endpoint
+    ) {
+        TableEntity table = tablesByName.get(tableName);
+        if (table == null) {
+            throw new IllegalArgumentException(
+                "Relationship " + endpoint + " table not found: " + tableName
+            );
+        }
+        return table.getColumns().stream()
+            .filter(column -> column.getName().equals(columnName))
+            .findFirst()
+            .orElseThrow(() -> new IllegalArgumentException(
+                "Relationship " + endpoint + " column not found: " + tableName + "." + columnName
+            ));
     }
 
     public static class DatasetNotFoundException extends RuntimeException {

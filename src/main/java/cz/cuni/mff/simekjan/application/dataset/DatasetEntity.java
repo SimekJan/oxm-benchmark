@@ -1,9 +1,10 @@
 package cz.cuni.mff.simekjan.application.dataset;
 
+import cz.cuni.mff.simekjan.application.relationship.RelationshipEntity;
 import cz.cuni.mff.simekjan.application.table.TableEntity;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
@@ -35,6 +36,9 @@ public class DatasetEntity {
 
     @OneToMany(mappedBy = "dataset", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<TableEntity> tables = new ArrayList<>();
+
+    @OneToMany(mappedBy = "dataset", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<RelationshipEntity> relationships = new ArrayList<>();
 
     @Column(nullable = false, length = 16)
     private String runtimeStatus;
