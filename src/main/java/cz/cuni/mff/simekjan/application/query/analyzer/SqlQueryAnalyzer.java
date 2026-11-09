@@ -26,6 +26,6 @@ public class SqlQueryAnalyzer implements QueryAnalyzer {
 
     @Override
     public void extractOperationMetadata(DatasetEntity dataset, QueryEntity queryEntity, String query) {
-        // SQL operation extraction will be added once the operation mappings are defined.
+        new SqlOperationExtractor(operationService).extract(dataset, queryEntity, query);
     }
 }
