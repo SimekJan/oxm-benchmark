@@ -115,7 +115,9 @@ public class DatasetService {
     }
 
     public UUID createQuerySet(UUID datasetId, CreateQuerySetCommand command) {
-        return queryService.createQuerySet(datasetId, command);
+        DatasetEntity dataset = datasetRepository.findById(datasetId)
+            .orElseThrow(() -> new DatasetNotFoundException(datasetId));
+        return queryService.createQuerySet(dataset, command);
     }
 
     private static void validateSchema(CreateDatasetFromSchemaCommand command) {

@@ -84,6 +84,8 @@ public class DatasetController implements DatasetApi {
             PostDataset202Response response = new PostDataset202Response();
             response.setId(datasetService.createQuerySet(datasetId, createQuerySetCommand));
             return ResponseEntity.accepted().body(response);
+        } catch (DatasetService.DatasetNotFoundException exception) {
+            return ResponseEntity.notFound().build();
         } catch (QuerySetCreationNotImplementedException exception) {
             return ResponseEntity.status(501).build();
         } catch (IllegalArgumentException exception) {

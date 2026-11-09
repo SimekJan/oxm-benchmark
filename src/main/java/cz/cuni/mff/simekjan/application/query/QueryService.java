@@ -1,5 +1,6 @@
 package cz.cuni.mff.simekjan.application.query;
 
+import cz.cuni.mff.simekjan.application.dataset.DatasetEntity;
 import cz.cuni.mff.simekjan.model.CreateQuerySetCommand;
 import cz.cuni.mff.simekjan.model.CreateQuerySetCommandFilesInner;
 import cz.cuni.mff.simekjan.model.QueryInfo;
@@ -29,7 +30,7 @@ public class QueryService {
             .toList();
     }
 
-    public UUID createQuerySet(UUID datasetId, CreateQuerySetCommand command) {
+    public UUID createQuerySet(DatasetEntity dataset, CreateQuerySetCommand command) {
         if (command == null || command.getFiles() == null || command.getFiles().isEmpty()) {
             throw new IllegalArgumentException("At least one query file is required");
         }
@@ -39,8 +40,14 @@ public class QueryService {
                 || file.getFormat() == null || file.getContent() == null) {
                 throw new IllegalArgumentException("Query files must have a name, format, and content");
             }
-            // TODO: use the returned analyzer
-            queryAnalyzerFactory.getAnalyzer(file.getFormat());
+        }
+
+        for (CreateQuerySetCommandFilesInner file : command.getFiles()) {
+            QueryAnalyzer analyzer = queryAnalyzerFactory.getAnalyzer(file.getFormat());
+            if (!dataset.isSchemaReady()) {
+                analyzer.inferSchema(file.getContent());
+            }
+            analyzer.extractOperationMetadata(file.getContent());
         }
 
         throw new QuerySetCreationNotImplementedException();
