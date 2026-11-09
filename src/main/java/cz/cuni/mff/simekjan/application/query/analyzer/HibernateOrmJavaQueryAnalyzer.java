@@ -1,13 +1,18 @@
 package cz.cuni.mff.simekjan.application.query.analyzer;
 
 import cz.cuni.mff.simekjan.application.dataset.DatasetEntity;
+import cz.cuni.mff.simekjan.application.operation.OperationService;
 import cz.cuni.mff.simekjan.application.query.QueryAnalyzer;
 import cz.cuni.mff.simekjan.application.query.QueryEntity;
 import cz.cuni.mff.simekjan.model.QueryFileFormat;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+@RequiredArgsConstructor
 @Component
 public class HibernateOrmJavaQueryAnalyzer implements QueryAnalyzer {
+
+    private final OperationService operationService;
 
     @Override
     public QueryFileFormat getFormat() {
