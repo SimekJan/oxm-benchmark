@@ -44,6 +44,12 @@ public class QueryEntity {
     @EqualsAndHashCode.Exclude
     private DatasetEntity dataset;
 
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "query_set_id", nullable = false)
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private QuerySetEntity querySet;
+
     @OneToMany(mappedBy = "query", cascade = CascadeType.ALL, orphanRemoval = true)
     @ToString.Exclude
     @EqualsAndHashCode.Exclude

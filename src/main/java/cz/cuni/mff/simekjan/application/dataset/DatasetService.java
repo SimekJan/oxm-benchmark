@@ -12,7 +12,7 @@ import cz.cuni.mff.simekjan.model.CreateDatasetFromFileCommand;
 import cz.cuni.mff.simekjan.model.CreateDatasetFromSchemaCommand;
 import cz.cuni.mff.simekjan.model.CreateDatasetWithoutSchemaCommand;
 import cz.cuni.mff.simekjan.model.CreateQuerySetCommand;
-import cz.cuni.mff.simekjan.model.QueryInfo;
+import cz.cuni.mff.simekjan.model.QuerySetInfo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -110,10 +110,11 @@ public class DatasetService {
         return null;
     }
 
-    public List<QueryInfo> getQueries(UUID datasetId) {
-        return queryService.getQueries(datasetId);
+    public List<QuerySetInfo> getQuerySets(UUID datasetId) {
+        return queryService.getQuerySets(datasetId);
     }
 
+    @Transactional
     public UUID createQuerySet(UUID datasetId, CreateQuerySetCommand command) {
         DatasetEntity dataset = datasetRepository.findById(datasetId)
             .orElseThrow(() -> new DatasetNotFoundException(datasetId));

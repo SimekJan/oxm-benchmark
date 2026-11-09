@@ -1,5 +1,6 @@
 package cz.cuni.mff.simekjan.application.dataset;
 
+import cz.cuni.mff.simekjan.application.query.QuerySetEntity;
 import cz.cuni.mff.simekjan.application.relationship.RelationshipEntity;
 import cz.cuni.mff.simekjan.application.table.TableEntity;
 import jakarta.persistence.CascadeType;
@@ -44,6 +45,9 @@ public class DatasetEntity {
 
     @OneToMany(mappedBy = "dataset", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<RelationshipEntity> relationships = new ArrayList<>();
+
+    @OneToMany(mappedBy = "dataset", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<QuerySetEntity> querySets = new ArrayList<>();
 
     @Column(nullable = false, length = 16)
     private String runtimeStatus;

@@ -22,8 +22,8 @@ public class DatasetController implements DatasetApi {
     }
 
     @Override
-    public ResponseEntity<List<QueryInfo>> getQueries(UUID datasetId) {
-        return ResponseEntity.ok(datasetService.getQueries(datasetId));
+    public ResponseEntity<List<QuerySetInfo>> getQueries(UUID datasetId) {
+        return ResponseEntity.ok(datasetService.getQuerySets(datasetId));
     }
 
     @Override

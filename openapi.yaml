@@ -75,14 +75,14 @@ paths:
       tags: [ Dataset, Query, Initial config ]
       operationId: getQueries
       summary: Get all query sets prepared in the app for given dataset
-      description: There will probably be only one query set per dataset in our implementation.
+      description: Returns all query sets attached to the dataset, including their queries.
       responses:
         '200':
           description: Successful response.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/QueryInfoArray"
+                $ref: "#/components/schemas/QuerySetInfoArray"
         '400':
           description: Bad request.
     post:
@@ -566,8 +566,12 @@ components:
       description: Command containing the query files to add to a dataset.
       type: object
       required:
+        - name
         - files
       properties:
+        name:
+          type: string
+          minLength: 1
         files:
           type: array
           items:
@@ -1041,6 +1045,28 @@ components:
       type: array
       items:
         $ref: "#/components/schemas/QueryInfo"
+
+    QuerySetInfoArray:
+      description: Array of query-set information.
+      type: array
+      items:
+        $ref: "#/components/schemas/QuerySetInfo"
+
+    QuerySetInfo:
+      description: Brief query-set information, including its queries.
+      type: object
+      required:
+        - id
+        - name
+        - queries
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        queries:
+          $ref: "#/components/schemas/QueryInfoArray"
 
     QueryBase:
       description: Basic Query specific fields.
