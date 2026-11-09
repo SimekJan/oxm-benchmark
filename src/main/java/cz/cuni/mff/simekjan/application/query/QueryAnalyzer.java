@@ -7,7 +7,7 @@ public interface QueryAnalyzer {
 
     QueryFileFormat getFormat();
 
-    void inferSchema(DatasetEntity dataset, String query);
+    void inferSchema(DatasetEntity dataset, QueryEntity queryEntity, String query);
 
-    void extractOperationMetadata(DatasetEntity dataset, String query);
+    void extractOperationMetadata(DatasetEntity dataset, QueryEntity queryEntity, String query);
 }

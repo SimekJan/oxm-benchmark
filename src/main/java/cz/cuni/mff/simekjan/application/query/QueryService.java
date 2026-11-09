@@ -43,11 +43,16 @@ public class QueryService {
         }
 
         for (CreateQuerySetCommandFilesInner file : command.getFiles()) {
+            QueryEntity queryEntity = new QueryEntity();
+            queryEntity.setId(UUID.randomUUID());
+            queryEntity.setName(file.getName());
+            queryEntity.setDataset(dataset);
+
             QueryAnalyzer analyzer = queryAnalyzerFactory.getAnalyzer(file.getFormat());
             if (!dataset.isSchemaReady()) {
-                analyzer.inferSchema(dataset, file.getContent());
+                analyzer.inferSchema(dataset, queryEntity, file.getContent());
             }
-            analyzer.extractOperationMetadata(dataset, file.getContent());
+            analyzer.extractOperationMetadata(dataset, queryEntity, file.getContent());
         }
 
         throw new QuerySetCreationNotImplementedException();
