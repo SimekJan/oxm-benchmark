@@ -16,6 +16,7 @@ import java.util.UUID;
 public class QueryService {
 
     private final QueryRepository queryRepository;
+    private final QueryAnalyzerFactory queryAnalyzerFactory;
 
     public List<QueryInfo> getQueries(UUID datasetId) {
         return queryRepository.findAllByDataset_IdOrderByNameAsc(datasetId)
@@ -38,6 +39,8 @@ public class QueryService {
                 || file.getFormat() == null || file.getContent() == null) {
                 throw new IllegalArgumentException("Query files must have a name, format, and content");
             }
+            // TODO: use the returned analyzer
+            queryAnalyzerFactory.getAnalyzer(file.getFormat());
         }
 
         throw new QuerySetCreationNotImplementedException();
