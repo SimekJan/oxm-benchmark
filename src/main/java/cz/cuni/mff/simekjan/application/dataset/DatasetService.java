@@ -13,6 +13,7 @@ import cz.cuni.mff.simekjan.model.CreateDatasetFromSchemaCommand;
 import cz.cuni.mff.simekjan.model.CreateDatasetWithoutSchemaCommand;
 import cz.cuni.mff.simekjan.model.CreateQuerySetCommand;
 import cz.cuni.mff.simekjan.model.QuerySetInfo;
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,9 +32,17 @@ public class DatasetService {
 
     private final DatasetRepository datasetRepository;
     private final QueryService queryService;
+    private final EntityManager entityManager;
 
     public List<DatasetInfo> getDatasets() {
-        return null;
+        return datasetRepository.findAll().stream()
+            .map(dataset -> {
+                DatasetInfo info = new DatasetInfo(dataset.getId(), dataset.getName());
+                info.setDescription(dataset.getDescription());
+                info.setRuntimeStatus(DatasetInfo.RuntimeStatusEnum.fromValue(dataset.getRuntimeStatus()));
+                return info;
+            })
+            .toList();
     }
 
     @Transactional(noRollbackFor = ExecutorUnavailableException.class)
@@ -88,7 +97,8 @@ public class DatasetService {
             dataset.getRelationships().add(relationship);
         }
 
-        datasetRepository.saveAndFlush(dataset);
+        entityManager.persist(dataset);
+        entityManager.flush();
         return datasetId;
     }
 
