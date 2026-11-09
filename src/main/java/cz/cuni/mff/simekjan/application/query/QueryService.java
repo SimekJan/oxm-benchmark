@@ -45,9 +45,9 @@ public class QueryService {
         for (CreateQuerySetCommandFilesInner file : command.getFiles()) {
             QueryAnalyzer analyzer = queryAnalyzerFactory.getAnalyzer(file.getFormat());
             if (!dataset.isSchemaReady()) {
-                analyzer.inferSchema(file.getContent());
+                analyzer.inferSchema(dataset, file.getContent());
             }
-            analyzer.extractOperationMetadata(file.getContent());
+            analyzer.extractOperationMetadata(dataset, file.getContent());
         }
 
         throw new QuerySetCreationNotImplementedException();
