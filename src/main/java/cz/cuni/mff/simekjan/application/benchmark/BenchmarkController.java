@@ -48,6 +48,8 @@ public class BenchmarkController implements BenchmarkApi {
         try {
             benchmarkService.generateData(benchmarkId, generateBenchmarkCommand);
             return ResponseEntity.accepted().build();
+        } catch (IllegalArgumentException exception) {
+            return ResponseEntity.badRequest().build();
         } catch (BenchmarkService.BenchmarkNotFoundException | DatasetService.DatasetNotFoundException exception) {
             return ResponseEntity.notFound().build();
         }

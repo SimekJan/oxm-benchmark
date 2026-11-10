@@ -18,6 +18,9 @@ import java.util.Queue;
 import java.util.Set;
 import java.util.Map;
 
+/**
+ * Legacy configuration-driven generator retained as a reference for the benchmark-specific implementation.
+ */
 public class LegacyGenerator {
 
     private static final int SUPPLIER_COUNT = 3_000;

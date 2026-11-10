@@ -10,8 +10,10 @@ import cz.cuni.mff.simekjan.generator.Generator;
 import cz.cuni.mff.simekjan.model.Benchmark;
 import cz.cuni.mff.simekjan.model.BenchmarkBase;
 import cz.cuni.mff.simekjan.model.CreateBenchmarkCommand;
+import cz.cuni.mff.simekjan.model.GenerateBenchmarkDatabasesCommand;
 import cz.cuni.mff.simekjan.model.DatasetDetail;
 import cz.cuni.mff.simekjan.model.GenerateBenchmarkCommand;
+import cz.cuni.mff.simekjan.model.GenerateBenchmarkFilesCommand;
 import cz.cuni.mff.simekjan.model.QueryInfo;
 import cz.cuni.mff.simekjan.model.TableBase;
 import lombok.RequiredArgsConstructor;
@@ -79,10 +81,27 @@ public class BenchmarkService {
 
     @Transactional
     public void generateData(UUID benchmarkId, GenerateBenchmarkCommand command) {
+        if (command == null) {
+            throw new IllegalArgumentException("Generation command is required");
+        }
+
         BenchmarkEntity benchmark = benchmarkRepository.findById(benchmarkId)
             .orElseThrow(() -> new BenchmarkNotFoundException(benchmarkId));
         var dataset = datasetService.getDatasetEntity(benchmark.getDataset().getId());
-        new Generator(dataset, benchmark.getQuerySet().getId()).generate();
+        Generator generator = new Generator(dataset, benchmark.getQuerySet().getId());
+        if (command instanceof GenerateBenchmarkFilesCommand filesCommand) {
+            if (filesCommand.getFormat() == null) {
+                throw new IllegalArgumentException("File format is required");
+            }
+            generator.generateToFiles(filesCommand.getFormat());
+        } else if (command instanceof GenerateBenchmarkDatabasesCommand databasesCommand) {
+            if (databasesCommand.getDatabases() == null) {
+                throw new IllegalArgumentException("Database options are required");
+            }
+            generator.generateToDatabases(databasesCommand.getDatabases());
+        } else {
+            throw new IllegalArgumentException("Unsupported generation command");
+        }
     }
 
     private static UUID parseId(String value, String fieldName) {
