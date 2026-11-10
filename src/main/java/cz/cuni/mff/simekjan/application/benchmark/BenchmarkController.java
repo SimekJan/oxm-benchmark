@@ -3,10 +3,7 @@ package cz.cuni.mff.simekjan.application.benchmark;
 import cz.cuni.mff.simekjan.api.BenchmarkApi;
 import cz.cuni.mff.simekjan.application.dataset.DatasetService;
 import cz.cuni.mff.simekjan.application.query.QueryService;
-import cz.cuni.mff.simekjan.model.Benchmark;
-import cz.cuni.mff.simekjan.model.BenchmarkBase;
-import cz.cuni.mff.simekjan.model.CreateBenchmarkCommand;
-import cz.cuni.mff.simekjan.model.PostDataset202Response;
+import cz.cuni.mff.simekjan.model.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
@@ -44,5 +41,10 @@ public class BenchmarkController implements BenchmarkApi {
                  | QueryService.QuerySetNotFoundException exception) {
             return ResponseEntity.badRequest().build();
         }
+    }
+    
+    @Override
+    public ResponseEntity<Void> generateData(UUID benchmarkId, GenerateBenchmarkCommand generateBenchmarkCommand) {
+        return null;
     }
 }
