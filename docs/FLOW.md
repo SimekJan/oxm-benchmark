@@ -51,14 +51,14 @@ flowchart LR
         GENERATE --> EXPORT
     end
 
-    subgraph EXECUTION["3 - Execution"]
+    subgraph EXECUTION["3 - Query execution"]
         direction TD
         RUN(["Run queries"])
         IMPORTER(["Importer for writing data to DBs"])
     end
 
     subgraph OUTPUTS["4 - App outputs"]
-        RESULTS(["See results"])
+        RESULTS(["Query performance results"])
         RESULT_DATASET(["CSV with generated data"])
     end
 
