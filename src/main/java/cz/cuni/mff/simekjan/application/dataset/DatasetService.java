@@ -45,6 +45,11 @@ public class DatasetService {
             .toList();
     }
 
+    public DatasetEntity getDatasetEntity(UUID datasetId) {
+        return datasetRepository.findById(datasetId)
+            .orElseThrow(() -> new DatasetNotFoundException(datasetId));
+    }
+
     @Transactional(noRollbackFor = ExecutorUnavailableException.class)
     public UUID createDatasetFromSchema(CreateDatasetFromSchemaCommand command) {
         validateSchema(command);
@@ -126,8 +131,7 @@ public class DatasetService {
 
     @Transactional
     public UUID createQuerySet(UUID datasetId, CreateQuerySetCommand command) {
-        DatasetEntity dataset = datasetRepository.findById(datasetId)
-            .orElseThrow(() -> new DatasetNotFoundException(datasetId));
+        DatasetEntity dataset = getDatasetEntity(datasetId);
         return queryService.createQuerySet(dataset, command);
     }
 

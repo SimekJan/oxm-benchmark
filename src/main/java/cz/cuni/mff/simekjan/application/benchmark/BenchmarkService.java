@@ -1,10 +1,14 @@
 package cz.cuni.mff.simekjan.application.benchmark;
 
 import cz.cuni.mff.simekjan.application.dataset.DatasetEntity;
+import cz.cuni.mff.simekjan.application.dataset.DatasetService;
 import cz.cuni.mff.simekjan.application.query.QueryEntity;
+import cz.cuni.mff.simekjan.application.query.QueryService;
+import cz.cuni.mff.simekjan.application.query.QuerySetEntity;
 import cz.cuni.mff.simekjan.application.table.TableEntity;
 import cz.cuni.mff.simekjan.model.Benchmark;
 import cz.cuni.mff.simekjan.model.BenchmarkBase;
+import cz.cuni.mff.simekjan.model.CreateBenchmarkCommand;
 import cz.cuni.mff.simekjan.model.DatasetDetail;
 import cz.cuni.mff.simekjan.model.QueryInfo;
 import cz.cuni.mff.simekjan.model.TableBase;
@@ -22,6 +26,8 @@ import java.util.UUID;
 public class BenchmarkService {
 
     private final BenchmarkRepository benchmarkRepository;
+    private final DatasetService datasetService;
+    private final QueryService queryService;
 
     public List<BenchmarkBase> getAllBenchmarks() {
         return benchmarkRepository.findAll().stream()
@@ -44,6 +50,40 @@ public class BenchmarkService {
             .map(BenchmarkService::toQueryInfo)
             .toList());
         return benchmark;
+    }
+
+    @Transactional
+    public UUID createBenchmark(CreateBenchmarkCommand command) {
+        if (command == null || command.getName() == null || command.getName().isBlank()) {
+            throw new IllegalArgumentException("Benchmark name must not be blank");
+        }
+
+        UUID datasetId = parseId(command.getDatasetId(), "datasetId");
+        UUID querySetId = parseId(command.getQuerySetId(), "querySetId");
+        DatasetEntity dataset = datasetService.getDatasetEntity(datasetId);
+        QuerySetEntity querySet = queryService.getQuerySetEntity(querySetId);
+        if (!querySet.getDataset().getId().equals(datasetId)) {
+            throw new IllegalArgumentException("Query set does not belong to dataset: " + datasetId);
+        }
+
+        BenchmarkEntity entity = new BenchmarkEntity();
+        entity.setId(UUID.randomUUID());
+        entity.setName(command.getName());
+        entity.setStatus(Benchmark.StatusEnum.READY.getValue());
+        entity.setDataset(dataset);
+        entity.setQuerySet(querySet);
+        return benchmarkRepository.save(entity).getId();
+    }
+
+    private static UUID parseId(String value, String fieldName) {
+        if (value == null || value.isBlank()) {
+            throw new IllegalArgumentException(fieldName + " must not be blank");
+        }
+        try {
+            return UUID.fromString(value);
+        } catch (IllegalArgumentException exception) {
+            throw new IllegalArgumentException(fieldName + " must be a UUID", exception);
+        }
     }
 
     private static BenchmarkBase toBenchmarkBase(BenchmarkEntity entity) {

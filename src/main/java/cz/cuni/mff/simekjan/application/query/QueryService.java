@@ -42,6 +42,11 @@ public class QueryService {
             .toList();
     }
 
+    public QuerySetEntity getQuerySetEntity(UUID querySetId) {
+        return querySetRepository.findById(querySetId)
+            .orElseThrow(() -> new QuerySetNotFoundException(querySetId));
+    }
+
     @Transactional
     public UUID createQuerySet(DatasetEntity dataset, CreateQuerySetCommand command) {
         if (command == null || command.getName() == null || command.getName().isBlank()) {
@@ -90,6 +95,12 @@ public class QueryService {
     public static class QuerySetCreationNotImplementedException extends RuntimeException {
         public QuerySetCreationNotImplementedException(Throwable cause) {
             super("Query set creation is not implemented for this file format", cause);
+        }
+    }
+
+    public static class QuerySetNotFoundException extends RuntimeException {
+        public QuerySetNotFoundException(UUID querySetId) {
+            super("Query set not found: " + querySetId);
         }
     }
 }

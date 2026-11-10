@@ -1,6 +1,8 @@
 package cz.cuni.mff.simekjan.application.benchmark;
 
 import cz.cuni.mff.simekjan.api.BenchmarkApi;
+import cz.cuni.mff.simekjan.application.dataset.DatasetService;
+import cz.cuni.mff.simekjan.application.query.QueryService;
 import cz.cuni.mff.simekjan.model.Benchmark;
 import cz.cuni.mff.simekjan.model.BenchmarkBase;
 import cz.cuni.mff.simekjan.model.CreateBenchmarkCommand;
@@ -34,6 +36,13 @@ public class BenchmarkController implements BenchmarkApi {
 
     @Override
     public ResponseEntity<PostDataset202Response> postBenchmark(CreateBenchmarkCommand createBenchmarkCommand) {
-        return null;
+        try {
+            PostDataset202Response response = new PostDataset202Response();
+            response.setId(benchmarkService.createBenchmark(createBenchmarkCommand));
+            return ResponseEntity.accepted().body(response);
+        } catch (IllegalArgumentException | DatasetService.DatasetNotFoundException
+                 | QueryService.QuerySetNotFoundException exception) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 }
