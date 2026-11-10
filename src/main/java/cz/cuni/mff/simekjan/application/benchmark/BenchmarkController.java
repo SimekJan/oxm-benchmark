@@ -45,6 +45,11 @@ public class BenchmarkController implements BenchmarkApi {
     
     @Override
     public ResponseEntity<Void> generateData(UUID benchmarkId, GenerateBenchmarkCommand generateBenchmarkCommand) {
-        return null;
+        try {
+            benchmarkService.generateData(benchmarkId, generateBenchmarkCommand);
+            return ResponseEntity.accepted().build();
+        } catch (BenchmarkService.BenchmarkNotFoundException | DatasetService.DatasetNotFoundException exception) {
+            return ResponseEntity.notFound().build();
+        }
     }
 }

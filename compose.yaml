@@ -55,7 +55,7 @@ services:
   generator:
     build: .
     command:
-      - generator.cz.cuni.mff.simekjan.Generator
+      - generator.cz.cuni.mff.simekjan.LegacyGenerator
     environment:
       CONFIG_FILE: /oxm_config.yaml
     volumes:

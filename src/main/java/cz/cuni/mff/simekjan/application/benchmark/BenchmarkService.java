@@ -6,10 +6,12 @@ import cz.cuni.mff.simekjan.application.query.QueryEntity;
 import cz.cuni.mff.simekjan.application.query.QueryService;
 import cz.cuni.mff.simekjan.application.query.QuerySetEntity;
 import cz.cuni.mff.simekjan.application.table.TableEntity;
+import cz.cuni.mff.simekjan.generator.Generator;
 import cz.cuni.mff.simekjan.model.Benchmark;
 import cz.cuni.mff.simekjan.model.BenchmarkBase;
 import cz.cuni.mff.simekjan.model.CreateBenchmarkCommand;
 import cz.cuni.mff.simekjan.model.DatasetDetail;
+import cz.cuni.mff.simekjan.model.GenerateBenchmarkCommand;
 import cz.cuni.mff.simekjan.model.QueryInfo;
 import cz.cuni.mff.simekjan.model.TableBase;
 import lombok.RequiredArgsConstructor;
@@ -73,6 +75,14 @@ public class BenchmarkService {
         entity.setDataset(dataset);
         entity.setQuerySet(querySet);
         return benchmarkRepository.save(entity).getId();
+    }
+
+    @Transactional
+    public void generateData(UUID benchmarkId, GenerateBenchmarkCommand command) {
+        BenchmarkEntity benchmark = benchmarkRepository.findById(benchmarkId)
+            .orElseThrow(() -> new BenchmarkNotFoundException(benchmarkId));
+        var dataset = datasetService.getDatasetEntity(benchmark.getDataset().getId());
+        new Generator(dataset, benchmark.getQuerySet().getId()).generate();
     }
 
     private static UUID parseId(String value, String fieldName) {

@@ -3,7 +3,7 @@ package cz.cuni.mff.simekjan.runner;
 import cz.cuni.mff.simekjan.ConfigLoader;
 
 import com.fasterxml.jackson.core.JsonGenerator;
-import cz.cuni.mff.simekjan.generator.Generator;
+import cz.cuni.mff.simekjan.generator.LegacyGenerator;
 // import cz.cuni.mff.simekjan.graph.Neo4jSessionManager;
 // import cz.cuni.mff.simekjan.relational.HibernateSessionManager;
 import lombok.extern.slf4j.Slf4j;
@@ -138,7 +138,7 @@ public class Runner {
         // Save results
         Path dataDir = ConfigLoader.getDataDir();
         Path dataPath = dataDir.resolve("results.json");
-        try (JsonGenerator json = Generator.jsonGenerator(dataPath)) {
+        try (JsonGenerator json = LegacyGenerator.jsonGenerator(dataPath)) {
             json.writeObject(results);
         }
 

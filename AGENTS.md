@@ -17,7 +17,7 @@ The Docker workflow is defined in `compose.yaml`:
 - `generator`, `importer`, and `runner` are the benchmark stages.
 - The generator/importer/runner containers all mount `./oxm_config.yaml` as `/oxm_config.yaml` and use `CONFIG_FILE=/oxm_config.yaml`.
 - The packaged app entrypoints are invoked by class name:
-  - `generator.cz.cuni.mff.simekjan.Generator`
+  - `generator.cz.cuni.mff.simekjan.LegacyGenerator`
   - `importer.cz.cuni.mff.simekjan.Importer`
   - `runner.cz.cuni.mff.simekjan.Runner`
 
@@ -33,7 +33,7 @@ The key execution pattern is:
 
 Important code-level locations:
 
-- `src/main/java/cz/cuni/mff/simekjan/generator/` contains dataset generation logic (`Generator`, `DataProvider`, `DataPools`).
+- `src/main/java/cz/cuni/mff/simekjan/generator/` contains dataset generation logic (`Generator`, `LegacyGenerator`, `DataProvider`, `DataPools`).
 - `src/main/java/cz/cuni/mff/simekjan/importer/` contains database-specific importers (`MongoImporter`, `Neo4jImporter`, `PostgresImporter`, `EmbeddedMongoImporter`).
 - `src/main/java/cz/cuni/mff/simekjan/runner/` contains the benchmark execution orchestration (`Runner`, query execution classes, result handling).
 - `src/main/java/cz/cuni/mff/simekjan/document/`, `document_embedded/`, `graph/`, and `relational/` hold DB-specific queries, session managers, and adapters.
@@ -60,4 +60,3 @@ Concrete examples from the codebase:
 - When changing generated data volume or benchmark behavior, update the matching config keys in `oxm_config.yaml` and the corresponding Docker/service setup in `compose.yaml`.
 - For new DB-specific behavior, follow the existing pattern of a small session manager or importer class plus query runner classes in the matching package.
 - `README.md` is the best source for user-facing build and connectivity details; `compose.yaml` and `oxm_config.yaml` are the authoritative operational references for this project.
-
