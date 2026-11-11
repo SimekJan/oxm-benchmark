@@ -2,6 +2,7 @@ package cz.cuni.mff.simekjan.application.column;
 
 import cz.cuni.mff.simekjan.application.table.TableEntity;
 import cz.cuni.mff.simekjan.model.DatasetSchemaTablesInnerColumnsInner;
+import cz.cuni.mff.simekjan.model.NodeOperationArrayInner;
 import cz.cuni.mff.simekjan.model.PatchColumnVisibilityCommand;
 import cz.cuni.mff.simekjan.model.TableColumn;
 import cz.cuni.mff.simekjan.model.UpdateTableColumnRelationshipsCommand;
@@ -10,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.UUID;
 
 @RequiredArgsConstructor
@@ -20,7 +22,7 @@ public class ColumnService {
     private final ColumnRepository columnRepository;
 
     @Transactional
-    public ColumnEntity createColumn(TableEntity table, DatasetSchemaTablesInnerColumnsInner columnSchema) {
+    public void createColumn(TableEntity table, DatasetSchemaTablesInnerColumnsInner columnSchema) {
         ColumnEntity column = new ColumnEntity();
         column.setId(UUID.randomUUID());
         column.setName(columnSchema.getName());
@@ -32,15 +34,34 @@ public class ColumnService {
 
         ColumnEntity savedColumn = columnRepository.save(column);
         table.getColumns().add(savedColumn);
-        return savedColumn;
     }
 
     @Transactional
     public void changeUnusedColumnVisibility(UUID columnId, PatchColumnVisibilityCommand command) {
+        if (command == null || command.getHide() == null) {
+            throw new IllegalArgumentException("Column visibility command and hide value are required");
+        }
+
+        ColumnEntity column = getColumnEntity(columnId);
+        if (!Boolean.TRUE.equals(column.getUnused())) {
+            throw new IllegalArgumentException("Only unused columns can be hidden or shown");
+        }
+
+        column.setHidden(command.getHide());
+        columnRepository.save(column);
     }
 
     public TableColumn getColumn(UUID columnId) {
-        return null;
+        ColumnEntity column = getColumnEntity(columnId);
+        TableColumn response = new TableColumn();
+        response.setId(column.getId());
+        response.setTableId(column.getTable().getId());
+        response.setName(column.getName());
+        response.setType(TableColumn.TypeEnum.fromValue(column.getDatatype()));
+        response.setUnused(Boolean.TRUE.equals(column.getUnused()));
+        response.setHidden(Boolean.TRUE.equals(column.getHidden()));
+        response.setOperations(List.<NodeOperationArrayInner>of());
+        return response;
     }
 
     @Transactional
@@ -49,5 +70,16 @@ public class ColumnService {
 
     @Transactional
     public void updateColumnValues(UUID columnId, UpdateTableColumnValuesCommand command) {
+    }
+
+    private ColumnEntity getColumnEntity(UUID columnId) {
+        return columnRepository.findById(columnId)
+            .orElseThrow(() -> new ColumnNotFoundException(columnId));
+    }
+
+    public static class ColumnNotFoundException extends RuntimeException {
+        public ColumnNotFoundException(UUID columnId) {
+            super("Column not found: " + columnId);
+        }
     }
 }

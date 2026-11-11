@@ -309,6 +309,8 @@ paths:
                 $ref: "#/components/schemas/TableColumn"
         '400':
           description: Bad request.
+        '404':
+          description: Column not found.
 
   /columns/{columnId}/values:
     parameters:
@@ -367,6 +369,8 @@ paths:
           description: Successful response.
         '400':
           description: Bad request.
+        '404':
+          description: Column not found.
 
   /runs:
     get:

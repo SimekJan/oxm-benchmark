@@ -22,12 +22,23 @@ public class ColumnController implements ColumnApi {
         UUID columnId,
         PatchColumnVisibilityCommand patchColumnVisibilityCommand
     ) {
-        return null;
+        try {
+            columnService.changeUnusedColumnVisibility(columnId, patchColumnVisibilityCommand);
+            return ResponseEntity.ok().build();
+        } catch (IllegalArgumentException exception) {
+            return ResponseEntity.badRequest().build();
+        } catch (ColumnService.ColumnNotFoundException exception) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @Override
     public ResponseEntity<TableColumn> getColumn(UUID columnId) {
-        return null;
+        try {
+            return ResponseEntity.ok(columnService.getColumn(columnId));
+        } catch (ColumnService.ColumnNotFoundException exception) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @Override
