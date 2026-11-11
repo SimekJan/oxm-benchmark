@@ -17,11 +17,22 @@ public class TableController implements TableApi {
 
     @Override
     public ResponseEntity<Table> getTable(UUID tableId) {
-        return null;
+        try {
+            return ResponseEntity.ok(tableService.getTable(tableId));
+        } catch (TableService.TableNotFoundException exception) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @Override
     public ResponseEntity<Void> updateTableSize(UUID tableId, UpdateTableSizeCommand updateTableSizeCommand) {
-        return null;
+        try {
+            tableService.updateTableSize(tableId, updateTableSizeCommand);
+            return ResponseEntity.ok().build();
+        } catch (IllegalArgumentException exception) {
+            return ResponseEntity.badRequest().build();
+        } catch (TableService.TableNotFoundException exception) {
+            return ResponseEntity.notFound().build();
+        }
     }
 }

@@ -36,6 +36,9 @@ public class TableEntity {
     @Column(nullable = false)
     private String name;
 
+    @Column(name = "number_of_rows")
+    private Integer numberOfRows;
+
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "dataset_id", nullable = false)
     @ToString.Exclude
