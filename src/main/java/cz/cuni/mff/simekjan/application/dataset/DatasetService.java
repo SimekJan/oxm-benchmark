@@ -5,6 +5,7 @@ import cz.cuni.mff.simekjan.application.query.QueryService;
 import cz.cuni.mff.simekjan.application.relationship.RelationshipEntity;
 import cz.cuni.mff.simekjan.application.relationship.RelationshipType;
 import cz.cuni.mff.simekjan.application.table.TableEntity;
+import cz.cuni.mff.simekjan.application.table.TableService;
 import cz.cuni.mff.simekjan.model.DatasetInfo;
 import cz.cuni.mff.simekjan.model.DatasetRuntimeStatus;
 import cz.cuni.mff.simekjan.model.CreateDatasetFromDatabaseCommand;
@@ -32,6 +33,7 @@ public class DatasetService {
 
     private final DatasetRepository datasetRepository;
     private final QueryService queryService;
+    private final TableService tableService;
     private final EntityManager entityManager;
 
     public List<DatasetInfo> getDatasets() {
@@ -62,27 +64,13 @@ public class DatasetService {
         dataset.setSchemaReady(true);
         dataset.setRuntimeStatus("BUILDING");
 
+        entityManager.persist(dataset);
+        entityManager.flush();
+
         Map<String, TableEntity> tablesByName = new HashMap<>();
         for (var tableSchema : command.getSchema().getTables()) {
-            TableEntity table = new TableEntity();
-            table.setId(UUID.randomUUID());
-            table.setName(tableSchema.getName());
-            table.setDataset(dataset);
+            TableEntity table = tableService.createTable(dataset, tableSchema);
             tablesByName.put(tableSchema.getName(), table);
-
-            for (var columnSchema : tableSchema.getColumns()) {
-                ColumnEntity column = new ColumnEntity();
-                column.setId(UUID.randomUUID());
-                column.setName(columnSchema.getName());
-                column.setDatatype(columnSchema.getDatatype().getValue());
-                column.setIndexed(columnSchema.getIndexed());
-                column.setPartOfKey(columnSchema.getIsKey());
-                column.setOptional(columnSchema.getOptional());
-                column.setTable(table);
-                table.getColumns().add(column);
-            }
-
-            dataset.getTables().add(table);
         }
 
         for (var relationshipSchema : command.getSchema().getRelationships()) {
@@ -102,7 +90,6 @@ public class DatasetService {
             dataset.getRelationships().add(relationship);
         }
 
-        entityManager.persist(dataset);
         entityManager.flush();
         return datasetId;
     }
