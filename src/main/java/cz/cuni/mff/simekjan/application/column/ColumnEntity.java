@@ -1,7 +1,10 @@
 package cz.cuni.mff.simekjan.application.column;
 
 import cz.cuni.mff.simekjan.application.table.TableEntity;
+import cz.cuni.mff.simekjan.model.ColumnDatatype;
 import jakarta.persistence.Column;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
@@ -31,21 +34,24 @@ public class ColumnEntity {
     @Column(nullable = false)
     private String name;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "column_type", nullable = false)
-    private String datatype;
+    private ColumnDatatype datatype;
 
-    private Boolean indexed;
+    @Column(name = "is_indexed", nullable = false)
+    private boolean indexed;
 
-    @Column(name = "is_part_of_key")
-    private Boolean partOfKey;
+    @Column(name = "is_part_of_key", nullable = false)
+    private boolean partOfKey;
 
-    @Column(name = "is_unused", nullable = true)
-    private Boolean unused = null;
+    @Column(name = "is_unused", nullable = false)
+    private boolean unused;
 
-    @Column(name = "is_hidden", nullable = true)
-    private Boolean hidden = null;
+    @Column(name = "is_hidden", nullable = false)
+    private boolean hidden;
 
-    private Boolean optional;
+    @Column(name = "is_optional", nullable = false)
+    private boolean optional;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "table_id", nullable = false)

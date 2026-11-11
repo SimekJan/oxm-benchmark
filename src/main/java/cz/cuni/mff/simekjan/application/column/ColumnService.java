@@ -1,8 +1,9 @@
 package cz.cuni.mff.simekjan.application.column;
 
+import cz.cuni.mff.simekjan.application.column.mapper.ColumnMapper;
+import cz.cuni.mff.simekjan.application.operation.OperationService;
 import cz.cuni.mff.simekjan.application.table.TableEntity;
 import cz.cuni.mff.simekjan.model.DatasetSchemaTablesInnerColumnsInner;
-import cz.cuni.mff.simekjan.model.NodeOperationArrayInner;
 import cz.cuni.mff.simekjan.model.PatchColumnVisibilityCommand;
 import cz.cuni.mff.simekjan.model.TableColumn;
 import cz.cuni.mff.simekjan.model.UpdateTableColumnRelationshipsCommand;
@@ -11,7 +12,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.UUID;
 
 @RequiredArgsConstructor
@@ -20,16 +20,18 @@ import java.util.UUID;
 public class ColumnService {
 
     private final ColumnRepository columnRepository;
+    private final ColumnMapper columnMapper;
+    private final OperationService operationService;
 
     @Transactional
     public void createColumn(TableEntity table, DatasetSchemaTablesInnerColumnsInner columnSchema) {
         ColumnEntity column = new ColumnEntity();
         column.setId(UUID.randomUUID());
         column.setName(columnSchema.getName());
-        column.setDatatype(columnSchema.getDatatype().getValue());
-        column.setIndexed(columnSchema.getIndexed());
-        column.setPartOfKey(columnSchema.getIsKey());
-        column.setOptional(columnSchema.getOptional());
+        column.setDatatype(columnSchema.getDatatype());
+        column.setIndexed(Boolean.TRUE.equals(columnSchema.getIndexed()));
+        column.setPartOfKey(Boolean.TRUE.equals(columnSchema.getIsKey()));
+        column.setOptional(Boolean.TRUE.equals(columnSchema.getOptional()));
         column.setTable(table);
 
         ColumnEntity savedColumn = columnRepository.save(column);
@@ -43,7 +45,7 @@ public class ColumnService {
         }
 
         ColumnEntity column = getColumnEntity(columnId);
-        if (!Boolean.TRUE.equals(column.getUnused())) {
+        if (!column.isUnused()) {
             throw new IllegalArgumentException("Only unused columns can be hidden or shown");
         }
 
@@ -53,14 +55,8 @@ public class ColumnService {
 
     public TableColumn getColumn(UUID columnId) {
         ColumnEntity column = getColumnEntity(columnId);
-        TableColumn response = new TableColumn();
-        response.setId(column.getId());
-        response.setTableId(column.getTable().getId());
-        response.setName(column.getName());
-        response.setType(TableColumn.TypeEnum.fromValue(column.getDatatype()));
-        response.setUnused(Boolean.TRUE.equals(column.getUnused()));
-        response.setHidden(Boolean.TRUE.equals(column.getHidden()));
-        response.setOperations(List.<NodeOperationArrayInner>of());
+        TableColumn response = columnMapper.toTableColumn(column);
+        response.setOperations(operationService.getOperationsForColumn(columnId));
         return response;
     }
 

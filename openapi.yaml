@@ -655,8 +655,7 @@ components:
                     name:
                       type: string
                     datatype:
-                      type: string
-                      enum: [ string, boolean, integer, float, date ]
+                      $ref: "#/components/schemas/ColumnDatatype"
                     indexed:
                       type: boolean
                     isKey:
@@ -778,6 +777,10 @@ components:
               items:
                 $ref: "#/components/schemas/TableColumnBase"
 
+    ColumnDatatype:
+      type: string
+      enum: [ string, boolean, integer, float, date ]
+
     TableColumnBase:
       description: Specific fields of table.
       type: object
@@ -785,7 +788,7 @@ components:
         - id
         - tableId
         - name
-        - type
+        - datatype
         - unused
       properties:
         id:
@@ -796,9 +799,8 @@ components:
           format: uuid
         name:
           type: string
-        type:
-          type: string
-          enum: [ string, integer, float, date, boolean ]
+        datatype:
+          $ref: "#/components/schemas/ColumnDatatype"
       oneOf:
         - properties:
             unused:
@@ -816,7 +818,7 @@ components:
         id: EXAMPLE_COLUMN_ID
         tableId: EXAMPLE_TABLE_ID
         name: EXAMPLE_COLUMN_NAME
-        type: string
+        datatype: string
         unused: true
         hidden: false
 
@@ -828,7 +830,6 @@ components:
         - type: object
           required:
             - operations
-            - info
           properties:
             operations:
               $ref: "#/components/schemas/NodeOperationArray"
@@ -928,13 +929,23 @@ components:
           type: integer
 
     NodeOperationArray:
-      description: Array of all node operations for given column.
+      description: Brief information about operations using the column.
       type: array
       items:
-        type: object
-        allOf:
-          - $ref: "#/components/schemas/OperationBase"
-          - $ref: "#/components/schemas/NodeOperation"
+        $ref: "#/components/schemas/OperationInfo"
+
+    OperationInfo:
+      description: Brief information about an operation.
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
 
     BenchmarkOperation:
       description: Info about an operation executed in a query over some column(s).
