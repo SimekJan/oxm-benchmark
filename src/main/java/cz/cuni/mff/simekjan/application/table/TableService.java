@@ -1,10 +1,9 @@
 package cz.cuni.mff.simekjan.application.table;
 
-import cz.cuni.mff.simekjan.application.column.ColumnEntity;
+import cz.cuni.mff.simekjan.application.column.ColumnService;
 import cz.cuni.mff.simekjan.application.dataset.DatasetEntity;
 import cz.cuni.mff.simekjan.model.Table;
 import cz.cuni.mff.simekjan.model.DatasetSchemaTablesInner;
-import cz.cuni.mff.simekjan.model.DatasetSchemaTablesInnerColumnsInner;
 import cz.cuni.mff.simekjan.model.UpdateTableSizeCommand;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +18,7 @@ import java.util.UUID;
 public class TableService {
 
     private final TableRepository tableRepository;
+    private final ColumnService columnService;
     private final EntityManager entityManager;
 
     public Table getTable(UUID tableId) {
@@ -32,20 +32,9 @@ public class TableService {
         table.setName(tableSchema.getName());
         table.setDataset(dataset);
 
-        for (DatasetSchemaTablesInnerColumnsInner columnSchema : tableSchema.getColumns()) {
-            ColumnEntity column = new ColumnEntity();
-            column.setId(UUID.randomUUID());
-            column.setName(columnSchema.getName());
-            column.setDatatype(columnSchema.getDatatype().getValue());
-            column.setIndexed(columnSchema.getIndexed());
-            column.setPartOfKey(columnSchema.getIsKey());
-            column.setOptional(columnSchema.getOptional());
-            column.setTable(table);
-            table.getColumns().add(column);
-        }
-
         dataset.getTables().add(table);
         entityManager.persist(table);
+        tableSchema.getColumns().forEach(columnSchema -> columnService.createColumn(table, columnSchema));
         return table;
     }
 
