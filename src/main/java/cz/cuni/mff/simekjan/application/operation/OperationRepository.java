@@ -8,4 +8,10 @@ import java.util.UUID;
 public interface OperationRepository extends JpaRepository<OperationEntity, UUID> {
 
     List<OperationEntity> findAllByQuery_IdAndParentOperationIsNull(UUID queryId);
+
+    List<OperationEntity> findAllByColumn_IdOrColumn1_IdOrColumn2_Id(
+        UUID columnId,
+        UUID column1Id,
+        UUID column2Id
+    );
 }

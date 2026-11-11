@@ -1,12 +1,21 @@
 package cz.cuni.mff.simekjan.application.operation;
 
+import cz.cuni.mff.simekjan.application.operation.mapper.OperationMapper;
 import cz.cuni.mff.simekjan.application.query.QueryEntity;
+import cz.cuni.mff.simekjan.model.OperationInfo;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.Comparator;
+import java.util.List;
 import java.util.UUID;
 
 @Service
+@RequiredArgsConstructor
 public class OperationServiceImpl implements OperationService {
+
+    private final OperationRepository operationRepository;
+    private final OperationMapper operationMapper;
 
     @Override
     public OperationEntity createOperation(QueryEntity queryEntity) {
@@ -57,5 +66,14 @@ public class OperationServiceImpl implements OperationService {
         child.setParentOperation(parent);
         child.setParentSlot(childSlot);
         parent.getChildOperations().add(child);
+    }
+
+    @Override
+    public List<OperationInfo> getOperationsForColumn(UUID columnId) {
+        return operationRepository.findAllByColumn_IdOrColumn1_IdOrColumn2_Id(columnId, columnId, columnId)
+            .stream()
+            .sorted(Comparator.comparing(OperationEntity::getName).thenComparing(OperationEntity::getId))
+            .map(operationMapper::toOperationInfo)
+            .toList();
     }
 }
