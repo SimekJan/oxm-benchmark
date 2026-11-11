@@ -56,6 +56,7 @@ Concrete examples from the codebase:
 ## Project-specific conventions
 
 - In `src/main/java/cz/cuni/mff/simekjan/application/`, which uses SQLite for application metadata, prefer Spring Data repositories for persistence over direct `EntityManager` usage. This convention applies only to the metadata/application layer; it does not apply to benchmark workload code that operates on the selected databases using OXMs and database-specific adapters.
+- Define application services as interfaces with Spring-managed `*ServiceImpl` implementations. Inject service interfaces into controllers and other services; keep repository and persistence access inside the owning service implementation.
 - Keep database-specific logic in the DB-specific package tree; do not mix Mongo/Neo4j/Postgres logic into a single service layer.
 - Preserve the benchmark stage boundaries: generator != importer != runner.
 - When changing generated data volume or benchmark behavior, update the matching config keys in `oxm_config.yaml` and the corresponding Docker/service setup in `compose.yaml`.

@@ -1,146 +1,24 @@
 package cz.cuni.mff.simekjan.application.benchmark;
 
-import cz.cuni.mff.simekjan.application.dataset.DatasetEntity;
-import cz.cuni.mff.simekjan.application.dataset.DatasetService;
-import cz.cuni.mff.simekjan.application.query.QueryEntity;
-import cz.cuni.mff.simekjan.application.query.QueryService;
-import cz.cuni.mff.simekjan.application.query.QuerySetEntity;
-import cz.cuni.mff.simekjan.application.table.TableEntity;
-import cz.cuni.mff.simekjan.generator.Generator;
 import cz.cuni.mff.simekjan.model.Benchmark;
 import cz.cuni.mff.simekjan.model.BenchmarkBase;
 import cz.cuni.mff.simekjan.model.CreateBenchmarkCommand;
-import cz.cuni.mff.simekjan.model.GenerateBenchmarkDatabasesCommand;
-import cz.cuni.mff.simekjan.model.DatasetDetail;
 import cz.cuni.mff.simekjan.model.GenerateBenchmarkCommand;
-import cz.cuni.mff.simekjan.model.GenerateBenchmarkFilesCommand;
-import cz.cuni.mff.simekjan.model.QueryInfo;
-import cz.cuni.mff.simekjan.model.TableBase;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 
-@RequiredArgsConstructor
-@Service
-@Transactional(readOnly = true)
-public class BenchmarkService {
+public interface BenchmarkService {
 
-    private final BenchmarkRepository benchmarkRepository;
-    private final DatasetService datasetService;
-    private final QueryService queryService;
+    List<BenchmarkBase> getAllBenchmarks();
 
-    public List<BenchmarkBase> getAllBenchmarks() {
-        return benchmarkRepository.findAll().stream()
-            .map(BenchmarkService::toBenchmarkBase)
-            .toList();
-    }
+    Benchmark getBenchmark(UUID benchmarkId);
 
-    public Benchmark getBenchmark(UUID benchmarkId) {
-        BenchmarkEntity entity = benchmarkRepository.findById(benchmarkId)
-            .orElseThrow(() -> new BenchmarkNotFoundException(benchmarkId));
+    UUID createBenchmark(CreateBenchmarkCommand command);
 
-        Benchmark benchmark = new Benchmark(
-            entity.getId().toString(),
-            entity.getName(),
-            Benchmark.StatusEnum.fromValue(entity.getStatus())
-        );
-        benchmark.setDataset(toDatasetDetail(entity.getDataset()));
-        benchmark.setQueries(entity.getQuerySet().getQueries().stream()
-            .sorted(Comparator.comparing(QueryEntity::getName))
-            .map(BenchmarkService::toQueryInfo)
-            .toList());
-        return benchmark;
-    }
+    void generateData(UUID benchmarkId, GenerateBenchmarkCommand command);
 
-    @Transactional
-    public UUID createBenchmark(CreateBenchmarkCommand command) {
-        if (command == null || command.getName() == null || command.getName().isBlank()) {
-            throw new IllegalArgumentException("Benchmark name must not be blank");
-        }
-
-        UUID datasetId = parseId(command.getDatasetId(), "datasetId");
-        UUID querySetId = parseId(command.getQuerySetId(), "querySetId");
-        DatasetEntity dataset = datasetService.getDatasetEntity(datasetId);
-        QuerySetEntity querySet = queryService.getQuerySetEntity(querySetId);
-        if (!querySet.getDataset().getId().equals(datasetId)) {
-            throw new IllegalArgumentException("Query set does not belong to dataset: " + datasetId);
-        }
-
-        BenchmarkEntity entity = new BenchmarkEntity();
-        entity.setId(UUID.randomUUID());
-        entity.setName(command.getName());
-        entity.setStatus(Benchmark.StatusEnum.READY.getValue());
-        entity.setDataset(dataset);
-        entity.setQuerySet(querySet);
-        return benchmarkRepository.save(entity).getId();
-    }
-
-    @Transactional
-    public void generateData(UUID benchmarkId, GenerateBenchmarkCommand command) {
-        if (command == null) {
-            throw new IllegalArgumentException("Generation command is required");
-        }
-
-        BenchmarkEntity benchmark = benchmarkRepository.findById(benchmarkId)
-            .orElseThrow(() -> new BenchmarkNotFoundException(benchmarkId));
-        var dataset = datasetService.getDatasetEntity(benchmark.getDataset().getId());
-        Generator generator = new Generator(dataset, benchmark.getQuerySet().getId());
-        if (command instanceof GenerateBenchmarkFilesCommand filesCommand) {
-            if (filesCommand.getFormat() == null) {
-                throw new IllegalArgumentException("File format is required");
-            }
-            generator.generateToFiles(filesCommand.getFormat());
-        } else if (command instanceof GenerateBenchmarkDatabasesCommand databasesCommand) {
-            if (databasesCommand.getDatabases() == null) {
-                throw new IllegalArgumentException("Database options are required");
-            }
-            generator.generateToDatabases(databasesCommand.getDatabases());
-        } else {
-            throw new IllegalArgumentException("Unsupported generation command");
-        }
-    }
-
-    private static UUID parseId(String value, String fieldName) {
-        if (value == null || value.isBlank()) {
-            throw new IllegalArgumentException(fieldName + " must not be blank");
-        }
-        try {
-            return UUID.fromString(value);
-        } catch (IllegalArgumentException exception) {
-            throw new IllegalArgumentException(fieldName + " must be a UUID", exception);
-        }
-    }
-
-    private static BenchmarkBase toBenchmarkBase(BenchmarkEntity entity) {
-        return new BenchmarkBase(
-            entity.getId().toString(),
-            entity.getName(),
-            BenchmarkBase.StatusEnum.fromValue(entity.getStatus())
-        );
-    }
-
-    private static DatasetDetail toDatasetDetail(DatasetEntity entity) {
-        DatasetDetail detail = new DatasetDetail(entity.getId(), entity.getName());
-        detail.setDescription(entity.getDescription());
-        detail.setRuntimeStatus(DatasetDetail.RuntimeStatusEnum.fromValue(entity.getRuntimeStatus()));
-        detail.setTables(entity.getTables().stream()
-            .sorted(Comparator.comparing(TableEntity::getName))
-            .map(table -> new TableBase(table.getId(), entity.getId(), table.getName()))
-            .toList());
-        return detail;
-    }
-
-    private static QueryInfo toQueryInfo(QueryEntity entity) {
-        QueryInfo info = new QueryInfo(entity.getId(), entity.getName());
-        info.setDescription(entity.getDescription());
-        return info;
-    }
-
-    public static class BenchmarkNotFoundException extends RuntimeException {
+    class BenchmarkNotFoundException extends RuntimeException {
         public BenchmarkNotFoundException(UUID benchmarkId) {
             super("Benchmark not found: " + benchmarkId);
         }
