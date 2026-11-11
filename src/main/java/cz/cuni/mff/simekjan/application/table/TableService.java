@@ -5,7 +5,6 @@ import cz.cuni.mff.simekjan.application.dataset.DatasetEntity;
 import cz.cuni.mff.simekjan.model.Table;
 import cz.cuni.mff.simekjan.model.DatasetSchemaTablesInner;
 import cz.cuni.mff.simekjan.model.UpdateTableSizeCommand;
-import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,7 +18,6 @@ public class TableService {
 
     private final TableRepository tableRepository;
     private final ColumnService columnService;
-    private final EntityManager entityManager;
 
     public Table getTable(UUID tableId) {
         return null;
@@ -32,10 +30,10 @@ public class TableService {
         table.setName(tableSchema.getName());
         table.setDataset(dataset);
 
-        dataset.getTables().add(table);
-        entityManager.persist(table);
-        tableSchema.getColumns().forEach(columnSchema -> columnService.createColumn(table, columnSchema));
-        return table;
+        TableEntity savedTable = tableRepository.save(table);
+        dataset.getTables().add(savedTable);
+        tableSchema.getColumns().forEach(columnSchema -> columnService.createColumn(savedTable, columnSchema));
+        return savedTable;
     }
 
     @Transactional

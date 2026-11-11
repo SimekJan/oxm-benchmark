@@ -14,7 +14,6 @@ import cz.cuni.mff.simekjan.model.CreateDatasetFromSchemaCommand;
 import cz.cuni.mff.simekjan.model.CreateDatasetWithoutSchemaCommand;
 import cz.cuni.mff.simekjan.model.CreateQuerySetCommand;
 import cz.cuni.mff.simekjan.model.QuerySetInfo;
-import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,7 +33,6 @@ public class DatasetService {
     private final DatasetRepository datasetRepository;
     private final QueryService queryService;
     private final TableService tableService;
-    private final EntityManager entityManager;
 
     public List<DatasetInfo> getDatasets() {
         return datasetRepository.findAll().stream()
@@ -64,8 +62,7 @@ public class DatasetService {
         dataset.setSchemaReady(true);
         dataset.setRuntimeStatus("BUILDING");
 
-        entityManager.persist(dataset);
-        entityManager.flush();
+        dataset = datasetRepository.save(dataset);
 
         Map<String, TableEntity> tablesByName = new HashMap<>();
         for (var tableSchema : command.getSchema().getTables()) {
@@ -90,7 +87,6 @@ public class DatasetService {
             dataset.getRelationships().add(relationship);
         }
 
-        entityManager.flush();
         return datasetId;
     }
 
