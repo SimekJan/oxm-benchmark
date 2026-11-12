@@ -63,7 +63,7 @@ public class LegacyGenerator {
 
         createDirectories();
 
-        DataProvider gen = new DataProvider(dataSeed);
+        LegacyDataProvider gen = new LegacyDataProvider(dataSeed);
 
         generateSuppliers(gen);
         generateProducts(gen);
@@ -91,7 +91,7 @@ public class LegacyGenerator {
     // Suppliers
     // -------------------------------------------------------------------------
 
-    private static void generateSuppliers(DataProvider gen) throws IOException {
+    private static void generateSuppliers(LegacyDataProvider gen) throws IOException {
 
         Path csvPath = csvDir.resolve("suppliers.csv");
         Path jsonPath = jsonDir.resolve("suppliers.json");
@@ -130,7 +130,7 @@ public class LegacyGenerator {
     // Products
     // -------------------------------------------------------------------------
 
-    private static void generateProducts(DataProvider gen) throws IOException {
+    private static void generateProducts(LegacyDataProvider gen) throws IOException {
 
         Path csvPath = csvDir.resolve("products.csv");
         Path jsonPath = jsonDir.resolve("products.json");
@@ -181,7 +181,7 @@ public class LegacyGenerator {
     // Employees
     // -------------------------------------------------------------------------
 
-    private static void generateEmployees(DataProvider gen) throws IOException {
+    private static void generateEmployees(LegacyDataProvider gen) throws IOException {
 
         Path csvPath = csvDir.resolve("employees.csv");
         Path jsonPath = jsonDir.resolve("employees.json");
@@ -233,7 +233,7 @@ public class LegacyGenerator {
         }
     }
 
-    private static void writeEmployee(long employeeId, Long reportsTo, DataProvider gen,
+    private static void writeEmployee(long employeeId, Long reportsTo, LegacyDataProvider gen,
                                       CSVPrinter csv, JsonGenerator json) throws IOException {
 
         String firstName = gen.nextFirstName();
@@ -266,7 +266,7 @@ public class LegacyGenerator {
     // Customers
     // -------------------------------------------------------------------------
 
-    private static void generateCustomers(DataProvider gen) throws IOException {
+    private static void generateCustomers(LegacyDataProvider gen) throws IOException {
 
         Path csvPath = csvDir.resolve("customers.csv");
         Path jsonPath = jsonDir.resolve("customers.json");
@@ -307,7 +307,7 @@ public class LegacyGenerator {
     // Orders
     // -------------------------------------------------------------------------
 
-    private static void generateOrders(DataProvider gen) throws IOException {
+    private static void generateOrders(LegacyDataProvider gen) throws IOException {
 
         Path csvPath = csvDir.resolve("orders.csv");
         Path jsonPath = jsonDir.resolve("orders.json");
@@ -349,7 +349,7 @@ public class LegacyGenerator {
     // Supplier -> Supplier
     // -------------------------------------------------------------------------
 
-    private static void generateSupplierRelationships(DataProvider gen) throws IOException {
+    private static void generateSupplierRelationships(LegacyDataProvider gen) throws IOException {
 
         Path csvPath = csvDir.resolve("supplier_relationships.csv");
         Path jsonPath = jsonDir.resolve("supplier_relationships.json");
@@ -398,7 +398,7 @@ public class LegacyGenerator {
     // Order -> Product
     // -------------------------------------------------------------------------
 
-    private static void generateOrderProducts(DataProvider gen) throws IOException {
+    private static void generateOrderProducts(LegacyDataProvider gen) throws IOException {
 
         Path csvPath = csvDir.resolve("order_products.csv");
         Path jsonPath = jsonDir.resolve("order_products.json");
@@ -444,7 +444,7 @@ public class LegacyGenerator {
     // Helpers
     // -------------------------------------------------------------------------
 
-    private static long randomId(DataProvider gen, long count) {
+    private static long randomId(LegacyDataProvider gen, long count) {
         return gen.nextInt(1, (int) count + 1);
     }
 
