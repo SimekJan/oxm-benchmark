@@ -1,11 +1,13 @@
 package cz.cuni.mff.simekjan.application.dataset;
 
 import cz.cuni.mff.simekjan.application.column.ColumnEntity;
+import cz.cuni.mff.simekjan.application.dataset.mapper.DatasetMapper;
 import cz.cuni.mff.simekjan.application.query.QueryService;
 import cz.cuni.mff.simekjan.application.relationship.RelationshipEntity;
 import cz.cuni.mff.simekjan.application.relationship.RelationshipType;
 import cz.cuni.mff.simekjan.application.table.TableEntity;
 import cz.cuni.mff.simekjan.application.table.TableService;
+import cz.cuni.mff.simekjan.model.DatasetDetail;
 import cz.cuni.mff.simekjan.model.DatasetInfo;
 import cz.cuni.mff.simekjan.model.DatasetRuntimeStatus;
 import cz.cuni.mff.simekjan.model.CreateDatasetFromDatabaseCommand;
@@ -33,6 +35,7 @@ public class DatasetServiceImpl implements DatasetService {
     private final DatasetRepository datasetRepository;
     private final QueryService queryService;
     private final TableService tableService;
+    private final DatasetMapper datasetMapper;
 
     public List<DatasetInfo> getDatasets() {
         return datasetRepository.findAll().stream()
@@ -48,6 +51,10 @@ public class DatasetServiceImpl implements DatasetService {
     public DatasetEntity getDatasetEntity(UUID datasetId) {
         return datasetRepository.findById(datasetId)
             .orElseThrow(() -> new DatasetNotFoundException(datasetId));
+    }
+
+    public DatasetDetail getDataset(UUID datasetId) {
+        return datasetMapper.toDatasetDetail(getDatasetEntity(datasetId));
     }
 
     @Transactional(noRollbackFor = ExecutorUnavailableException.class)

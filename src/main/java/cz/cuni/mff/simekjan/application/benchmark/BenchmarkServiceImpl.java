@@ -2,18 +2,16 @@ package cz.cuni.mff.simekjan.application.benchmark;
 
 import cz.cuni.mff.simekjan.application.dataset.DatasetEntity;
 import cz.cuni.mff.simekjan.application.dataset.DatasetService;
+import cz.cuni.mff.simekjan.application.dataset.mapper.DatasetMapper;
 import cz.cuni.mff.simekjan.application.query.QueryEntity;
 import cz.cuni.mff.simekjan.application.query.QueryService;
 import cz.cuni.mff.simekjan.application.query.QuerySetEntity;
-import cz.cuni.mff.simekjan.application.table.TableEntity;
 import cz.cuni.mff.simekjan.generator.DatasetGenerator;
 import cz.cuni.mff.simekjan.model.Benchmark;
 import cz.cuni.mff.simekjan.model.BenchmarkBase;
 import cz.cuni.mff.simekjan.model.CreateBenchmarkCommand;
-import cz.cuni.mff.simekjan.model.DatasetDetail;
 import cz.cuni.mff.simekjan.model.GenerateBenchmarkCommand;
 import cz.cuni.mff.simekjan.model.QueryInfo;
-import cz.cuni.mff.simekjan.model.TableBase;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,6 +29,7 @@ public class BenchmarkServiceImpl implements BenchmarkService {
     private final DatasetService datasetService;
     private final QueryService queryService;
     private final DatasetGenerator datasetGenerator;
+    private final DatasetMapper datasetMapper;
 
     public List<BenchmarkBase> getAllBenchmarks() {
         return benchmarkRepository.findAll().stream()
@@ -47,7 +46,7 @@ public class BenchmarkServiceImpl implements BenchmarkService {
             entity.getName(),
             Benchmark.StatusEnum.fromValue(entity.getStatus())
         );
-        benchmark.setDataset(toDatasetDetail(entity.getDataset()));
+        benchmark.setDataset(datasetMapper.toDatasetDetail(entity.getDataset()));
         benchmark.setQueries(entity.getQuerySet().getQueries().stream()
             .sorted(Comparator.comparing(QueryEntity::getName))
             .map(BenchmarkServiceImpl::toQueryInfo)
@@ -115,17 +114,6 @@ public class BenchmarkServiceImpl implements BenchmarkService {
             entity.getName(),
             BenchmarkBase.StatusEnum.fromValue(entity.getStatus())
         );
-    }
-
-    private static DatasetDetail toDatasetDetail(DatasetEntity entity) {
-        DatasetDetail detail = new DatasetDetail(entity.getId(), entity.getName());
-        detail.setDescription(entity.getDescription());
-        detail.setRuntimeStatus(DatasetDetail.RuntimeStatusEnum.fromValue(entity.getRuntimeStatus()));
-        detail.setTables(entity.getTables().stream()
-            .sorted(Comparator.comparing(TableEntity::getName))
-            .map(table -> new TableBase(table.getId(), entity.getId(), table.getName()))
-            .toList());
-        return detail;
     }
 
     private static QueryInfo toQueryInfo(QueryEntity entity) {

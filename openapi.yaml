@@ -68,6 +68,24 @@ paths:
         '400':
           description: Bad request.
 
+  /dataset/{datasetId}:
+    parameters:
+      - $ref: "#/components/parameters/DatasetId"
+    get:
+      tags: [ Dataset, Initial config ]
+      operationId: getDataset
+      summary: Get dataset information
+      description: Returns basic dataset information and its tables.
+      responses:
+        '200':
+          description: Successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DatasetDetail"
+        '404':
+          description: Dataset not found.
+
   /datasets/{datasetId}/queries:
     parameters:
       - $ref: "#/components/parameters/DatasetId"

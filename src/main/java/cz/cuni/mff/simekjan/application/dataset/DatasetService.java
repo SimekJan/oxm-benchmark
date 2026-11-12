@@ -5,6 +5,7 @@ import cz.cuni.mff.simekjan.model.CreateDatasetFromFileCommand;
 import cz.cuni.mff.simekjan.model.CreateDatasetFromSchemaCommand;
 import cz.cuni.mff.simekjan.model.CreateDatasetWithoutSchemaCommand;
 import cz.cuni.mff.simekjan.model.CreateQuerySetCommand;
+import cz.cuni.mff.simekjan.model.DatasetDetail;
 import cz.cuni.mff.simekjan.model.DatasetInfo;
 import cz.cuni.mff.simekjan.model.DatasetRuntimeStatus;
 import cz.cuni.mff.simekjan.model.QuerySetInfo;
@@ -15,6 +16,8 @@ import java.util.UUID;
 public interface DatasetService {
 
     List<DatasetInfo> getDatasets();
+
+    DatasetDetail getDataset(UUID datasetId);
 
     DatasetEntity getDatasetEntity(UUID datasetId);
 

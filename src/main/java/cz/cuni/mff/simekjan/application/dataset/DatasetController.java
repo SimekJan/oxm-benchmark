@@ -22,6 +22,15 @@ public class DatasetController implements DatasetApi {
     }
 
     @Override
+    public ResponseEntity<DatasetDetail> getDataset(UUID datasetId) {
+        try {
+            return ResponseEntity.ok(datasetService.getDataset(datasetId));
+        } catch (DatasetService.DatasetNotFoundException exception) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @Override
     public ResponseEntity<List<QuerySetInfo>> getQueries(UUID datasetId) {
         return ResponseEntity.ok(datasetService.getQuerySets(datasetId));
     }
