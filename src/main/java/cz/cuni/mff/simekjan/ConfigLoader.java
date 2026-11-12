@@ -24,7 +24,7 @@ public class ConfigLoader {
     public static Map<String, Object> getConfig() throws IOException {
         String configFile = System.getenv().getOrDefault(
             "CONFIG_FILE",
-            "oxm_generator.yaml"
+            "oxm_config.yaml"
         );
 
         Yaml yaml = new Yaml();

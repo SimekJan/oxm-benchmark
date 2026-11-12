@@ -37,7 +37,7 @@ public class TableEntity {
     private String name;
 
     @Column(name = "number_of_rows")
-    private Integer numberOfRows;
+    private Integer numberOfRows = 0;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "dataset_id", nullable = false)

@@ -5,7 +5,7 @@ databaseToUse:
   - mongoEmbedded
 
 generator:
-  outputDir: /data
+  outputDir: ./generatedData
   keepData: true
   dataSeed: 1234567890
   dataSize: small
