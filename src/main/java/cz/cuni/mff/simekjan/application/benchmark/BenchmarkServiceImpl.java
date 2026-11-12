@@ -6,7 +6,9 @@ import cz.cuni.mff.simekjan.application.query.QueryEntity;
 import cz.cuni.mff.simekjan.application.query.QueryService;
 import cz.cuni.mff.simekjan.application.query.QuerySetEntity;
 import cz.cuni.mff.simekjan.application.table.TableEntity;
+import cz.cuni.mff.simekjan.generator.CsvGenerator;
 import cz.cuni.mff.simekjan.generator.Generator;
+import cz.cuni.mff.simekjan.generator.JsonGenerator;
 import cz.cuni.mff.simekjan.model.Benchmark;
 import cz.cuni.mff.simekjan.model.BenchmarkBase;
 import cz.cuni.mff.simekjan.model.CreateBenchmarkCommand;
@@ -86,11 +88,19 @@ public class BenchmarkServiceImpl implements BenchmarkService {
         BenchmarkEntity benchmark = benchmarkRepository.findById(benchmarkId)
             .orElseThrow(() -> new BenchmarkNotFoundException(benchmarkId));
         var dataset = datasetService.getDatasetEntity(benchmark.getDataset().getId());
-        Generator generator = new Generator(dataset, benchmark.getQuerySet().getId());
         if (command.getFormat() == null) {
             throw new IllegalArgumentException("File format is required");
         }
-        generator.generateToFiles(command.getFormat());
+        QuerySetEntity querySet = benchmark.getQuerySet();
+        if (dataset.getQuerySets().stream().noneMatch(candidate -> candidate.getId().equals(querySet.getId()))) {
+            throw new IllegalArgumentException("Query set does not belong to dataset: " + querySet.getId());
+        }
+
+        Generator generator = switch (command.getFormat()) {
+            case CSV -> new CsvGenerator();
+            case JSON -> new JsonGenerator();
+        };
+        generator.generate(dataset, querySet);
     }
 
     private static UUID parseId(String value, String fieldName) {

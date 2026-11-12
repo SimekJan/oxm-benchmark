@@ -2,34 +2,14 @@ package cz.cuni.mff.simekjan.generator;
 
 import cz.cuni.mff.simekjan.application.dataset.DatasetEntity;
 import cz.cuni.mff.simekjan.application.query.QuerySetEntity;
-import cz.cuni.mff.simekjan.model.GenerateBenchmarkCommand;
-
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
 
 /**
- * Generates data for a benchmark using its dataset and selected query set.
+ * Generates benchmark data in a specific output format.
  */
-public class Generator {
-
-    private final DatasetEntity dataset;
-    private final QuerySetEntity querySet;
-
-    public Generator(DatasetEntity dataset, UUID querySetId) {
-        this.dataset = Objects.requireNonNull(dataset, "dataset");
-        Objects.requireNonNull(querySetId, "querySetId");
-        this.querySet = dataset.getQuerySets().stream()
-            .filter(candidate -> candidate.getId().equals(querySetId))
-            .findFirst()
-            .orElseThrow(() -> new IllegalArgumentException(
-                "Query set does not belong to dataset: " + querySetId
-            ));
-    }
+public interface Generator {
 
     /**
-     * Generates benchmark data as files in the requested format.
+     * Generates data for the given dataset and query set.
      */
-    public void generateToFiles(GenerateBenchmarkCommand.FormatEnum format) {
-    }
+    void generate(DatasetEntity dataset, QuerySetEntity querySet);
 }
