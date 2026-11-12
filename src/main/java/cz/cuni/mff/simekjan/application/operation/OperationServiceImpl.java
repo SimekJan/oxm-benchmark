@@ -25,6 +25,7 @@ public class OperationServiceImpl implements OperationService {
 
         OperationEntity operation = new OperationEntity();
         operation.setId(UUID.randomUUID());
+        operation.setResultsCount(0);
         operation.setQuery(queryEntity);
         queryEntity.getOperations().add(operation);
         return operation;

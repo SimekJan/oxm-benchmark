@@ -67,7 +67,6 @@ public class QueryServiceImpl implements QueryService {
         querySet.setId(UUID.randomUUID());
         querySet.setName(command.getName());
         querySet.setDataset(dataset);
-        dataset.getQuerySets().add(querySet);
 
         for (CreateQuerySetCommandFilesInner file : command.getFiles()) {
             QueryEntity queryEntity = new QueryEntity();
@@ -88,8 +87,9 @@ public class QueryServiceImpl implements QueryService {
             }
         }
 
-        querySetRepository.saveAndFlush(querySet);
-        return querySet.getId();
+        QuerySetEntity savedQuerySet = querySetRepository.saveAndFlush(querySet);
+        dataset.getQuerySets().add(savedQuerySet);
+        return savedQuerySet.getId();
     }
 
 }
