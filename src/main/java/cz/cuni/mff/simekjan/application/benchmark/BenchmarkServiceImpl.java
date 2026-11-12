@@ -6,9 +6,7 @@ import cz.cuni.mff.simekjan.application.query.QueryEntity;
 import cz.cuni.mff.simekjan.application.query.QueryService;
 import cz.cuni.mff.simekjan.application.query.QuerySetEntity;
 import cz.cuni.mff.simekjan.application.table.TableEntity;
-import cz.cuni.mff.simekjan.generator.CsvGenerator;
-import cz.cuni.mff.simekjan.generator.Generator;
-import cz.cuni.mff.simekjan.generator.JsonGenerator;
+import cz.cuni.mff.simekjan.generator.DatasetGenerator;
 import cz.cuni.mff.simekjan.model.Benchmark;
 import cz.cuni.mff.simekjan.model.BenchmarkBase;
 import cz.cuni.mff.simekjan.model.CreateBenchmarkCommand;
@@ -32,6 +30,7 @@ public class BenchmarkServiceImpl implements BenchmarkService {
     private final BenchmarkRepository benchmarkRepository;
     private final DatasetService datasetService;
     private final QueryService queryService;
+    private final DatasetGenerator datasetGenerator;
 
     public List<BenchmarkBase> getAllBenchmarks() {
         return benchmarkRepository.findAll().stream()
@@ -96,11 +95,7 @@ public class BenchmarkServiceImpl implements BenchmarkService {
             throw new IllegalArgumentException("Query set does not belong to dataset: " + querySet.getId());
         }
 
-        Generator generator = switch (command.getFormat()) {
-            case CSV -> new CsvGenerator();
-            case JSON -> new JsonGenerator();
-        };
-        generator.generate(dataset, querySet);
+        datasetGenerator.generate(dataset, command.getFormat());
     }
 
     private static UUID parseId(String value, String fieldName) {
