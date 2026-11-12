@@ -202,7 +202,7 @@ paths:
       tags: [ Benchmark, Benchmark config ]
       operationId: generateData
       summary: Generate benchmark data
-      description: Generate benchmark data as files or insert it into databases based on the configured metadata.
+      description: Generate benchmark data as files.
       requestBody:
         required: true
         content:
@@ -1162,43 +1162,13 @@ components:
           type: string
 
     GenerateBenchmarkCommand:
-      description: Options for generating benchmark data.
-      oneOf:
-        - $ref: "#/components/schemas/GenerateBenchmarkFilesCommand"
-        - $ref: "#/components/schemas/GenerateBenchmarkDatabasesCommand"
-      discriminator:
-        propertyName: generationType
-        mapping:
-          file: "#/components/schemas/GenerateBenchmarkFilesCommand"
-          database: "#/components/schemas/GenerateBenchmarkDatabasesCommand"
-
-    GenerateBenchmarkFilesCommand:
       type: object
       required:
-        - generationType
         - format
       properties:
-        generationType:
-          type: string
-          pattern: '^file$'
         format:
           type: string
           enum: [ CSV, JSON ]
-
-    GenerateBenchmarkDatabasesCommand:
-      type: object
-      required:
-        - generationType
-        - databases
-      properties:
-        generationType:
-          type: string
-          pattern: '^database$'
-        databases:
-          type: array
-          description: Database options to be specified in a future API version.
-          items:
-            type: object
 
     BenchmarkBase:
       description: Specific fields for basic benchmark info.

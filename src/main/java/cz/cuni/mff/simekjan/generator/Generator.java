@@ -2,7 +2,7 @@ package cz.cuni.mff.simekjan.generator;
 
 import cz.cuni.mff.simekjan.application.dataset.DatasetEntity;
 import cz.cuni.mff.simekjan.application.query.QuerySetEntity;
-import cz.cuni.mff.simekjan.model.GenerateBenchmarkFilesCommand;
+import cz.cuni.mff.simekjan.model.GenerateBenchmarkCommand;
 
 import java.util.List;
 import java.util.Objects;
@@ -30,12 +30,6 @@ public class Generator {
     /**
      * Generates benchmark data as files in the requested format.
      */
-    public void generateToFiles(GenerateBenchmarkFilesCommand.FormatEnum format) {
-    }
-
-    /**
-     * Generates benchmark data directly in the requested databases.
-     */
-    public void generateToDatabases(List<Object> databases) {
+    public void generateToFiles(GenerateBenchmarkCommand.FormatEnum format) {
     }
 }

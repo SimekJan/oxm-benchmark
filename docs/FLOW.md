@@ -32,7 +32,6 @@ flowchart LR
     READONLY_DATABASE --> SCHEMA_ANALYSER
     QUERIES --> SCHEMA_ANALYSER
     CODE_QUERIES --> SCHEMA_ANALYSER
-
     INFERRED_SCHEMA --> GENERATE
     INITIAL_DATA --> GENERATE
     INFERRED_METADATA <--> ADJUST
@@ -45,9 +44,9 @@ flowchart LR
     subgraph CONFIG["2 - User configuration and Data generation"]
         ADJUST(["User adjusts number of items, values and cardinalities"])
         GENERATE(["Generate / update dataset"])
-        EXPORT(["Export data / changes to DBs or CSV"])
+        EXPORT(["Export data / changes to CSV or JSON"])
         ADJUST --> GENERATE
-        GENERATE --> ADJUST 
+        GENERATE --> ADJUST
         GENERATE --> EXPORT
     end
 
@@ -59,16 +58,15 @@ flowchart LR
 
     subgraph OUTPUTS["4 - App outputs"]
         RESULTS(["Query performance results"])
-        RESULT_DATASET(["CSV with generated data"])
+        RESULT_DATASET(["CSV / JSON with generated data"])
     end
 
     EXPORT --> RESULT_DATASET
-    GENERATED_DATASET(["CSV dataset to import"]) --> IMPORTER
+    GENERATED_DATASET(["CSV / JSON dataset to import"]) --> IMPORTER
     IMPORTER --> RUN
     RUN --> RESULTS
     QUERIES_IN_CODE --> RUN
     ENTITIES_IN_CODE --> IMPORTER
-
     classDef input fill: #DBEAFE, stroke: #2563EB, color: #1E3A8A
     classDef init fill: #EDE9FE, stroke: #7C3AED, color: #4C1D95
     classDef config fill: #222222, stroke: #D97706, color: #78350F

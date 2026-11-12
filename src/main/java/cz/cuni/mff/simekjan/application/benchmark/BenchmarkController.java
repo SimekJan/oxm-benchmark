@@ -42,7 +42,7 @@ public class BenchmarkController implements BenchmarkApi {
             return ResponseEntity.badRequest().build();
         }
     }
-    
+
     @Override
     public ResponseEntity<Void> generateData(UUID benchmarkId, GenerateBenchmarkCommand generateBenchmarkCommand) {
         try {
