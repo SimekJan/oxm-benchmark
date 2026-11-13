@@ -1,8 +1,12 @@
-# OXM-benchmark 
+# OXM-benchmark
 
-See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the intended application architecture and Main App workflow. The implementation details below describe current runtime behavior.
+As of now the benchmark is in an early stage of development and is not yet fully functional. The readme reflects an
+older version of the application and will be updated as the project progresses. Currently, the closest to a finished
+documentation are the [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) file and the [docs/FLOW.md](docs/FLOW.md) file with
+visualizations of the intended inner workings.
 
 ## Running the experiment
+
 ```bash
 # first run this to compile JAR file, or after changing Java code
 mvn clean package
@@ -23,12 +27,12 @@ After the `importer` runs, you can find the data imported to the running instanc
 
 After the `runner` runs, you can find the results in `/data/results.json`.
 
-Generated files in `/data` are not automatically deleted ofter Docker ends runing.
+Generated files in `/data` are not automatically deleted ofter Docker ends running.
 
 ## Connecting to the DBs
 
-- All ports for the databases are moved from the standard ports to avoid clash 
-  with local instances during development and benchmark usage. 
+- All ports for the databases are moved from the standard ports to avoid clash
+  with local instances during development and benchmark usage.
 
 ### MongoDB
 
@@ -51,7 +55,7 @@ All config can be changed in `oxm_config.yaml` in root of the project.
 
 ### Mongo
 
-To use local instance of MongoDB instead of container change: 
+To use local instance of MongoDB instead of container change:
 
 ```yaml
 importer:
@@ -59,7 +63,7 @@ importer:
     connection: mongodb://host.docker.internal:27017
 ```
 
-Similarly for the rest of the DBs.
+Similarly, for the rest of the DBs.
 
 ## Building the Spring Boot app
 
@@ -68,10 +72,6 @@ To build the project first you need to compile the generated source by running:
 ```bash
 mvn clean generate-sources
 ```
-in root directory. This will generate API endpoints interfaces to be implemented by the code and model for data transfer in the API methods.
 
-## Dynamic dataset executor
-
-The Compose stack includes an `executor` service on port `8081`. The main application sends each schema to this service when creating a dataset. The executor generates Java entity classes, compiles them in a dataset-specific directory under `data/executor`, and starts a separate supervised JVM process. Build and runtime status is available from `GET /datasets/{datasetId}/status` (`BUILDING`, `READY`, or `FAILED`).
-
-Dataset schemas and executor status are persisted so the main application can report state and the executor can rebuild its generated processes after restart. The generated runtime currently exposes only readiness and schema inspection endpoints. Existing column/table configuration routes in the public API describe benchmark distributions and sizes, not individual record CRUD; forwarding those configuration changes to regenerate records and connecting benchmark query execution to generated runtimes remain to be implemented.
+in root directory. This will generate API endpoints interfaces to be implemented by the code and model for data transfer
+in the API methods.
