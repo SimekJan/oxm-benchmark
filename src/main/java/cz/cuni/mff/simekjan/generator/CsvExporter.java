@@ -14,6 +14,9 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Implements CSV serialization for generated dataset records.
+ */
 @Component
 public class CsvExporter implements DataExporter {
 

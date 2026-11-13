@@ -45,6 +45,9 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+/**
+ * Converts SQL query structure into query operation metadata.
+ */
 @RequiredArgsConstructor
 final class SqlOperationExtractor {
 

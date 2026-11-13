@@ -18,6 +18,9 @@ import org.hibernate.type.SqlTypes;
 
 import java.util.UUID;
 
+/**
+ * Represents a Benchmark and its associated dataset and queries.
+ */
 @Data
 @NoArgsConstructor
 @Entity

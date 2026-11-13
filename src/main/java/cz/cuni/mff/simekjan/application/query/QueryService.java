@@ -7,6 +7,9 @@ import cz.cuni.mff.simekjan.model.QuerySetInfo;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Defines business logic methods to operate with queries and query sets.
+ */
 public interface QueryService {
 
     List<QuerySetInfo> getQuerySets(UUID datasetId);

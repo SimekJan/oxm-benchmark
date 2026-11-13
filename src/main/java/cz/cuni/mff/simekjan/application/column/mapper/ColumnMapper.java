@@ -8,6 +8,9 @@ import cz.cuni.mff.simekjan.model.TableColumnBaseOneOf1;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
+/**
+ * Defines mappings between column entities and API models.
+ */
 @Mapper(componentModel = "spring")
 public interface ColumnMapper {
 

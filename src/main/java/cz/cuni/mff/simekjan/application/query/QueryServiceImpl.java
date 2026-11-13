@@ -13,6 +13,9 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Implements business logic for operating with queries and query sets.
+ */
 @RequiredArgsConstructor
 @Service
 @Transactional(readOnly = true)

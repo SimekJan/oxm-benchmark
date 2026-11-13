@@ -7,6 +7,9 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Selects the analyzer for a query format.
+ */
 @Component
 public class QueryAnalyzerFactory {
 

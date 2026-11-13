@@ -2,6 +2,9 @@ package cz.cuni.mff.simekjan.generator;
 
 import java.util.List;
 
+/**
+ * Defines sample vocabularies used by the generator.
+ */
 public class DataPools {
 
     public static final List<String> FIRST_NAMES = List.of(

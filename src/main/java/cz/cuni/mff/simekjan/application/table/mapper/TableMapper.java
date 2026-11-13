@@ -7,6 +7,9 @@ import cz.cuni.mff.simekjan.model.TableBase;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
+/**
+ * Defines mappings between table entities and API models.
+ */
 @Mapper(componentModel = "spring", uses = ColumnMapper.class)
 public interface TableMapper {
 

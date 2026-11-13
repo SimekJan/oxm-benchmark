@@ -7,6 +7,9 @@ import cz.cuni.mff.simekjan.model.UpdateTableSizeCommand;
 
 import java.util.UUID;
 
+/**
+ * Defines business logic methods to operate with dataset tables.
+ */
 public interface TableService {
 
     Table getTable(UUID tableId);

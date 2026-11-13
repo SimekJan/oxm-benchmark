@@ -11,6 +11,9 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Defines API endpoints for working with Benchmarks.
+ */
 @RestController
 @RequiredArgsConstructor
 public class BenchmarkController implements BenchmarkApi {

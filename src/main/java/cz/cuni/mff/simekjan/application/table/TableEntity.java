@@ -22,6 +22,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Represents a table and its schema within a dataset.
+ */
 @Data
 @NoArgsConstructor
 @Entity

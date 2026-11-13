@@ -9,6 +9,9 @@ import cz.cuni.mff.simekjan.model.UpdateTableColumnValuesCommand;
 
 import java.util.UUID;
 
+/**
+ * Defines business logic methods to operate with dataset columns.
+ */
 public interface ColumnService {
 
     void createColumn(TableEntity table, DatasetSchemaTablesInnerColumnsInner columnSchema);

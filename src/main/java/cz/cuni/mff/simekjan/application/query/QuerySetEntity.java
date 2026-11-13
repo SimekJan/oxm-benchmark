@@ -21,6 +21,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Represents a set of queries associated with a dataset.
+ */
 @Data
 @NoArgsConstructor
 @Entity

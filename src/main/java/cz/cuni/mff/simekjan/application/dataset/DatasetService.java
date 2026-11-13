@@ -13,6 +13,9 @@ import cz.cuni.mff.simekjan.model.QuerySetInfo;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Defines business logic methods to operate with Datasets.
+ */
 public interface DatasetService {
 
     List<DatasetInfo> getDatasets();

@@ -27,6 +27,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+/**
+ * Implements business logic for operating with Datasets.
+ */
 @RequiredArgsConstructor
 @Service
 @Transactional(readOnly = true)

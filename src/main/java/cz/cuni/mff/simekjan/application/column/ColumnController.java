@@ -11,6 +11,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.UUID;
 
+/**
+ * Implements API endpoints for working with dataset columns.
+ */
 @RequiredArgsConstructor
 @RestController
 public class ColumnController implements ColumnApi {

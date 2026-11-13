@@ -8,6 +8,9 @@ import cz.cuni.mff.simekjan.model.QueryFileFormat;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+/**
+ * Implements query analysis for queries expressed in the Java Hibernate format.
+ */
 @RequiredArgsConstructor
 @Component
 public class HibernateOrmJavaQueryAnalyzer implements QueryAnalyzer {

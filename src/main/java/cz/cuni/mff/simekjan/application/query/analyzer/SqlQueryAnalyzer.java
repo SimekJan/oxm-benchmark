@@ -8,6 +8,9 @@ import cz.cuni.mff.simekjan.model.QueryFileFormat;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+/**
+ * Implements query analysis for queries expressed in SQL.
+ */
 @RequiredArgsConstructor
 @Component
 public class SqlQueryAnalyzer implements QueryAnalyzer {

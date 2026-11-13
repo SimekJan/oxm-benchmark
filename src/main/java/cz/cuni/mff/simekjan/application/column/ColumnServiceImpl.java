@@ -14,6 +14,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
+/**
+ * Implements business logic for operating with dataset columns.
+ */
 @RequiredArgsConstructor
 @Service
 @Transactional(readOnly = true)

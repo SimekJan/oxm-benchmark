@@ -24,6 +24,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Represents a specific operation associated with a query.
+ */
 @Data
 @NoArgsConstructor
 @Entity

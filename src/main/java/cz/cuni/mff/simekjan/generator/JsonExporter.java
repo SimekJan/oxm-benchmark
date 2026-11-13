@@ -16,6 +16,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+/**
+ * Implements JSON serialization for generated dataset records.
+ */
 @Component
 public class JsonExporter implements DataExporter {
 

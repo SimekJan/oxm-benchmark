@@ -9,6 +9,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.UUID;
 
+/**
+ * Implements API endpoints for working with dataset tables.
+ */
 @RequiredArgsConstructor
 @RestController
 public class TableController implements TableApi {

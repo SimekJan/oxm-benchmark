@@ -3,6 +3,9 @@ package cz.cuni.mff.simekjan.generator;
 import java.time.LocalDate;
 import java.util.SplittableRandom;
 
+/**
+ * Provides sample values for the legacy generator.
+ */
 public class LegacyDataProvider {
 
     private final SplittableRandom random;

@@ -14,6 +14,9 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Generates records from dataset metadata and coordinates their serialization.
+ */
 @Service
 public class DatasetGenerator {
 

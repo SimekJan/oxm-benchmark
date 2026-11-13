@@ -6,6 +6,9 @@ import cz.cuni.mff.simekjan.model.OperationInfo;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Defines business logic methods to operate with query operations.
+ */
 public interface OperationService {
 
     OperationEntity createOperation(QueryEntity queryEntity);

@@ -20,6 +20,9 @@ import org.hibernate.type.SqlTypes;
 
 import java.util.UUID;
 
+/**
+ * Represents a column in a dataset schema.
+ */
 @Data
 @NoArgsConstructor
 @Entity

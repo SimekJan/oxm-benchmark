@@ -20,6 +20,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Represents a Dataset and its associated metadata.
+ */
 @Data
 @NoArgsConstructor
 @Entity

@@ -10,6 +10,9 @@ import org.mapstruct.MappingTarget;
 
 import java.util.Comparator;
 
+/**
+ * Defines mappings between dataset entities and API models.
+ */
 @Mapper(componentModel = "spring", uses = TableMapper.class)
 public interface DatasetMapper {
 

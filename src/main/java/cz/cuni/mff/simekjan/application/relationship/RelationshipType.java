@@ -1,5 +1,8 @@
 package cz.cuni.mff.simekjan.application.relationship;
 
+/**
+ * Defines relationship cardinalities supported by a dataset schema.
+ */
 public enum RelationshipType {
     ONE_TO_ONE("one-to-one"),
     ONE_TO_MANY("one-to-many"),

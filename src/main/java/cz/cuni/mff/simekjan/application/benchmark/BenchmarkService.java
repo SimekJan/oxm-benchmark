@@ -8,6 +8,9 @@ import cz.cuni.mff.simekjan.model.GenerateBenchmarkCommand;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Defines business logic methods to operate with Benchmarks.
+ */
 public interface BenchmarkService {
 
     List<BenchmarkBase> getAllBenchmarks();
