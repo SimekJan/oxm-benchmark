@@ -8,6 +8,7 @@ dependencies, not additional application components.
 The Main App's API coordinates analysis, dataset generation and metadata storage within the same application.
 
 ```mermaid
+
 flowchart TD
     subgraph SPRING_BOOT_APP["Spring Boot application"]
         API[Spring Boot API]
@@ -20,25 +21,33 @@ flowchart TD
     RunInputs([Zipped app with entities and queries])
     Runner[Runner]
     RunInputs --> Runner
+
     Client[External client] -->|API requests| API
+    
     API -->|Dataset definitions| Analyzer
     API <-->|Updates to data| DatasetWorkbench
     API -->|Generate data| Generator
+    
     Analyzer -->|Uniform DB schema| DatasetWorkbench
     Analyzer -->|Save analyzed schema| Metadata
+    
     DatasetWorkbench -->|Schema, distributions + optional initial data| Generator
     DatasetWorkbench <-->|Update distributions| Metadata
+    
     Generator -->|Generated records| DataFiles[CSV or JSON files]
     Databases[(Selected databases / repositories)]
     DataFiles -->|Import data| Databases
     Metadata -->|Uses metadata| Generator
     Runner -->|Execute queries| Databases
+
     Metadata ~~~ Databases
     Metadata ~~~ DataFiles
+    
     classDef external stroke: #64748B, stroke-width: 1.5px
     classDef mainApp stroke: #2563EB, stroke-width: 1.5px
-    class Client, Databases external
-    class API, Analyzer, Generator, Runner, Metadata, DatasetWorkbench mainApp
+    class Client,Databases external
+    class API,Analyzer,Generator,Runner,Metadata,DatasetWorkbench mainApp
+
 ```
 
 ### Responsibilities
