@@ -2,6 +2,8 @@ package cz.cuni.mff.simekjan.application.query;
 
 import cz.cuni.mff.simekjan.application.dataset.DatasetEntity;
 import cz.cuni.mff.simekjan.model.CreateQuerySetCommand;
+import cz.cuni.mff.simekjan.model.QueryDetail;
+import cz.cuni.mff.simekjan.model.QuerySetDetail;
 import cz.cuni.mff.simekjan.model.QuerySetInfo;
 
 import java.util.List;
@@ -13,6 +15,10 @@ import java.util.UUID;
 public interface QueryService {
 
     List<QuerySetInfo> getQuerySets(UUID datasetId);
+
+    QueryDetail getQuery(UUID queryId);
+
+    QuerySetDetail getQuerySet(UUID datasetId, UUID querySetId);
 
     QuerySetEntity getQuerySetEntity(UUID querySetId);
 
@@ -27,6 +33,12 @@ public interface QueryService {
     class QuerySetNotFoundException extends RuntimeException {
         public QuerySetNotFoundException(UUID querySetId) {
             super("Query set not found: " + querySetId);
+        }
+    }
+
+    class QueryNotFoundException extends RuntimeException {
+        public QueryNotFoundException(UUID queryId) {
+            super("Query not found: " + queryId);
         }
     }
 }

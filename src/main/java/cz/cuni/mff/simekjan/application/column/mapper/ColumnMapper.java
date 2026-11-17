@@ -24,6 +24,9 @@ public interface ColumnMapper {
     TableColumnBaseOneOf toUsedTableColumnBase(ColumnEntity column);
 
     default TableColumnBase toTableColumnBase(ColumnEntity column) {
+        if (column == null) {
+            return null;
+        }
         return column.isUnused()
             ? toUnusedTableColumnBase(column)
             : toUsedTableColumnBase(column);

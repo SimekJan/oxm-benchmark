@@ -1,15 +1,17 @@
 package cz.cuni.mff.simekjan.application.query;
 
 import cz.cuni.mff.simekjan.application.dataset.DatasetEntity;
+import cz.cuni.mff.simekjan.application.query.mapper.QueryMapper;
+import cz.cuni.mff.simekjan.application.query.mapper.QuerySetMapper;
 import cz.cuni.mff.simekjan.model.CreateQuerySetCommand;
 import cz.cuni.mff.simekjan.model.CreateQuerySetCommandFilesInner;
-import cz.cuni.mff.simekjan.model.QueryInfo;
+import cz.cuni.mff.simekjan.model.QueryDetail;
+import cz.cuni.mff.simekjan.model.QuerySetDetail;
 import cz.cuni.mff.simekjan.model.QuerySetInfo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 
@@ -22,26 +24,27 @@ import java.util.UUID;
 public class QueryServiceImpl implements QueryService {
 
     private final QuerySetRepository querySetRepository;
+    private final QueryRepository queryRepository;
     private final QueryAnalyzerFactory queryAnalyzerFactory;
+    private final QueryMapper queryMapper;
+    private final QuerySetMapper querySetMapper;
+
+    public QueryDetail getQuery(UUID queryId) {
+        QueryEntity query = queryRepository.findById(queryId)
+            .orElseThrow(() -> new QueryNotFoundException(queryId));
+        return queryMapper.toQueryDetail(query);
+    }
+
+    public QuerySetDetail getQuerySet(UUID datasetId, UUID querySetId) {
+        QuerySetEntity querySet = querySetRepository.findByIdAndDataset_Id(querySetId, datasetId)
+            .orElseThrow(() -> new QuerySetNotFoundException(querySetId));
+        return querySetMapper.toQuerySetDetail(querySet);
+    }
 
     public List<QuerySetInfo> getQuerySets(UUID datasetId) {
         return querySetRepository.findAllByDataset_IdOrderByNameAsc(datasetId)
             .stream()
-            .map(querySet -> {
-                List<QueryInfo> queries = querySet.getQueries().stream()
-                    .sorted(Comparator.comparing(QueryEntity::getName))
-                    .map(query -> {
-                        QueryInfo queryInfo = new QueryInfo(query.getId(), query.getName());
-                        queryInfo.setDescription(query.getDescription());
-                        return queryInfo;
-                    })
-                    .toList();
-                QuerySetInfo info = new QuerySetInfo();
-                info.setId(querySet.getId());
-                info.setName(querySet.getName());
-                info.setQueries(queries);
-                return info;
-            })
+            .map(querySetMapper::toQuerySetInfo)
             .toList();
     }
 

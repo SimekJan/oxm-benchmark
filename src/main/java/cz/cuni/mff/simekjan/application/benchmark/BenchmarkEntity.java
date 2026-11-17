@@ -9,9 +9,11 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import lombok.AccessLevel;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
@@ -38,8 +40,12 @@ public class BenchmarkEntity {
     @Column(nullable = false, length = 16)
     private String status;
 
+    @JdbcTypeCode(SqlTypes.VARCHAR)
+    @Column(name = "dataset_id", nullable = false, length = 36)
+    private UUID datasetId;
+
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "dataset_id", nullable = false)
+    @JoinColumn(name = "dataset_id", nullable = false, insertable = false, updatable = false)
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
     private DatasetEntity dataset;

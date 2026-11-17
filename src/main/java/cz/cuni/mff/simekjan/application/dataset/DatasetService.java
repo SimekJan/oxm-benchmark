@@ -1,14 +1,6 @@
 package cz.cuni.mff.simekjan.application.dataset;
 
-import cz.cuni.mff.simekjan.model.CreateDatasetFromDatabaseCommand;
-import cz.cuni.mff.simekjan.model.CreateDatasetFromFileCommand;
-import cz.cuni.mff.simekjan.model.CreateDatasetFromSchemaCommand;
-import cz.cuni.mff.simekjan.model.CreateDatasetWithoutSchemaCommand;
-import cz.cuni.mff.simekjan.model.CreateQuerySetCommand;
-import cz.cuni.mff.simekjan.model.DatasetDetail;
-import cz.cuni.mff.simekjan.model.DatasetInfo;
-import cz.cuni.mff.simekjan.model.DatasetRuntimeStatus;
-import cz.cuni.mff.simekjan.model.QuerySetInfo;
+import cz.cuni.mff.simekjan.model.*;
 
 import java.util.List;
 import java.util.UUID;
@@ -22,7 +14,9 @@ public interface DatasetService {
 
     DatasetDetail getDataset(UUID datasetId);
 
-    DatasetEntity getDatasetEntity(UUID datasetId);
+    void requireDataset(UUID datasetId);
+
+    void generateData(UUID datasetId, GenerateBenchmarkCommand.FormatEnum format);
 
     UUID createDatasetFromSchema(CreateDatasetFromSchemaCommand command);
 
@@ -35,6 +29,8 @@ public interface DatasetService {
     DatasetRuntimeStatus getRuntimeStatus(UUID datasetId);
 
     List<QuerySetInfo> getQuerySets(UUID datasetId);
+
+    QuerySetDetail getQuerySet(UUID datasetId, UUID querySetId);
 
     UUID createQuerySet(UUID datasetId, CreateQuerySetCommand command);
 

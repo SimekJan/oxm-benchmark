@@ -1,12 +1,9 @@
 package cz.cuni.mff.simekjan.application.benchmark;
 
-import cz.cuni.mff.simekjan.application.dataset.DatasetEntity;
 import cz.cuni.mff.simekjan.application.dataset.DatasetService;
-import cz.cuni.mff.simekjan.application.dataset.mapper.DatasetMapper;
 import cz.cuni.mff.simekjan.application.query.QueryEntity;
 import cz.cuni.mff.simekjan.application.query.QueryService;
 import cz.cuni.mff.simekjan.application.query.QuerySetEntity;
-import cz.cuni.mff.simekjan.generator.DatasetGenerator;
 import cz.cuni.mff.simekjan.model.Benchmark;
 import cz.cuni.mff.simekjan.model.BenchmarkBase;
 import cz.cuni.mff.simekjan.model.CreateBenchmarkCommand;
@@ -31,8 +28,6 @@ public class BenchmarkServiceImpl implements BenchmarkService {
     private final BenchmarkRepository benchmarkRepository;
     private final DatasetService datasetService;
     private final QueryService queryService;
-    private final DatasetGenerator datasetGenerator;
-    private final DatasetMapper datasetMapper;
 
     public List<BenchmarkBase> getAllBenchmarks() {
         return benchmarkRepository.findAll().stream()
@@ -49,7 +44,7 @@ public class BenchmarkServiceImpl implements BenchmarkService {
             entity.getName(),
             Benchmark.StatusEnum.fromValue(entity.getStatus())
         );
-        benchmark.setDataset(datasetMapper.toDatasetDetail(entity.getDataset()));
+        benchmark.setDataset(datasetService.getDataset(entity.getDatasetId()));
         benchmark.setQueries(entity.getQuerySet().getQueries().stream()
             .sorted(Comparator.comparing(QueryEntity::getName))
             .map(BenchmarkServiceImpl::toQueryInfo)
@@ -65,7 +60,7 @@ public class BenchmarkServiceImpl implements BenchmarkService {
 
         UUID datasetId = parseId(command.getDatasetId(), "datasetId");
         UUID querySetId = parseId(command.getQuerySetId(), "querySetId");
-        DatasetEntity dataset = datasetService.getDatasetEntity(datasetId);
+        datasetService.requireDataset(datasetId);
         QuerySetEntity querySet = queryService.getQuerySetEntity(querySetId);
         if (!querySet.getDataset().getId().equals(datasetId)) {
             throw new IllegalArgumentException("Query set does not belong to dataset: " + datasetId);
@@ -75,7 +70,7 @@ public class BenchmarkServiceImpl implements BenchmarkService {
         entity.setId(UUID.randomUUID());
         entity.setName(command.getName());
         entity.setStatus(Benchmark.StatusEnum.READY.getValue());
-        entity.setDataset(dataset);
+        entity.setDatasetId(datasetId);
         entity.setQuerySet(querySet);
         return benchmarkRepository.save(entity).getId();
     }
@@ -88,16 +83,17 @@ public class BenchmarkServiceImpl implements BenchmarkService {
 
         BenchmarkEntity benchmark = benchmarkRepository.findById(benchmarkId)
             .orElseThrow(() -> new BenchmarkNotFoundException(benchmarkId));
-        var dataset = datasetService.getDatasetEntity(benchmark.getDataset().getId());
+        UUID datasetId = benchmark.getDatasetId();
+        datasetService.requireDataset(datasetId);
         if (command.getFormat() == null) {
             throw new IllegalArgumentException("File format is required");
         }
         QuerySetEntity querySet = benchmark.getQuerySet();
-        if (dataset.getQuerySets().stream().noneMatch(candidate -> candidate.getId().equals(querySet.getId()))) {
+        if (!querySet.getDataset().getId().equals(datasetId)) {
             throw new IllegalArgumentException("Query set does not belong to dataset: " + querySet.getId());
         }
 
-        datasetGenerator.generate(dataset, command.getFormat());
+        datasetService.generateData(datasetId, command.getFormat());
     }
 
     private static UUID parseId(String value, String fieldName) {

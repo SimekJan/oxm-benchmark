@@ -7,15 +7,8 @@ import cz.cuni.mff.simekjan.application.relationship.RelationshipEntity;
 import cz.cuni.mff.simekjan.application.relationship.RelationshipType;
 import cz.cuni.mff.simekjan.application.table.TableEntity;
 import cz.cuni.mff.simekjan.application.table.TableService;
-import cz.cuni.mff.simekjan.model.DatasetDetail;
-import cz.cuni.mff.simekjan.model.DatasetInfo;
-import cz.cuni.mff.simekjan.model.DatasetRuntimeStatus;
-import cz.cuni.mff.simekjan.model.CreateDatasetFromDatabaseCommand;
-import cz.cuni.mff.simekjan.model.CreateDatasetFromFileCommand;
-import cz.cuni.mff.simekjan.model.CreateDatasetFromSchemaCommand;
-import cz.cuni.mff.simekjan.model.CreateDatasetWithoutSchemaCommand;
-import cz.cuni.mff.simekjan.model.CreateQuerySetCommand;
-import cz.cuni.mff.simekjan.model.QuerySetInfo;
+import cz.cuni.mff.simekjan.generator.DatasetGenerator;
+import cz.cuni.mff.simekjan.model.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,6 +32,7 @@ public class DatasetServiceImpl implements DatasetService {
     private final QueryService queryService;
     private final TableService tableService;
     private final DatasetMapper datasetMapper;
+    private final DatasetGenerator datasetGenerator;
 
     public List<DatasetInfo> getDatasets() {
         return datasetRepository.findAll().stream()
@@ -51,13 +45,28 @@ public class DatasetServiceImpl implements DatasetService {
             .toList();
     }
 
-    public DatasetEntity getDatasetEntity(UUID datasetId) {
+    private DatasetEntity getDatasetEntity(UUID datasetId) {
         return datasetRepository.findById(datasetId)
             .orElseThrow(() -> new DatasetNotFoundException(datasetId));
     }
 
+    public void requireDataset(UUID datasetId) {
+        if (!datasetRepository.existsById(datasetId)) {
+            throw new DatasetNotFoundException(datasetId);
+        }
+    }
+
+    public void generateData(UUID datasetId, GenerateBenchmarkCommand.FormatEnum format) {
+        if (format == null) {
+            throw new IllegalArgumentException("File format is required");
+        }
+        datasetGenerator.generate(getDatasetEntity(datasetId), format);
+    }
+
     public DatasetDetail getDataset(UUID datasetId) {
-        return datasetMapper.toDatasetDetail(getDatasetEntity(datasetId));
+        DatasetDetail detail = datasetMapper.toDatasetDetail(getDatasetEntity(datasetId));
+        detail.setQuerySets(queryService.getQuerySets(datasetId));
+        return detail;
     }
 
     @Transactional(noRollbackFor = ExecutorUnavailableException.class)
@@ -119,7 +128,13 @@ public class DatasetServiceImpl implements DatasetService {
     }
 
     public List<QuerySetInfo> getQuerySets(UUID datasetId) {
+        getDatasetEntity(datasetId);
         return queryService.getQuerySets(datasetId);
+    }
+
+    @Override
+    public QuerySetDetail getQuerySet(UUID datasetId, UUID querySetId) {
+        return queryService.getQuerySet(datasetId, querySetId);
     }
 
     @Transactional

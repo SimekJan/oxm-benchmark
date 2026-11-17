@@ -1,6 +1,7 @@
 package cz.cuni.mff.simekjan.application.dataset;
 
 import cz.cuni.mff.simekjan.api.DatasetApi;
+import cz.cuni.mff.simekjan.application.query.QueryService;
 import cz.cuni.mff.simekjan.application.query.QueryService.QuerySetCreationNotImplementedException;
 import cz.cuni.mff.simekjan.model.*;
 import lombok.RequiredArgsConstructor;
@@ -34,13 +35,21 @@ public class DatasetController implements DatasetApi {
     }
 
     @Override
-    public ResponseEntity<List<QuerySetInfo>> getQueries(UUID datasetId) {
-        return ResponseEntity.ok(datasetService.getQuerySets(datasetId));
+    public ResponseEntity<List<QuerySetInfo>> getQuerySets(UUID datasetId) {
+        try {
+            return ResponseEntity.ok(datasetService.getQuerySets(datasetId));
+        } catch (DatasetService.DatasetNotFoundException exception) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @Override
-    public ResponseEntity<QueryDetail> getQuery(UUID datasetId, UUID queryId) {
-        return null;
+    public ResponseEntity<QuerySetDetail> getQuerySet(UUID datasetId, UUID querySetId) {
+        try {
+            return ResponseEntity.ok(datasetService.getQuerySet(datasetId, querySetId));
+        } catch (QueryService.QuerySetNotFoundException exception) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @Override

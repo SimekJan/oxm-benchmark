@@ -6,6 +6,7 @@ import cz.cuni.mff.simekjan.model.DatasetDetail;
 import cz.cuni.mff.simekjan.model.TableBase;
 import org.mapstruct.AfterMapping;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 
 import java.util.Comparator;
@@ -16,6 +17,7 @@ import java.util.Comparator;
 @Mapper(componentModel = "spring", uses = TableMapper.class)
 public interface DatasetMapper {
 
+    @Mapping(target = "querySets", ignore = true)
     DatasetDetail toDatasetDetail(DatasetEntity dataset);
 
     @AfterMapping

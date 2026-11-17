@@ -75,7 +75,7 @@ paths:
       tags: [ Dataset, Initial config ]
       operationId: getDataset
       summary: Get dataset information
-      description: Returns basic dataset information and its tables.
+      description: Returns basic dataset information, its tables, and query-set summaries.
       responses:
         '200':
           description: Successful response.
@@ -86,14 +86,14 @@ paths:
         '404':
           description: Dataset not found.
 
-  /datasets/{datasetId}/queries:
+  /datasets/{datasetId}/querySets:
     parameters:
       - $ref: "#/components/parameters/DatasetId"
     get:
       tags: [ Dataset, Query, Initial config ]
-      operationId: getQueries
+      operationId: getQuerySets
       summary: Get all query sets prepared in the app for given dataset
-      description: Returns all query sets attached to the dataset, including their queries.
+      description: Returns all query-set summaries attached to the dataset.
       responses:
         '200':
           description: Successful response.
@@ -103,6 +103,8 @@ paths:
                 $ref: "#/components/schemas/QuerySetInfoArray"
         '400':
           description: Bad request.
+        '404':
+          description: Dataset not found.
     post:
       tags: [ Dataset, Query, Initial config ]
       operationId: postQuerySet
@@ -119,18 +121,38 @@ paths:
           $ref: "#/components/responses/SimpleIdResponse"
         '400':
           description: Bad request.
+        '404':
+          description: Dataset not found.
         '501':
           description: Query sets for the provided file format are not implemented.
 
-  /datasets/{datasetId}/queries/{queryId}:
+  /datasets/{datasetId}/querySets/{querySetId}:
     parameters:
       - $ref: "#/components/parameters/DatasetId"
+      - $ref: "#/components/parameters/QuerySetId"
+    get:
+      tags: [ Dataset, Query, Initial config ]
+      operationId: getQuerySet
+      summary: Get query-set detail
+      description: Returns the queries in a query set belonging to the dataset.
+      responses:
+        '200':
+          description: Successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuerySetDetail"
+        '404':
+          description: Query set not found for the dataset.
+
+  /queries/{queryId}:
+    parameters:
       - $ref: "#/components/parameters/QueryId"
     get:
-      tags: [ Dataset, Query, Benchmark config ]
+      tags: [ Query, Benchmark config ]
       operationId: getQuery
       summary: Get query detail
-      description: Get dataset's query operation based on ID.
+      description: Returns query information and its operation tree.
       responses:
         '200':
           description: Successful response.
@@ -140,6 +162,8 @@ paths:
                 $ref: "#/components/schemas/QueryDetail"
         '400':
           description: Bad request.
+        '404':
+          description: Query not found.
 
   /datasets/{datasetId}/status:
     parameters:
@@ -754,6 +778,8 @@ components:
           properties:
             tables:
               $ref: "#/components/schemas/TableInfoArray"
+            querySets:
+              $ref: "#/components/schemas/QuerySetInfoArray"
 
     TableInfoArray:
       description: Array of basic info about Tables.
@@ -972,12 +998,17 @@ components:
         - oneOf:
             - $ref: "#/components/schemas/NestedOperation"
             - $ref: "#/components/schemas/NodeOperation"
+        - type: object
+          properties:
+            operationType:
+              type: string
+              enum: [ AND, OR, NOT, MATCH, LESS_THAN, MORE_THAN, RANGE, SORT, COUNT, EXTREME, JOIN ]
       example:
         id: EXAMPLE_OPERATION_ID
         name: EXAMPLE_OPERATION
         resultsCount: 1234
-        type: MATCH
-        value: 42
+        operationType: MATCH
+        value: "42"
         column:
           id: EXAMPLE_COLUMN_ID
           tableId: EXAMPLE_TABLE_ID
@@ -1116,20 +1147,28 @@ components:
         $ref: "#/components/schemas/QuerySetInfo"
 
     QuerySetInfo:
-      description: Brief query-set information, including its queries.
+      description: Brief query-set information.
       type: object
       required:
         - id
         - name
-        - queries
       properties:
         id:
           type: string
           format: uuid
         name:
           type: string
-        queries:
-          $ref: "#/components/schemas/QueryInfoArray"
+
+    QuerySetDetail:
+      description: Query-set information and its queries.
+      allOf:
+        - $ref: "#/components/schemas/QuerySetInfo"
+        - type: object
+          required:
+            - queries
+          properties:
+            queries:
+              $ref: "#/components/schemas/QueryInfoArray"
 
     QueryBase:
       description: Basic Query specific fields.
@@ -1158,11 +1197,11 @@ components:
       allOf:
         - $ref: "#/components/schemas/QueryBase"
         - type: object
-          required:
-            - operations
           properties:
             operations:
-              $ref: "#/components/schemas/BenchmarkOperation"
+              type: array
+              items:
+                $ref: "#/components/schemas/BenchmarkOperation"
 
     CreateBenchmarkCommand:
       type: object
@@ -1326,6 +1365,14 @@ components:
       in: path
       name: queryId
       description: ID of required query in URL.
+      required: true
+      schema:
+        type: string
+        format: uuid
+    QuerySetId:
+      in: path
+      name: querySetId
+      description: ID of required query set in URL.
       required: true
       schema:
         type: string
