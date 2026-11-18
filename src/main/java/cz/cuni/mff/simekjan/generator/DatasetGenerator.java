@@ -3,6 +3,7 @@ package cz.cuni.mff.simekjan.generator;
 import cz.cuni.mff.simekjan.application.column.ColumnEntity;
 import cz.cuni.mff.simekjan.application.dataset.DatasetEntity;
 import cz.cuni.mff.simekjan.application.table.TableEntity;
+import cz.cuni.mff.simekjan.generator.exporter.DataExporter;
 import cz.cuni.mff.simekjan.model.ColumnDatatype;
 import cz.cuni.mff.simekjan.model.GenerateBenchmarkCommand;
 import org.springframework.stereotype.Service;

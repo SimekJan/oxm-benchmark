@@ -1,8 +1,9 @@
-package cz.cuni.mff.simekjan.generator;
+package cz.cuni.mff.simekjan.generator.exporter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import cz.cuni.mff.simekjan.ConfigLoader;
 import cz.cuni.mff.simekjan.application.dataset.DatasetEntity;
+import cz.cuni.mff.simekjan.generator.GeneratedTable;
 import cz.cuni.mff.simekjan.model.GenerateBenchmarkCommand;
 import org.springframework.stereotype.Component;
 
