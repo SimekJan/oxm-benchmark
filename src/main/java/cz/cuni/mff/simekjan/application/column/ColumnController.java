@@ -57,6 +57,13 @@ public class ColumnController implements ColumnApi {
         UUID columnId,
         UpdateTableColumnValuesCommand updateTableColumnValuesCommand
     ) {
-        return null;
+        try {
+            columnService.updateColumnValues(columnId, updateTableColumnValuesCommand);
+            return ResponseEntity.ok().build();
+        } catch (IllegalArgumentException exception) {
+            return ResponseEntity.badRequest().build();
+        } catch (ColumnService.ColumnNotFoundException exception) {
+            return ResponseEntity.notFound().build();
+        }
     }
 }

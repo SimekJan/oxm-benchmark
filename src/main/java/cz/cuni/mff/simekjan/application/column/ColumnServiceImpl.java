@@ -65,10 +65,35 @@ public class ColumnServiceImpl implements ColumnService {
 
     @Transactional
     public void updateColumnRelationships(UUID columnId, UpdateTableColumnRelationshipsCommand command) {
+        throw new RuntimeException("Not implemented yet");
     }
 
     @Transactional
     public void updateColumnValues(UUID columnId, UpdateTableColumnValuesCommand command) {
+        ColumnEntity column = getColumnEntity(columnId);
+        if (command.getUniqueValues() != null) {
+            column.setUniqueValues(command.getUniqueValues());
+        }
+        if (command.getIndexed() != null) {
+            column.setIndexed(command.getIndexed());
+        }
+        if (command.getNumberOfUniqueValues() != null) {
+            column.setNumberOfUniqueValues(command.getNumberOfUniqueValues());
+        }
+        if (command.getPartOfKey() != null) {
+            column.setPartOfKey(command.getPartOfKey());
+        }
+        if (command.getOptional() != null) {
+            column.setOptional(command.getOptional());
+        }
+        if (command.getDistribution() != null) {
+            column.setDistribution(command.getDistribution());
+        }
+        if (command.getValueDistribution() != null) {
+            command.getValueDistribution().forEach(valueDistribution ->
+                column.getValueDistribution().put(valueDistribution.getValue(), valueDistribution.getCount())
+            );
+        }
     }
 
     private ColumnEntity getColumnEntity(UUID columnId) {

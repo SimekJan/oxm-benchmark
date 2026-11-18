@@ -520,11 +520,19 @@ components:
           type: boolean
         uniqueValues:
           type: boolean
+        partOfKey:
+          type: boolean
+        optional:
+          type: boolean
         valueDistribution:
           $ref: "#/components/schemas/ValueDistribution"
         distribution:
-          type: string
-          enum: [ normal, exponential, uniform ]
+          $ref: "#/components/schemas/FunctionDistribution"
+
+    FunctionDistribution:
+      description: Functions for distribution definitions
+      type: string
+      enum: [ general, normal, exponential, uniform, logarithmic ]
 
     UpdateTableColumnRelationshipsCommand:
       description: Command for updating statistics for relationships in given column.
@@ -533,8 +541,7 @@ components:
         valueDistribution:
           $ref: "#/components/schemas/ValueDistribution"
         distribution:
-          type: string
-          enum: [ normal, exponential, logarithmic, uniform ]
+          $ref: "#/components/schemas/FunctionDistribution"
 
     UpdateOperationExactValueCommand:
       description: Data used to update exact value operation's value(s).
@@ -939,11 +946,7 @@ components:
         type: object
         properties:
           value:
-            oneOf:
-              - type: string
-              - type: integer
-              - type: number
-              - type: boolean
+            type: string
           count:
             type: integer
 
