@@ -60,5 +60,9 @@ flowchart TD
 
 ### Undecided:
 
-- How to generate **Employees relationships** table (if needed / supported)
+- How to generate **self-referential relationships** (if needed / supported) -> e.g. Employees table has a
+  self-referential relationship to itself (manager_id). Should it be generated as an additional table or should it be
+  generated after the table is created?
 
+- How to generate **cyclic relationships** (if needed / supported) between two or more tables. Not present in Northwind
+  dataset.
