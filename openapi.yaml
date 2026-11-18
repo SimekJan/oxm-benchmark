@@ -302,7 +302,7 @@ paths:
       - $ref: "#/components/parameters/BenchmarkOperationId"
     get:
       tags: [ Operation, Benchmark config ]
-      operationId: getOperations
+      operationId: getOperation
       summary: Get operation detail
       description: Get benchmark's specific operation based on ID.
       responses:

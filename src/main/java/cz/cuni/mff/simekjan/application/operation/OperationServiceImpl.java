@@ -1,6 +1,8 @@
 package cz.cuni.mff.simekjan.application.operation;
 
+import cz.cuni.mff.simekjan.application.operation.mapper.OperationMapper;
 import cz.cuni.mff.simekjan.application.query.QueryEntity;
+import cz.cuni.mff.simekjan.model.BenchmarkOperation;
 import cz.cuni.mff.simekjan.model.OperationInfo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -17,6 +19,14 @@ import java.util.UUID;
 public class OperationServiceImpl implements OperationService {
 
     private final OperationRepository operationRepository;
+    private final OperationMapper operationMapper;
+
+    @Override
+    public BenchmarkOperation getOperation(UUID operationId) {
+        return operationRepository.findById(operationId)
+            .map(operationMapper::toBenchmarkOperation)
+            .orElseThrow(() -> new OperationNotFoundException(operationId));
+    }
 
     @Override
     public OperationEntity createOperation(QueryEntity queryEntity) {
@@ -80,4 +90,6 @@ public class OperationServiceImpl implements OperationService {
             )
             .toList();
     }
+
+
 }
