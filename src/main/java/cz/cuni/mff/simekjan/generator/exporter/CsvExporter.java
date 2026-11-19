@@ -1,7 +1,6 @@
 package cz.cuni.mff.simekjan.generator.exporter;
 
 import cz.cuni.mff.simekjan.ConfigLoader;
-import cz.cuni.mff.simekjan.application.dataset.DatasetEntity;
 import cz.cuni.mff.simekjan.generator.GeneratedTable;
 import cz.cuni.mff.simekjan.model.GenerateBenchmarkCommand;
 import org.apache.commons.csv.CSVFormat;
@@ -12,8 +11,8 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.List;
-import java.util.UUID;
 
 /**
  * Implements CSV serialization for generated dataset records.
@@ -29,17 +28,21 @@ public class CsvExporter implements DataExporter {
     @Override
     public void write(String tableName, GeneratedTable data) throws IOException {
 
-        // TODO: handle if the file already exists, we are writing by batches
-
         Path outputDirectory = ConfigLoader.getCsvDir();
         Files.createDirectories(outputDirectory);
 
         Path outputFile = outputDirectory.resolve(tableName + ".csv");
+        boolean writeHeader = !Files.exists(outputFile) || Files.size(outputFile) == 0;
         try (
-            BufferedWriter writer = Files.newBufferedWriter(outputFile);
+            BufferedWriter writer = Files.newBufferedWriter(
+                outputFile, StandardOpenOption.CREATE, StandardOpenOption.APPEND
+            );
             CSVPrinter csv = new CSVPrinter(
                 writer,
-                CSVFormat.DEFAULT.builder().setHeader(data.columns().toArray(String[]::new)).get()
+                CSVFormat.DEFAULT.builder()
+                    .setHeader(data.columns().toArray(String[]::new))
+                    .setSkipHeaderRecord(!writeHeader)
+                    .get()
             )
         ) {
             for (List<Object> row : data.rows()) {
