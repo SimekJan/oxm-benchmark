@@ -1226,9 +1226,11 @@ components:
       required:
         - format
       properties:
-        format:
-          type: string
-          enum: [ CSV, JSON ]
+        formats:
+          type: array
+          items:
+            type: string
+            enum: [ CSV, JSON ]
 
     BenchmarkBase:
       description: Specific fields for basic benchmark info.

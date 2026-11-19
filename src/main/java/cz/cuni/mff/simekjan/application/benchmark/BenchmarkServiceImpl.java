@@ -85,15 +85,15 @@ public class BenchmarkServiceImpl implements BenchmarkService {
             .orElseThrow(() -> new BenchmarkNotFoundException(benchmarkId));
         UUID datasetId = benchmark.getDatasetId();
         datasetService.requireDataset(datasetId);
-        if (command.getFormat() == null) {
-            throw new IllegalArgumentException("File format is required");
+        if (command.getFormats() == null || command.getFormats().isEmpty()) {
+            throw new IllegalArgumentException("At least one file format is required");
         }
         QuerySetEntity querySet = benchmark.getQuerySet();
         if (!querySet.getDataset().getId().equals(datasetId)) {
             throw new IllegalArgumentException("Query set does not belong to dataset: " + querySet.getId());
         }
 
-        datasetService.generateData(datasetId, command.getFormat());
+        datasetService.generateData(datasetId, command.getFormats());
     }
 
     private static UUID parseId(String value, String fieldName) {

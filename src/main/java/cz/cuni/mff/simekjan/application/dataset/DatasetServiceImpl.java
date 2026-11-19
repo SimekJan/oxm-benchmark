@@ -56,11 +56,11 @@ public class DatasetServiceImpl implements DatasetService {
         }
     }
 
-    public void generateData(UUID datasetId, GenerateBenchmarkCommand.FormatEnum format) {
-        if (format == null) {
-            throw new IllegalArgumentException("File format is required");
+    public void generateData(UUID datasetId, List<GenerateBenchmarkCommand.FormatsEnum> formats) {
+        if (formats == null || formats.isEmpty()) {
+            throw new IllegalArgumentException("At least one file format is required");
         }
-        datasetGenerator.generate(getDatasetEntity(datasetId), format);
+        datasetGenerator.generate(getDatasetEntity(datasetId), formats);
     }
 
     public DatasetDetail getDataset(UUID datasetId) {

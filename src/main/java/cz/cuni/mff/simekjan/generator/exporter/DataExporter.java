@@ -12,7 +12,7 @@ import java.util.List;
  */
 public interface DataExporter {
 
-    GenerateBenchmarkCommand.FormatEnum getFormat();
+    GenerateBenchmarkCommand.FormatsEnum getFormat();
 
     void export(DatasetEntity dataset, List<GeneratedTable> tables) throws IOException;
 }

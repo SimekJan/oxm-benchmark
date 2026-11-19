@@ -16,7 +16,7 @@ public interface DatasetService {
 
     void requireDataset(UUID datasetId);
 
-    void generateData(UUID datasetId, GenerateBenchmarkCommand.FormatEnum format);
+    void generateData(UUID datasetId, List<GenerateBenchmarkCommand.FormatsEnum> format);
 
     UUID createDatasetFromSchema(CreateDatasetFromSchemaCommand command);
 
