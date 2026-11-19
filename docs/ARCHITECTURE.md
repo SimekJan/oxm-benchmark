@@ -47,7 +47,6 @@ flowchart TD
     classDef mainApp stroke: #2563EB, stroke-width: 1.5px
     class Client,Databases external
     class API,Analyzer,Generator,Runner,Metadata,DatasetWorkbench mainApp
-
 ```
 
 ### Responsibilities

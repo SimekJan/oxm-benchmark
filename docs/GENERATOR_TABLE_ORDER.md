@@ -32,6 +32,7 @@ after the two tables they depend on.
 
 ```mermaid
 classDiagram
+
     class Employee {
         +String firstName
         +String lastName
@@ -83,6 +84,19 @@ classDiagram
 
     Employee "1" <|-- "1" IsResponsibleFor
     Order "1" <|-- "n" IsResponsibleFor
+
+    style SuppliesTo fill: #000000, stroke: #93C5FD
+    style IsPartOf fill: #000000, stroke: #93C5FD
+    style SuppliesProduct fill: #000000, stroke: #93C5FD
+    style Ordered fill: #000000, stroke: #93C5FD
+    style ReportsTo fill: #000000, stroke: #93C5FD
+    style IsResponsibleFor fill: #000000, stroke: #93C5FD
+
+    style Employee fill: #111111, stroke: #1cc327
+    style Order fill: #111111, stroke: #1cc327
+    style Product fill: #111111, stroke: #1cc327
+    style Supplier fill: #111111, stroke: #1cc327
+    style Customer fill: #111111, stroke: #1cc327
 ```
 
 ### Order to generate the tables in:

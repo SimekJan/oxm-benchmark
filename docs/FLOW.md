@@ -67,9 +67,7 @@ flowchart LR
     RUN --> RESULTS
     QUERIES_IN_CODE --> RUN
     ENTITIES_IN_CODE --> IMPORTER
-    classDef input fill: #DBEAFE, stroke: #2563EB, color: #1E3A8A
-    classDef init fill: #EDE9FE, stroke: #7C3AED, color: #4C1D95
-    classDef config fill: #222222, stroke: #D97706, color: #78350F
+    
     style INPUTS_DATASET fill: #000000, stroke: #93C5FD
     style INPUTS_QUERIES fill: #000000, stroke: #93C5FD
     style SCHEMA_INFER fill: #000000, stroke: #5027f1
