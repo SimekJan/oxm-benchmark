@@ -5,36 +5,84 @@ Northwind dataset schema example.
 
 ## Basic ideas:
 
-1. Tables that share a relationship of type many-to-one (or one-to-many) creates a dependency between the two tables.
-   The table that is on the "many" side needs id / key of an existing row in the table on the "one" side for it's row to
-   be filled with correct values.
+For dataset generation we'll introduce two strategies to generate the tables in schema. The first strategy is beneficial in its simplicity and performance, but does not support all possible schemas. The second one is more complex and slower, but supports all possible schemas. The idea is to use the first strategy when possible and fallback to the second one when needed.
 
-2. Tables that depend on nothing should be generated first. Their ids (keys) will be used to generate data in later
-   tables.
+### Ordering tables by dependencies
 
-3. Tables that share a relationship of type many-to-many creates an additional relationship table. The relationship
-   table needs ids / keys of existing rows in both tables to be filled with correct values. These tables must be created
-   after the two tables they depend on.
+1. Tables that share a relationship of type many-to-one (or one-to-many) creates a dependency between the two tables. The table that is on the "many" side needs id / key of an existing row in the table on the "one" side for it's row to be filled with correct values.
 
-4. Self-referential relationships can be generated after the table is created. Preferably as an additional table
-   regardless of relationship type (**TODO: Final decision pending**).
+2. Tables that depend on nothing should be generated first. Their ids (keys) will be used to generate data in later tables.
+
+3. Tables that share a relationship of type many-to-many creates an additional relationship table. The relationship table needs ids / keys of existing rows in both tables to be filled with correct values. These tables must be created
+after the two tables they depend on.
+
+4. Self-referential relationships are possible to create this way only if represented as an additional table. 
+
+### Representing relationships as independent objects
+
+1. Some DB systems needs the relationships to be represented as independent objects. We'll use this representation to generate some parts of the datasets and representation if aligned in unfavorable way in the schema.
+
+2. When relationships are represented this way, the oriented dependency graph does not include directed circles. This allows us to first generate all the tables, then generate all the relationships. 
+
+3. This strategy might be the optimal one for graph databases.
+
+4. Also, can be used to generate self-referential relationships and Cyclic dependencies in all databases.
 
 ## Northwind dataset example
 
 ```mermaid
+classDiagram
+    class Employee {
+        +String firstName
+        +String lastName
+    }
+    class Product {
+        +String productName
+        +String category
+    }
+    class Supplier {
+        +String supplierName
+        +String city
+    }
+    class Order {
+        +String orderNumber
+        +String orderDate
+    }
+    class Customer {
+        +String customerName
+        +String city
+    }
 
-flowchart TD
-    SUPPLIERS(["Suppliers"])
-    EMPLOYEES(["Employees"])
-    CUSTOMERS(["Customers"])
-    ORDERS(["Orders"])
-    PRODUCTS(["Products"])
-    SUPPLIERS <--> SUPPLIERS
-    SUPPLIERS --> PRODUCTS
-    ORDERS <--> PRODUCTS
-    EMPLOYEES --> ORDERS
-    CUSTOMERS --> ORDERS
-    EMPLOYEES --> EMPLOYEES
+    class SuppliesTo {
+    }
+    class IsPartOf {
+    }
+    class SuppliesProduct {
+    }
+    class Ordered {
+    }
+    class ReportsTo {
+    }
+    class IsResponsibleFor {
+    }
+
+    SuppliesTo "n" --|> "1" Supplier
+    SuppliesTo "n" --|> "1" Supplier
+
+    Supplier "1" <|-- "1" SuppliesProduct
+    Product "1" <|-- "n" SuppliesProduct
+
+    IsPartOf "1" --|> "n" Order
+    IsPartOf "1" --|> "n" Product
+
+    Customer "1" <|-- "1" Ordered
+    Ordered "n" --|> "1" Order
+
+    ReportsTo "1" --|> "1" Employee
+    ReportsTo "n" --|> "1" Employee
+
+    Employee "1" <|-- "1" IsResponsibleFor
+    Order "1" <|-- "n" IsResponsibleFor
 ```
 
 ### Order to generate the tables in:
@@ -47,6 +95,7 @@ flowchart TD
     - Suppliers relationships table depends on Suppliers
 3. **Products-Orders relationships** table
     - Products-Orders relationships depends on Products and Orders
+4. **Fallback** on second strategy for Employees self-referential relationship (Reports to).
 
 ### Total tables to generate: 7
 
@@ -57,12 +106,3 @@ flowchart TD
 - Orders
 - Suppliers relationships table
 - Products-Orders relationships table
-
-### Undecided:
-
-- How to generate **self-referential relationships** (if needed / supported) -> e.g. Employees table has a
-  self-referential relationship to itself (manager_id). Should it be generated as an additional table or should it be
-  generated after the table is created?
-
-- How to generate **cyclic relationships** (if needed / supported) between two or more tables. Not present in Northwind
-  dataset.
