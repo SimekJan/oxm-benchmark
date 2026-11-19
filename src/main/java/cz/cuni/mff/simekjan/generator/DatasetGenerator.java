@@ -1,16 +1,12 @@
 package cz.cuni.mff.simekjan.generator;
 
-import cz.cuni.mff.simekjan.application.column.ColumnEntity;
 import cz.cuni.mff.simekjan.application.dataset.DatasetEntity;
-import cz.cuni.mff.simekjan.application.table.TableEntity;
 import cz.cuni.mff.simekjan.generator.exporter.DataExporter;
+import cz.cuni.mff.simekjan.generator.orderer.DataGeneratorOrderer;
 import cz.cuni.mff.simekjan.model.ColumnDatatype;
 import cz.cuni.mff.simekjan.model.GenerateBenchmarkCommand;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
@@ -22,6 +18,7 @@ import java.util.Map;
 public class DatasetGenerator {
 
     private final Map<GenerateBenchmarkCommand.FormatsEnum, DataExporter> exporters;
+    private final DataGeneratorOrderer orderer = new DataGeneratorOrderer();
 
     public DatasetGenerator(List<DataExporter> exporters) {
         Map<GenerateBenchmarkCommand.FormatsEnum, DataExporter> exportersByFormat =
@@ -58,47 +55,39 @@ public class DatasetGenerator {
         // Generate tables in order determined, possibly in parallel by whole order equivalence batch
 
         DataProvider dataProvider = new DataProvider(dataset.getId().getMostSignificantBits());
-        List<GeneratedTable> tables = dataset.getTables().stream()
-            .map(table -> generateTable(table, dataProvider))
-            .toList();
-/*
-        try {
-            // TODO: remake -- exporter.export(dataset, tables);
-        } catch (IOException exception) {
-            throw new UncheckedIOException("Failed to export generated dataset " + dataset.getId(), exception);
-        }
- */
-    }
 
-
-    private static GeneratedTable generateTable(TableEntity table, DataProvider dataProvider) {
-        Integer rowCount = table.getNumberOfRows();
-        if (rowCount == null || rowCount < 0) {
-            throw new IllegalStateException("Table size must be set before generating data: " + table.getName());
-        }
-
-        List<ColumnEntity> columns = table.getColumns();
-        List<String> columnNames = columns.stream().map(ColumnEntity::getName).toList();
-        List<List<Object>> rows = new ArrayList<>(rowCount);
-
-        for (int rowIndex = 0; rowIndex < rowCount; rowIndex++) {
-            List<Object> row = new ArrayList<>(columns.size());
-            for (ColumnEntity column : columns) {
-                row.add(generateValue(column.getDatatype(), dataProvider));
-            }
-            rows.add(row);
-        }
-        return new GeneratedTable(table.getId(), table.getName(), columnNames, rows);
+        throw new UnsupportedOperationException("Not implemented yet");
     }
 
     /**
-     *
+     * Generates all items (tables and relationships) in a batch (tables possible to generate at once)
      */
-    private static void generateBatch() {
-
+    private void generateItemBatch() {
+        throw new UnsupportedOperationException("Not implemented yet");
     }
 
-    private static Object generateValue(ColumnDatatype datatype, DataProvider dataProvider) {
+    /**
+     * Generates next table to be exported (either value table or relationship table)
+     */
+    private void generateNextItem() {
+        throw new UnsupportedOperationException("Not implemented yet");
+    }
+
+    /**
+     * Generates part of a table's data (one batch) and writes it to the specified exporters.
+     */
+    private static void generateBatch() {
+        throw new UnsupportedOperationException("Not implemented yet");
+    }
+
+    /**
+     * Generates a single value for a given column datatype using the provided data provider.
+     *
+     * @param datatype     Datatype to generate
+     * @param dataProvider Data provider to use for generating values
+     * @return Generated value for the specified datatype
+     */
+    private Object generateValue(ColumnDatatype datatype, DataProvider dataProvider) {
         return switch (datatype) {
             case STRING -> dataProvider.generateStringType();
             case BOOLEAN -> dataProvider.generateBooleanType();

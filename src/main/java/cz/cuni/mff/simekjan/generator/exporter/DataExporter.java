@@ -14,5 +14,12 @@ public interface DataExporter {
 
     GenerateBenchmarkCommand.FormatsEnum getFormat();
 
-    void export(DatasetEntity dataset, List<GeneratedTable> tables) throws IOException;
+    /**
+     * Exports the generated dataset records to a file.
+     *
+     * @param tableName the name of the table
+     * @param data      Prepared data to export
+     * @throws IOException if an I/O error occurs
+     */
+    void write(String tableName, GeneratedTable data) throws IOException;
 }
