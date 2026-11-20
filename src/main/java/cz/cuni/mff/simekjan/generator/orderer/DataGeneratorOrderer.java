@@ -116,8 +116,7 @@ public class DataGeneratorOrderer {
     }
 
     private boolean isReadyRelationship(Node relationshipNode) {
-        if (relationshipNode.relationshipType() != RelationshipType.ONE_TO_ONE
-            && relationshipNode.relationshipType() != RelationshipType.MANY_TO_MANY) {
+        if (!relationshipNode.requiresSeparateGeneration()) {
             return false;
         }
         return !graph.contains(relationshipNode.sourceTable())
@@ -135,8 +134,7 @@ public class DataGeneratorOrderer {
                 continue;
             }
 
-            if (relationshipNode.relationshipType() == RelationshipType.ONE_TO_MANY
-                || relationshipNode.relationshipType() == RelationshipType.MANY_TO_ONE) {
+            if (!relationshipNode.requiresSeparateGeneration()) {
                 Cardinality tableCardinality = relationshipNode.cardinalityFor(tableNode);
                 Node prerequisite = isSource
                     ? relationshipNode.targetTable()
@@ -152,8 +150,7 @@ public class DataGeneratorOrderer {
     private void discardCompletedInlineRelationships() {
         graph.removeIf(node ->
             node.type() == NodeType.RELATIONSHIP
-                && (node.relationshipType() == RelationshipType.ONE_TO_MANY
-                    || node.relationshipType() == RelationshipType.MANY_TO_ONE)
+                && !node.requiresSeparateGeneration()
                 && !graph.contains(node.sourceTable())
                 && !graph.contains(node.targetTable())
         );
@@ -253,8 +250,10 @@ public class DataGeneratorOrderer {
             return targetTable;
         }
 
-        private RelationshipType relationshipType() {
-            return relationshipType;
+        private boolean requiresSeparateGeneration() {
+            return sourceTable == targetTable
+                || relationshipType == RelationshipType.ONE_TO_ONE
+                || relationshipType == RelationshipType.MANY_TO_MANY;
         }
     }
 }

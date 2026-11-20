@@ -16,7 +16,7 @@ For dataset generation we'll introduce two strategies to generate the tables in 
 3. Tables that share a relationship of type many-to-many creates an additional relationship table. The relationship table needs ids / keys of existing rows in both tables to be filled with correct values. These tables must be created
 after the two tables they depend on.
 
-4. Self-referential relationships are possible to create this way only if represented as an additional table. 
+4. Self-referential relationships are generated as separate items after their table, including one-to-many and many-to-one relationships. Other table dependencies still determine when that table can be generated.
 
 ### Representing relationships as independent objects
 
@@ -103,13 +103,14 @@ classDiagram
 
 1. **Suppliers** / **Employees** / **Customers**
     - Depends on nothing
-2. **Products** / **Orders** / **Suppliers relationships** table
+    - Employees ignores self-referential one-to-many edge
+2. **Products** / **Orders** / **Suppliers relationships** / **Reports to** table
     - Products depends on Suppliers
     - Orders depends on Customers and Employees
     - Suppliers relationships table depends on Suppliers
+    - **Fallback** on second strategy for Employees self-referential relationship (Reports to).
 3. **Products-Orders relationships** table
     - Products-Orders relationships depends on Products and Orders
-4. **Fallback** on second strategy for Employees self-referential relationship (Reports to).
 
 ### Total tables to generate: 7
 
