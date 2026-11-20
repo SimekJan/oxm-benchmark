@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * Generates records from dataset metadata and coordinates their serialization.
@@ -51,6 +52,21 @@ public class DatasetGenerator {
 
         // Analyze the dataset and Relationships and construct a directed graph for generation order
 
+        orderer.decideOrder(dataset);
+
+        while (orderer.hasNextItemBatch()) {
+
+            System.out.println("Next batch of items:");
+
+            for (UUID item : orderer.nextItemBatch()) {
+                dataset.getRelationships().stream()
+                    .filter(r -> r.getId().equals(item))
+                    .forEach(r -> System.out.println("Relationship: " + r.getName()));
+                dataset.getTables().stream()
+                    .filter(t -> t.getId().equals(item))
+                    .forEach(t -> System.out.println("Table: " + t.getName()));
+            }
+        }
 
         // Generate tables in order determined, possibly in parallel by whole order equivalence batch
 
