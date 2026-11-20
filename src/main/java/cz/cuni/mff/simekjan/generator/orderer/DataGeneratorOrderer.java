@@ -21,6 +21,7 @@ import java.util.UUID;
 public class DataGeneratorOrderer {
 
     private Map<Node, List<Edge>> graph = Map.of();
+    private Map<Node, RelationshipType> relationshipTypes = Map.of();
 
     /**
      * Prepares the internal graph representation of the dataset and decides the order of data generation.
@@ -31,6 +32,7 @@ public class DataGeneratorOrderer {
         Objects.requireNonNull(dataset, "dataset must not be null");
 
         Map<Node, List<Edge>> newGraph = new LinkedHashMap<>();
+        Map<Node, RelationshipType> newRelationshipTypes = new LinkedHashMap<>();
         for (TableEntity table : dataset.getTables()) {
             Node tableNode = new Node(NodeType.TABLE, Objects.requireNonNull(table.getId(), "table id must not be null"));
             newGraph.put(tableNode, new ArrayList<>());
@@ -42,6 +44,10 @@ public class DataGeneratorOrderer {
                 Objects.requireNonNull(relationship.getId(), "relationship id must not be null")
             );
             newGraph.put(relationshipNode, new ArrayList<>());
+            newRelationshipTypes.put(
+                relationshipNode,
+                Objects.requireNonNull(relationship.getRelationshipType(), "relationship type must not be null")
+            );
         }
 
         for (RelationshipEntity relationship : dataset.getRelationships()) {
@@ -84,6 +90,7 @@ public class DataGeneratorOrderer {
         Map<Node, List<Edge>> immutableGraph = new LinkedHashMap<>();
         newGraph.forEach((node, edges) -> immutableGraph.put(node, List.copyOf(edges)));
         graph = Collections.unmodifiableMap(immutableGraph);
+        relationshipTypes = Collections.unmodifiableMap(newRelationshipTypes);
     }
 
     /**
@@ -92,7 +99,125 @@ public class DataGeneratorOrderer {
      * @return List of table/relationships IDs for next item batch to generate.
      */
     public List<String> nextItemBatch() {
-        throw new RuntimeException("Not implemented yet");
+        discardCompletedInlineRelationships();
+        if (graph.isEmpty()) {
+            return List.of();
+        }
+
+        List<Node> batch = new ArrayList<>();
+        for (Map.Entry<Node, List<Edge>> entry : graph.entrySet()) {
+            Node node = entry.getKey();
+            if (node.type() == NodeType.RELATIONSHIP) {
+                if (isReadyRelationship(node)) {
+                    batch.add(node);
+                }
+            } else if (isReadyTable(node)) {
+                batch.add(node);
+            }
+        }
+
+        if (batch.isEmpty()) {
+            throw new IllegalStateException("Unable to determine the next generation batch; the relationship graph contains a cycle");
+        }
+
+        List<String> itemIds = batch.stream().map(node -> node.id().toString()).toList();
+        Map<Node, List<Edge>> remainingGraph = new LinkedHashMap<>();
+        for (Map.Entry<Node, List<Edge>> entry : graph.entrySet()) {
+            if (!batch.contains(entry.getKey())) {
+                List<Edge> remainingEdges = entry.getValue().stream()
+                    .filter(edge -> !batch.contains(edge.target()))
+                    .toList();
+                remainingGraph.put(entry.getKey(), remainingEdges);
+            }
+        }
+        graph = Collections.unmodifiableMap(remainingGraph);
+        return itemIds;
+    }
+
+    private boolean isReadyRelationship(Node relationshipNode) {
+        RelationshipType type = relationshipTypes.get(relationshipNode);
+        if (type != RelationshipType.ONE_TO_ONE && type != RelationshipType.MANY_TO_MANY) {
+            return false;
+        }
+
+        for (Map.Entry<Node, List<Edge>> entry : graph.entrySet()) {
+            for (Edge edge : entry.getValue()) {
+                if (edge.target().equals(relationshipNode) || entry.getKey().equals(relationshipNode)) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    private boolean isReadyTable(Node tableNode) {
+        List<Node> incomingRelationships = graph.entrySet().stream()
+            .filter(entry -> entry.getKey().type() == NodeType.RELATIONSHIP)
+            .filter(entry -> entry.getValue().stream().anyMatch(edge -> edge.target().equals(tableNode)))
+            .map(Map.Entry::getKey)
+            .toList();
+        if (incomingRelationships.isEmpty()
+            || incomingRelationships.stream().allMatch(this::hasNoIncomingEdges)) {
+            return true;
+        }
+
+        List<Cardinality> cardinalities = new ArrayList<>();
+        for (Map.Entry<Node, List<Edge>> entry : graph.entrySet()) {
+            for (Edge edge : entry.getValue()) {
+                if (entry.getKey().equals(tableNode) || edge.target().equals(tableNode)) {
+                    cardinalities.add(edge.cardinality());
+                }
+            }
+        }
+        return !cardinalities.isEmpty()
+            && cardinalities.stream().allMatch(cardinality -> cardinality == Cardinality.MANY);
+    }
+
+    private boolean hasNoIncomingEdges(Node node) {
+        return graph.values().stream()
+            .flatMap(List::stream)
+            .noneMatch(edge -> edge.target().equals(node));
+    }
+
+    private void discardCompletedInlineRelationships() {
+        List<Node> completedRelationships = graph.keySet().stream()
+            .filter(node -> node.type() == NodeType.RELATIONSHIP)
+            .filter(node -> {
+                RelationshipType type = relationshipTypes.get(node);
+                return type == RelationshipType.ONE_TO_MANY || type == RelationshipType.MANY_TO_ONE;
+            })
+            .filter(node -> {
+                boolean hasIncidentEdges = graph.entrySet().stream().anyMatch(entry ->
+                    entry.getKey().equals(node)
+                        ? !entry.getValue().isEmpty()
+                        : entry.getValue().stream().anyMatch(edge -> edge.target().equals(node))
+                );
+                return !hasIncidentEdges;
+            })
+            .toList();
+        if (completedRelationships.isEmpty()) {
+            return;
+        }
+
+        Map<Node, List<Edge>> remainingGraph = new LinkedHashMap<>();
+        graph.forEach((node, edges) -> {
+            if (!completedRelationships.contains(node)) {
+                remainingGraph.put(
+                    node,
+                    edges.stream().filter(edge -> !completedRelationships.contains(edge.target())).toList()
+                );
+            }
+        });
+        graph = Collections.unmodifiableMap(remainingGraph);
+    }
+
+    /**
+     * Returns true if there are more items to be generated, false otherwise.
+     *
+     * @return Whether there are more items to be generated.
+     */
+    public boolean hasNextItemBatch() {
+        return !graph.isEmpty();
     }
 
     private enum NodeType {
