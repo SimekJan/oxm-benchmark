@@ -1,10 +1,13 @@
 package cz.cuni.mff.simekjan.generator;
 
 import cz.cuni.mff.simekjan.application.dataset.DatasetEntity;
+import cz.cuni.mff.simekjan.application.relationship.RelationshipEntity;
+import cz.cuni.mff.simekjan.application.table.TableEntity;
 import cz.cuni.mff.simekjan.generator.exporter.DataExporter;
 import cz.cuni.mff.simekjan.generator.orderer.DataGeneratorOrderer;
 import cz.cuni.mff.simekjan.model.ColumnDatatype;
 import cz.cuni.mff.simekjan.model.GenerateBenchmarkCommand;
+import org.neo4j.driver.types.Relationship;
 import org.springframework.stereotype.Service;
 
 import java.util.EnumMap;
@@ -17,6 +20,8 @@ import java.util.UUID;
  */
 @Service
 public class DatasetGenerator {
+
+    private static final int BATCH_SIZE = 1000;
 
     private final Map<GenerateBenchmarkCommand.FormatsEnum, DataExporter> exporters;
     private final DataGeneratorOrderer orderer = new DataGeneratorOrderer();
@@ -78,7 +83,39 @@ public class DatasetGenerator {
 
         // TODO: decide if table or relationship table and generate accordingly
 
-        throw new UnsupportedOperationException("Not implemented yet");
+        TableEntity table = dataset.getTables().stream()
+            .filter(t -> t.getId().equals(itemId))
+            .findFirst()
+            .orElse(null);
+
+        if (table != null) {
+            int rowsRemaining = table.getNumberOfRows();
+            while (rowsRemaining > 0) {
+                int batchSize = Math.min(BATCH_SIZE, rowsRemaining);
+                generateBatch(); // TODO: Implement this method to generate and export a batch of data
+                rowsRemaining -= batchSize;
+            }
+            return;
+        }
+
+        RelationshipEntity relationship = dataset.getRelationships().stream()
+            .filter(r -> r.getId().equals(itemId))
+            .findFirst()
+            .orElse(null);
+
+        if (relationship == null) {
+            throw new IllegalStateException("Item ID " + itemId + " is neither a table nor a relationship in the dataset");
+        }
+
+        // TODO: Add number of rows to relationship entity and generate accordingly
+        /*
+        int rowsRemaining = relationship.getNumberOfRows();
+        while (rowsRemaining > 0) {
+            int batchSize = Math.min(BATCH_SIZE, rowsRemaining);
+            generateBatch(); // TODO: Implement this method to generate and export a batch of data
+            rowsRemaining -= batchSize;
+        }
+        */
     }
 
     /**
