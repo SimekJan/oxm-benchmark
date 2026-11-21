@@ -20,6 +20,7 @@ public class DatasetGenerator {
 
     private final Map<GenerateBenchmarkCommand.FormatsEnum, DataExporter> exporters;
     private final DataGeneratorOrderer orderer = new DataGeneratorOrderer();
+    private final DataProvider dataProvider = new DataProvider(42L);
 
     public DatasetGenerator(List<DataExporter> exporters) {
         Map<GenerateBenchmarkCommand.FormatsEnum, DataExporter> exportersByFormat =
@@ -51,41 +52,32 @@ public class DatasetGenerator {
             .toList();
 
         // Analyze the dataset and Relationships and construct a directed graph for generation order
-
         orderer.decideOrder(dataset);
 
+        // Generate by epochs (item batches), based on fulfilled dependencies
         while (orderer.hasNextItemBatch()) {
-
-            System.out.println("Next batch of items:");
-
-            for (UUID item : orderer.nextItemBatch()) {
-                dataset.getRelationships().stream()
-                    .filter(r -> r.getId().equals(item))
-                    .forEach(r -> System.out.println("Relationship: " + r.getName()));
-                dataset.getTables().stream()
-                    .filter(t -> t.getId().equals(item))
-                    .forEach(t -> System.out.println("Table: " + t.getName()));
-            }
+            generateItemBatch(exporters, dataset);
         }
-
-        // Generate tables in order determined, possibly in parallel by whole order equivalence batch
-
-        DataProvider dataProvider = new DataProvider(dataset.getId().getMostSignificantBits());
-
-        throw new UnsupportedOperationException("Not implemented yet");
     }
 
     /**
      * Generates all items (tables and relationships) in a batch (tables possible to generate at once)
      */
-    private void generateItemBatch() {
-        throw new UnsupportedOperationException("Not implemented yet");
+    private void generateItemBatch(List<DataExporter> exporters, DatasetEntity dataset) {
+
+        // TODO: These items are possible to generate in parallel due to being independent of each other
+        for (UUID itemId : orderer.nextItemBatch()) {
+            generateNextItem(itemId, exporters, dataset);
+        }
     }
 
     /**
      * Generates next table to be exported (either value table or relationship table)
      */
-    private void generateNextItem() {
+    private void generateNextItem(UUID itemId, List<DataExporter> exporters, DatasetEntity dataset) {
+
+        // TODO: decide if table or relationship table and generate accordingly
+
         throw new UnsupportedOperationException("Not implemented yet");
     }
 
@@ -99,11 +91,10 @@ public class DatasetGenerator {
     /**
      * Generates a single value for a given column datatype using the provided data provider.
      *
-     * @param datatype     Datatype to generate
-     * @param dataProvider Data provider to use for generating values
+     * @param datatype Datatype to generate
      * @return Generated value for the specified datatype
      */
-    private Object generateValue(ColumnDatatype datatype, DataProvider dataProvider) {
+    private Object generateValue(ColumnDatatype datatype) {
         return switch (datatype) {
             case STRING -> dataProvider.generateStringType();
             case BOOLEAN -> dataProvider.generateBooleanType();
