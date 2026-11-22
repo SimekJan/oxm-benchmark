@@ -25,8 +25,8 @@ class CsvExporterTest {
         try (MockedStatic<ConfigLoader> config = mockStatic(ConfigLoader.class)) {
             config.when(ConfigLoader::getCsvDir).thenReturn(csvDirectory);
             CsvExporter exporter = new CsvExporter();
-            exporter.write("people", table(List.of(List.of(1, "Alice"))));
-            exporter.write("people", table(List.of(List.of(2, "Bob, Jr."))));
+            exporter.write(table(List.of(List.of(1, "Alice"))));
+            exporter.write(table(List.of(List.of(2, "Bob, Jr."))));
         }
 
         assertEquals(
@@ -41,7 +41,7 @@ class CsvExporterTest {
         Files.writeString(file, "id,name\r\n1,Alice\r\n");
         try (MockedStatic<ConfigLoader> config = mockStatic(ConfigLoader.class)) {
             config.when(ConfigLoader::getCsvDir).thenReturn(outputDirectory);
-            new CsvExporter().write("people", table(List.of(List.of(2, "Bob"))));
+            new CsvExporter().write(table(List.of(List.of(2, "Bob"))));
         }
 
         assertEquals("id,name\r\n1,Alice\r\n2,Bob\r\n", Files.readString(file));
@@ -52,7 +52,7 @@ class CsvExporterTest {
         Path file = Files.createFile(outputDirectory.resolve("people.csv"));
         try (MockedStatic<ConfigLoader> config = mockStatic(ConfigLoader.class)) {
             config.when(ConfigLoader::getCsvDir).thenReturn(outputDirectory);
-            new CsvExporter().write("people", table(List.of()));
+            new CsvExporter().write(table(List.of()));
         }
 
         assertEquals("id,name\r\n", Files.readString(file));

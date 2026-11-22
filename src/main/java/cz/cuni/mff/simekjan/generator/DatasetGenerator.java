@@ -1,5 +1,6 @@
 package cz.cuni.mff.simekjan.generator;
 
+import cz.cuni.mff.simekjan.application.column.ColumnEntity;
 import cz.cuni.mff.simekjan.application.dataset.DatasetEntity;
 import cz.cuni.mff.simekjan.application.relationship.RelationshipEntity;
 import cz.cuni.mff.simekjan.application.table.TableEntity;
@@ -10,6 +11,8 @@ import cz.cuni.mff.simekjan.model.GenerateBenchmarkCommand;
 import org.neo4j.driver.types.Relationship;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
@@ -81,20 +84,13 @@ public class DatasetGenerator {
      */
     private void generateNextItem(UUID itemId, List<DataExporter> exporters, DatasetEntity dataset) {
 
-        // TODO: decide if table or relationship table and generate accordingly
-
         TableEntity table = dataset.getTables().stream()
             .filter(t -> t.getId().equals(itemId))
             .findFirst()
             .orElse(null);
 
         if (table != null) {
-            int rowsRemaining = table.getNumberOfRows();
-            while (rowsRemaining > 0) {
-                int batchSize = Math.min(BATCH_SIZE, rowsRemaining);
-                generateBatch(); // TODO: Implement this method to generate and export a batch of data
-                rowsRemaining -= batchSize;
-            }
+            generateTable(table, exporters);
             return;
         }
 
@@ -103,25 +99,98 @@ public class DatasetGenerator {
             .findFirst()
             .orElse(null);
 
-        if (relationship == null) {
-            throw new IllegalStateException("Item ID " + itemId + " is neither a table nor a relationship in the dataset");
+        if (relationship != null) {
+            generateRelationship(relationship, exporters);
+            return;
         }
 
-        // TODO: Add number of rows to relationship entity and generate accordingly
-        /*
-        int rowsRemaining = relationship.getNumberOfRows();
+        throw new IllegalStateException("Item ID " + itemId + " is neither a table nor a relationship in the dataset");
+    }
+
+    /**
+     * Generates all rows for a given table in batches and writes them to the specified exporters.
+     *
+     * @param table     The table entity to generate data for.
+     * @param exporters The list of data exporters to write the generated data to.
+     */
+    private void generateTable(TableEntity table, List<DataExporter> exporters) {
+        int rowsRemaining = table.getNumberOfRows();
         while (rowsRemaining > 0) {
             int batchSize = Math.min(BATCH_SIZE, rowsRemaining);
-            generateBatch(); // TODO: Implement this method to generate and export a batch of data
+            generateTableBatch(table, batchSize, exporters);
             rowsRemaining -= batchSize;
         }
+    }
+
+    /**
+     * Generates all rows for a given relationship in batches and writes them to the specified exporters.
+     *
+     * @param relationship The relationship entity to generate data for.
+     * @param exporters    The list of data exporters to write the generated data to.
+     */
+    private void generateRelationship(RelationshipEntity relationship, List<DataExporter> exporters) {
+        // TODO: Add number of rows to relationship entity and generate accordingly
+        /*
+            int rowsRemaining = relationship.getNumberOfRows();
+            while (rowsRemaining > 0) {
+                int batchSize = Math.min(BATCH_SIZE, rowsRemaining);
+                generateBatch(); // TODO: Implement this method to generate and export a batch of data
+                rowsRemaining -= batchSize;
+            }
         */
     }
 
     /**
      * Generates part of a table's data (one batch) and writes it to the specified exporters.
+     *
+     * @param table     The table entity to generate data for.
+     * @param batchSize The number of rows to generate in this batch.
+     * @param exporters The list of data exporters to write the generated data to.
      */
-    private static void generateBatch() {
+    private void generateTableBatch(TableEntity table, int batchSize, List<DataExporter> exporters) {
+        List<String> columnNames = table.getColumns().stream()
+            .map(ColumnEntity::getName)
+            .toList();
+
+        List<List<Object>> rows = new java.util.ArrayList<>();
+
+        for (int i = 0; i < batchSize; i++) {
+            List<Object> row = new java.util.ArrayList<>();
+            for (ColumnEntity column : table.getColumns()) {
+                ColumnDatatype datatype = column.getDatatype();
+                Object value = generateValue(datatype);
+                row.add(value);
+            }
+            rows.add(row);
+        }
+
+        GeneratedTable generatedTable = new GeneratedTable(
+            java.util.UUID.randomUUID(),
+            table.getName(),
+            columnNames,
+            rows
+        );
+
+        for (DataExporter exporter : exporters) {
+            try {
+                exporter.write(generatedTable);
+            } catch (IOException e) {
+                throw new UncheckedIOException(
+                    "Failed to export table '" + table.getName() + "' as " + exporter.getFormat(),
+                    e
+                );
+            }
+        }
+    }
+
+    /**
+     * Generates part of a relationship's data (one batch) and writes it to the specified exporters.
+     *
+     * @param relationship The relationship entity to generate data for.
+     * @param batchSize    The number of rows to generate in this batch.
+     * @param exporters    The list of data exporters to write the generated data to.
+     */
+    private void generateRelationshipBatch(RelationshipEntity relationship, int batchSize, List<DataExporter> exporters) {
         throw new UnsupportedOperationException("Not implemented yet");
     }
 

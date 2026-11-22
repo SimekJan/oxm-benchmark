@@ -30,9 +30,9 @@ class JsonExporterTest {
         try (MockedStatic<ConfigLoader> config = mockStatic(ConfigLoader.class)) {
             config.when(ConfigLoader::getJsonDir).thenReturn(jsonDirectory);
             JsonExporter exporter = new JsonExporter();
-            exporter.write("people", table(List.of(List.of(1, "Alice", LocalDate.of(2025, 1, 2)))));
-            exporter.write("people", table(List.of(List.of(2, "Bob", LocalDate.of(2025, 2, 3)))));
-            exporter.write("people", table(List.of()));
+            exporter.write(table(List.of(List.of(1, "Alice", LocalDate.of(2025, 1, 2)))));
+            exporter.write(table(List.of(List.of(2, "Bob", LocalDate.of(2025, 2, 3)))));
+            exporter.write(table(List.of()));
         }
 
         JsonNode actual = objectMapper.readTree(jsonDirectory.resolve("people.json").toFile());
@@ -48,7 +48,7 @@ class JsonExporterTest {
         Files.writeString(file, " [ {\"nested\": [1, {\"value\": true}]} ] \n");
         try (MockedStatic<ConfigLoader> config = mockStatic(ConfigLoader.class)) {
             config.when(ConfigLoader::getJsonDir).thenReturn(outputDirectory);
-            new JsonExporter().write("people", table(List.of(List.of(2, "Bob", LocalDate.of(2025, 2, 3)))));
+            new JsonExporter().write(table(List.of(List.of(2, "Bob", LocalDate.of(2025, 2, 3)))));
         }
 
         assertEquals(objectMapper.readTree("""
@@ -62,8 +62,8 @@ class JsonExporterTest {
         try (MockedStatic<ConfigLoader> config = mockStatic(ConfigLoader.class)) {
             config.when(ConfigLoader::getJsonDir).thenReturn(outputDirectory);
             JsonExporter exporter = new JsonExporter();
-            exporter.write("people", table(List.of()));
-            exporter.write("people", table(List.of(List.of(1, "Alice", LocalDate.of(2025, 1, 2)))));
+            exporter.write(table(List.of()));
+            exporter.write(table(List.of(List.of(1, "Alice", LocalDate.of(2025, 1, 2)))));
         }
 
         assertEquals(objectMapper.readTree("""
@@ -79,7 +79,7 @@ class JsonExporterTest {
             try (MockedStatic<ConfigLoader> config = mockStatic(ConfigLoader.class)) {
                 config.when(ConfigLoader::getJsonDir).thenReturn(outputDirectory);
                 assertThrows(java.io.IOException.class,
-                    () -> new JsonExporter().write("people", table(List.of())));
+                    () -> new JsonExporter().write(table(List.of())));
             }
             assertEquals(invalid, Files.readString(file));
         }
