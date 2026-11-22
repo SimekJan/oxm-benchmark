@@ -26,12 +26,12 @@ public class CsvExporter implements DataExporter {
     }
 
     @Override
-    public void write(String tableName, GeneratedTable data) throws IOException {
+    public void write(GeneratedTable data) throws IOException {
 
         Path outputDirectory = ConfigLoader.getCsvDir();
         Files.createDirectories(outputDirectory);
 
-        Path outputFile = outputDirectory.resolve(tableName + ".csv");
+        Path outputFile = outputDirectory.resolve(data.name() + ".csv");
         boolean writeHeader = !Files.exists(outputFile) || Files.size(outputFile) == 0;
         try (
             BufferedWriter writer = Files.newBufferedWriter(

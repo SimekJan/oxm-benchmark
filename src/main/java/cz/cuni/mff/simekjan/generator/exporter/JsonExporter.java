@@ -33,12 +33,12 @@ public class JsonExporter implements DataExporter {
     }
 
     @Override
-    public void write(String tableName, GeneratedTable data) throws IOException {
+    public void write(GeneratedTable data) throws IOException {
 
         Path outputDirectory = ConfigLoader.getJsonDir();
         Files.createDirectories(outputDirectory);
 
-        Path outputFile = outputDirectory.resolve(tableName + ".json");
+        Path outputFile = outputDirectory.resolve(data.name() + ".json");
         Path temporaryFile = Files.createTempFile(outputDirectory, ".json-export-", ".tmp");
         try {
             try (
