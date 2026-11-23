@@ -3,7 +3,6 @@ package cz.cuni.mff.simekjan.application.column;
 import cz.cuni.mff.simekjan.api.ColumnApi;
 import cz.cuni.mff.simekjan.model.PatchColumnVisibilityCommand;
 import cz.cuni.mff.simekjan.model.TableColumn;
-import cz.cuni.mff.simekjan.model.UpdateTableColumnRelationshipsCommand;
 import cz.cuni.mff.simekjan.model.UpdateTableColumnValuesCommand;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -42,14 +41,6 @@ public class ColumnController implements ColumnApi {
         } catch (ColumnService.ColumnNotFoundException exception) {
             return ResponseEntity.notFound().build();
         }
-    }
-
-    @Override
-    public ResponseEntity<Void> updateColumnRelationships(
-        UUID columnId,
-        UpdateTableColumnRelationshipsCommand updateTableColumnRelationshipsCommand
-    ) {
-        return null;
     }
 
     @Override

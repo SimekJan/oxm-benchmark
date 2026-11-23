@@ -2,11 +2,11 @@ package cz.cuni.mff.simekjan.application.column;
 
 import cz.cuni.mff.simekjan.application.column.mapper.ColumnMapper;
 import cz.cuni.mff.simekjan.application.operation.OperationService;
+import cz.cuni.mff.simekjan.application.relationship.RelationshipService;
 import cz.cuni.mff.simekjan.application.table.TableEntity;
 import cz.cuni.mff.simekjan.model.DatasetSchemaTablesInnerColumnsInner;
 import cz.cuni.mff.simekjan.model.PatchColumnVisibilityCommand;
 import cz.cuni.mff.simekjan.model.TableColumn;
-import cz.cuni.mff.simekjan.model.UpdateTableColumnRelationshipsCommand;
 import cz.cuni.mff.simekjan.model.UpdateTableColumnValuesCommand;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -25,6 +25,7 @@ public class ColumnServiceImpl implements ColumnService {
     private final ColumnRepository columnRepository;
     private final ColumnMapper columnMapper;
     private final OperationService operationService;
+    private final RelationshipService relationshipService;
 
     @Transactional
     public void createColumn(TableEntity table, DatasetSchemaTablesInnerColumnsInner columnSchema) {
@@ -60,12 +61,8 @@ public class ColumnServiceImpl implements ColumnService {
         ColumnEntity column = getColumnEntity(columnId);
         TableColumn response = columnMapper.toTableColumn(column);
         response.setOperations(operationService.getOperationsForColumn(columnId));
+        response.setRelationshipsInfo(relationshipService.getRelationshipsForColumn(columnId));
         return response;
-    }
-
-    @Transactional
-    public void updateColumnRelationships(UUID columnId, UpdateTableColumnRelationshipsCommand command) {
-        throw new RuntimeException("Not implemented yet");
     }
 
     @Transactional

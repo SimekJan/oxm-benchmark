@@ -2,7 +2,7 @@ package cz.cuni.mff.simekjan.generator.orderer;
 
 import cz.cuni.mff.simekjan.application.dataset.DatasetEntity;
 import cz.cuni.mff.simekjan.application.relationship.RelationshipEntity;
-import cz.cuni.mff.simekjan.application.relationship.RelationshipType;
+import cz.cuni.mff.simekjan.model.RelationshipType;
 import cz.cuni.mff.simekjan.application.table.TableEntity;
 
 import java.util.ArrayList;
@@ -116,7 +116,7 @@ public class DataGeneratorOrderer {
     }
 
     private boolean isReadyRelationship(Node relationshipNode) {
-        if (!relationshipNode.requiresSeparateGeneration()) {
+        if (relationshipNode.isGeneratedWithTable()) {
             return false;
         }
         return !graph.contains(relationshipNode.sourceTable())
@@ -134,7 +134,7 @@ public class DataGeneratorOrderer {
                 continue;
             }
 
-            if (!relationshipNode.requiresSeparateGeneration()) {
+            if (relationshipNode.isGeneratedWithTable()) {
                 Cardinality tableCardinality = relationshipNode.cardinalityFor(tableNode);
                 Node prerequisite = isSource
                     ? relationshipNode.targetTable()
@@ -150,7 +150,7 @@ public class DataGeneratorOrderer {
     private void discardCompletedInlineRelationships() {
         graph.removeIf(node ->
             node.type() == NodeType.RELATIONSHIP
-                && !node.requiresSeparateGeneration()
+                && node.isGeneratedWithTable()
                 && !graph.contains(node.sourceTable())
                 && !graph.contains(node.targetTable())
         );
@@ -250,10 +250,10 @@ public class DataGeneratorOrderer {
             return targetTable;
         }
 
-        private boolean requiresSeparateGeneration() {
-            return sourceTable == targetTable
-                || relationshipType == RelationshipType.ONE_TO_ONE
-                || relationshipType == RelationshipType.MANY_TO_MANY;
+        private boolean isGeneratedWithTable() {
+            return sourceTable != targetTable
+                && relationshipType != RelationshipType.ONE_TO_ONE
+                && relationshipType != RelationshipType.MANY_TO_MANY;
         }
     }
 }

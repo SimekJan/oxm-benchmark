@@ -24,7 +24,7 @@ import java.util.UUID;
 @Service
 public class DatasetGenerator {
 
-    private static final int BATCH_SIZE = 1000;
+    private static final int BATCH_SIZE = 5;
 
     private final Map<GenerateBenchmarkCommand.FormatsEnum, DataExporter> exporters;
     private final DataGeneratorOrderer orderer = new DataGeneratorOrderer();
@@ -134,7 +134,7 @@ public class DatasetGenerator {
             int rowsRemaining = relationship.getNumberOfRows();
             while (rowsRemaining > 0) {
                 int batchSize = Math.min(BATCH_SIZE, rowsRemaining);
-                generateBatch(); // TODO: Implement this method to generate and export a batch of data
+                generateRelationshipBatch(); // TODO: Implement this method to generate and export a batch of data
                 rowsRemaining -= batchSize;
             }
         */
@@ -157,6 +157,7 @@ public class DatasetGenerator {
         for (int i = 0; i < batchSize; i++) {
             List<Object> row = new java.util.ArrayList<>();
             for (ColumnEntity column : table.getColumns()) {
+                // TODO: add support for generating values based on value distribution and constraints
                 ColumnDatatype datatype = column.getDatatype();
                 Object value = generateValue(datatype);
                 row.add(value);

@@ -4,7 +4,6 @@ import cz.cuni.mff.simekjan.application.column.ColumnEntity;
 import cz.cuni.mff.simekjan.application.dataset.mapper.DatasetMapper;
 import cz.cuni.mff.simekjan.application.query.QueryService;
 import cz.cuni.mff.simekjan.application.relationship.RelationshipEntity;
-import cz.cuni.mff.simekjan.application.relationship.RelationshipType;
 import cz.cuni.mff.simekjan.application.table.TableEntity;
 import cz.cuni.mff.simekjan.application.table.TableService;
 import cz.cuni.mff.simekjan.generator.DatasetGenerator;
@@ -93,9 +92,7 @@ public class DatasetServiceImpl implements DatasetService {
             RelationshipEntity relationship = new RelationshipEntity();
             relationship.setId(UUID.randomUUID());
             relationship.setName(relationshipSchema.getName());
-            relationship.setRelationshipType(RelationshipType.fromValue(
-                relationshipSchema.getRelationshipType().getValue()
-            ));
+            relationship.setRelationshipType(relationshipSchema.getRelationshipType());
             relationship.setDataset(dataset);
             relationship.setSourceColumn(resolveColumn(
                 tablesByName, relationshipSchema.getFromTable(), relationshipSchema.getFromColumn(), "source"

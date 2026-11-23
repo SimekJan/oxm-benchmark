@@ -20,6 +20,7 @@ public interface ColumnMapper {
 
     @Mapping(target = "tableId", source = "table.id")
     @Mapping(target = "valuesInfo", expression = "java(toValuesInfo(column))")
+    @Mapping(target = "relationshipsInfo", ignore = true)
     TableColumn toTableColumn(ColumnEntity column);
 
     @Mapping(target = "tableId", source = "table.id")

@@ -23,6 +23,8 @@ tags:
     description: Endpoints to show and update operations in benchmark during config.
   - name: Column
     description: Endpoints to show and update columns in benchmark during config.
+  - name: Relationship
+    description: Endpoints to show and update relationships in benchmark during config.
   - name: Run
     description: Endpoints to start and manage benchmark runs.
   - name: Initial config
@@ -373,24 +375,43 @@ paths:
         '400':
           description: Bad request.
 
-  /columns/{columnId}/relationships:
+  /relationships/{relationshipId}:
     parameters:
-      - $ref: "#/components/parameters/ColumnId"
+      - $ref: "#/components/parameters/RelationshipId"
+    get:
+      tags: [ Relationship, Benchmark config ]
+      operationId: getRelationship
+      summary: Get relationship detail
+      description: Get a dataset relationship by ID.
+      responses:
+        '200':
+          description: Successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RelationshipDetail"
+        '400':
+          description: Bad request.
+        '404':
+          description: Relationship not found.
     put:
-      tags: [ Column, Benchmark config ]
-      operationId: updateColumnRelationships
-      summary: Update column relationships
-      description: Update column relationships distribution and other statistic.
+      tags: [ Relationship, Benchmark config ]
+      operationId: updateRelationship
+      summary: Update relationship distribution
+      description: Replace the relationship's value distribution and distribution function.
       requestBody:
+        required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/UpdateTableColumnRelationshipsCommand"
+              $ref: "#/components/schemas/UpdateRelationshipCommand"
       responses:
         '200':
           description: Successful response.
         '400':
           description: Bad request.
+        '404':
+          description: Relationship not found.
 
   /columns/unused/{columnId}:
     parameters:
@@ -534,8 +555,8 @@ components:
       type: string
       enum: [ general, normal, exponential, uniform, logarithmic ]
 
-    UpdateTableColumnRelationshipsCommand:
-      description: Command for updating statistics for relationships in given column.
+    UpdateRelationshipCommand:
+      description: Command for updating statistics for relationships.
       type: object
       properties:
         valueDistribution:
@@ -734,8 +755,7 @@ components:
               toColumn:
                 type: string
               relationshipType:
-                type: string
-                enum: [ one-to-one, one-to-many, many-to-one, many-to-many ]
+                $ref: "#/components/schemas/RelationshipType"
 
     DatasetArray:
       description: Array of dataset information.
@@ -881,13 +901,17 @@ components:
         - type: object
           required:
             - operations
+            - relationshipsInfo
           properties:
             operations:
               $ref: "#/components/schemas/NodeOperationArray"
             valuesInfo:
               $ref: "#/components/schemas/TableColumnValuesInfo"
             relationshipsInfo:
-              $ref: "#/components/schemas/TableColumnRelationshipsInfo"
+              description: Relationships where this column is either the source or the target.
+              type: array
+              items:
+                $ref: "#/components/schemas/RelationshipInfo"
 
     TableColumnValuesInfo:
       description: Detail info about values present in given column.
@@ -921,23 +945,47 @@ components:
         uniqueValues: true
         percentiles: [ 0, 500, 1000, 1500, 2000, 2500, 3500, 5000, 8000, 20000, 50000 ]
 
-    TableColumnRelationshipsInfo:
-      description: Detail info about connections (relationships) present for given column.
+    RelationshipType:
+      type: string
+      enum: [ one-to-one, one-to-many, many-to-one, many-to-many ]
+
+    RelationshipInfo:
+      description: Brief information identifying a relationship and its endpoints.
       type: object
+      required:
+        - id
+        - name
+        - sourceColumnId
+        - targetColumnId
+        - relationshipType
       properties:
-        foreignColumnId:
+        id:
           type: string
           format: uuid
-        numberOfForeignValues:
-          type: integer
-        relationshipType:
-          description: Types one-to-one and many-to-one don't need distributions at all.
+        name:
           type: string
-          enum: [ one-to-one, one-to-many, many-to-one, many-to-many ]
-        valueDistribution:
-          $ref: "#/components/schemas/ValueDistribution"
-        percentiles:
-          $ref: "#/components/schemas/Percentiles"
+        sourceColumnId:
+          type: string
+          format: uuid
+        targetColumnId:
+          type: string
+          format: uuid
+        relationshipType:
+          $ref: "#/components/schemas/RelationshipType"
+
+    RelationshipDetail:
+      description: Relationship information and its configured distribution.
+      type: object
+      allOf:
+        - $ref: "#/components/schemas/RelationshipInfo"
+        - type: object
+          required:
+            - valueDistribution
+          properties:
+            distribution:
+              $ref: "#/components/schemas/FunctionDistribution"
+            valueDistribution:
+              $ref: "#/components/schemas/ValueDistribution"
 
     ValueDistribution:
       description: Distribution of values count in percentiles or dictionary distribution based on number of unique values.
@@ -1402,6 +1450,14 @@ components:
       in: path
       name: columnId
       description: ID of required column in existing table in URL.
+      required: true
+      schema:
+        type: string
+        format: uuid
+    RelationshipId:
+      in: path
+      name: relationshipId
+      description: ID of the dataset relationship.
       required: true
       schema:
         type: string

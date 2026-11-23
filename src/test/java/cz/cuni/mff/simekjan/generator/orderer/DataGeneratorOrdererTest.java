@@ -3,7 +3,7 @@ package cz.cuni.mff.simekjan.generator.orderer;
 import cz.cuni.mff.simekjan.application.column.ColumnEntity;
 import cz.cuni.mff.simekjan.application.dataset.DatasetEntity;
 import cz.cuni.mff.simekjan.application.relationship.RelationshipEntity;
-import cz.cuni.mff.simekjan.application.relationship.RelationshipType;
+import cz.cuni.mff.simekjan.model.RelationshipType;
 import cz.cuni.mff.simekjan.application.table.TableEntity;
 import org.junit.jupiter.api.Test;
 
