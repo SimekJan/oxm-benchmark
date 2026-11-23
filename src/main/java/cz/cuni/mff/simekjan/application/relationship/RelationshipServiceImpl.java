@@ -25,13 +25,17 @@ public class RelationshipServiceImpl implements RelationshipService {
     private final RelationshipRepository relationshipRepository;
     private final RelationshipMapper relationshipMapper;
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public RelationshipDetail getRelationship(UUID relationshipId) {
         return relationshipMapper.toRelationshipDetail(getRelationshipEntity(relationshipId));
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public List<RelationshipInfo> getRelationshipsForColumn(UUID columnId) {
         return relationshipRepository.findBySourceColumnIdOrTargetColumnId(columnId, columnId).stream()
@@ -39,13 +43,16 @@ public class RelationshipServiceImpl implements RelationshipService {
             .toList();
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     @Transactional
     public void updateRelationship(UUID relationshipId, UpdateRelationshipCommand command) {
         if (command == null || command.getValueDistribution() == null) {
             throw new IllegalArgumentException("Relationship command and value distribution must not be null");
         }
+        // TODO: distributions does not work with many-to-many relationships in current design
         Map<String, Integer> distribution = createDistribution(command);
         RelationshipEntity relationship = getRelationshipEntity(relationshipId);
         relationship.setDistribution(command.getDistribution());
