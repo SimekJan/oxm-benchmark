@@ -21,11 +21,18 @@ flowchart TD
         GENERATE([".generate(dataset, format)"])
         GENERATE_ITEM_BATCH([".generateItemBatch()"])
         GENERATE_ITEM([".generateNextItem()"])
-        GENERATE_BATCH([".generateBatch()"])
-    
+        
+        GENERATE_TABLE([".generateTable()"])
+        GENERATE_RELATIONSHIP([".generateRelationship()"])
+        GENERATE_TABLE_BATCH([".generateTableBatch()"])
+        GENERATE_RELATIONSHIP_BATCH([".generateRelationshipBatch()"])
+            
         GENERATE -->|"Generate one batch"| GENERATE_ITEM_BATCH
         GENERATE_ITEM_BATCH -->|"Generate one item"| GENERATE_ITEM
-        GENERATE_ITEM -->|"Generate data batch"| GENERATE_BATCH
+        GENERATE_ITEM -->|"Generate table"| GENERATE_TABLE
+        GENERATE_ITEM -->|"Generate relationship"| GENERATE_RELATIONSHIP
+        GENERATE_TABLE -->|"Batch tables"| GENERATE_TABLE_BATCH
+        GENERATE_RELATIONSHIP -->|"Batch relationship"| GENERATE_RELATIONSHIP_BATCH        
     end
     
     subgraph DATA_EXPORTER["DataExporter - Implementations"]
@@ -43,15 +50,16 @@ flowchart TD
 
     GENERATE -->|"Issues creation"| ORDER
     GENERATE_ITEM_BATCH -->|"Requests next batch"| NEXT
-    GENERATE_BATCH -->|"Sends data for export"| WRITE
-    
+    GENERATE_TABLE_BATCH -->|"Sends data for export"| WRITE
+    GENERATE_RELATIONSHIP_BATCH -->|"Sends data for export"| WRITE
+
     WRITE -->|"Writes to a file"| FILE["Generated File"]
 
     classDef generator fill: #111111, stroke: #2563EB
     classDef exporter fill: #111111, stroke: #25c01f
     classDef orderer fill: #111111, stroke: #d90606, stroke-width: 1.5px
 
-    class GENERATE,GENERATE_ITEM_BATCH,GENERATE_ITEM,GENERATE_BATCH generator
+    class GENERATE,GENERATE_ITEM_BATCH,GENERATE_ITEM,GENERATE_TABLE,GENERATE_RELATIONSHIP,GENERATE_TABLE_BATCH,GENERATE_RELATIONSHIP_BATCH generator
     class WRITE exporter
     class ORDER,GRAPH,NEXT orderer
 ```
