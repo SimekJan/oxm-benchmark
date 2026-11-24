@@ -1,18 +1,16 @@
 # Runner architecture
 
-The runner is a standalone application in this repository. It compiles trusted Java entities and queries, measures them against populated databases, writes reports and exits.
+The runner is a standalone application in this repository. Java entities and queries are compiled into the runner at build time. The runner measures them against populated databases, writes reports and exits.
 
 ## Workflow
 
 ```mermaid
 flowchart LR
-    APP["Spring Boot app"] -->|export| DATA["CSV / JSON and schema information"]
-    DATA --> IMPORT["Import scripts or tools"]
-    IMPORT --> DB[("Populated databases")]
-    ZIP["Submission ZIP<br/>Java sources"] --> RUN["Standalone runner"]
+    DB[("Populated databases")]
+    SRC["Submitted<br/>Java sources"] --> BUILD["Maven build"]
+    BUILD --> RUN["Standalone runner"]
     PARAMS["params.yaml<br/>query parameters"] --> RUN
-    CONFIG["oxm_config.yaml"] --> APP
-    CONFIG --> IMPORT
+    CONFIG["oxm_config.yaml"] -. Defines usage .-> DB
     CONFIG --> RUN
     RUN -->|execute queries| DB
     RUN --> OUT["Result report, JUnit XML and log"]
@@ -32,22 +30,19 @@ flowchart TB
     SPI --> N["Spring Data Neo4j"]
 ```
 
-The runner has its own `runner/pom.xml` and Docker image. It is a single Maven project, independent of the Spring Boot build. Its core handles configuration, compilation, discovery, execution and reporting without importing ORM types. Backend providers implement the SPI and are discovered with `ServiceLoader`; the executable preserves provider registrations.
+The runner has its own `runner/pom.xml` and Docker image. It is a single Maven project, independent of the Spring Boot build. Its core handles configuration, execution and reporting through the generic `Query` and `Backend` interfaces, so it does not reference ORM types directly. Entities, ORM queries and ORM dependencies live in the backend packages and the submission. Backends are ordinary classes in the runner, one subpackage each, selected from configuration by id; adding a backend is a project update.
 
 Each backend supplies its typed query API, ORM dependencies, context lifecycle, schema validation and metrics. The runner ships as one image and JVM with compatible dependency versions.
 
 ## Submission
 
-The submission is a ZIP of Java sources, organized by backend:
+The submission consists of Java sources compiled into the runner during the Maven build. The first iteration uses a Hibernate example in:
 
 ```text
-shared/
-hibernate/
-springdata-mongodb/
-springdata-neo4j/
+runner/example-submission/src/main/java/
 ```
 
-The runner compiles each selected backend directory with `shared/` against its supported dependencies. It discovers queries by their backend-specific query interface and entities by ORM mapping annotations. Each backend uses a separate submission classloader, allowing backend source sets to use the same class names. No manifest is required.
+`HibernateRegistration` explicitly registers the example's entity and query classes. To use different classes, replace the example sources and update the registration, then rebuild the runner. Submission and runner classes share a classpath and must have distinct fully qualified names.
 
 ```java
 public interface Query<C, P> {
@@ -98,7 +93,7 @@ importer:
 runner:
   numberOfRuns: 20
   warmup: true
-  queries: []                     # Empty selects all discovered queries.
+  queries: []                     # Empty selects all registered queries.
   paramsFile: ./params.yaml
   timeoutMs: 30000
   outputDir: ./out
@@ -124,7 +119,7 @@ runner:
       options: {}
 ```
 
-Each runner database entry references an enabled `databaseToUse` name and a backend matching a submission directory. Connection settings come from `importer`, with optional per-entry overrides. `mongo` and `mongoEmbedded` share a connection but use `db_name` and `db_name_embedded` respectively; the latter denotes an embedded-document layout, not an embedded server. Relative runner paths resolve from its working directory. Credentials can use environment variables and must not appear in reports or logs.
+Each runner database entry references an enabled `databaseToUse` name and a backend. Connection settings come from `importer`, with optional per-entry overrides. `mongo` and `mongoEmbedded` share a connection but use `db_name` and `db_name_embedded` respectively; the latter denotes an embedded-document layout, not an embedded server. Relative runner paths resolve from its working directory. Credentials can use environment variables and must not appear in reports or logs.
 
 ## Execution
 
@@ -134,8 +129,8 @@ sequenceDiagram
     participant R as Runner
     participant B as Backend
     participant D as Populated database
-    U->>R: Start with ZIP, oxm_config.yaml and params.yaml
-    R->>R: Compile sources, discover classes and bind parameters
+    U->>R: Start with oxm_config.yaml and params.yaml
+    R->>R: Load configuration and registered classes
     R->>B: Initialize with resolved connection and options
     B->>D: Connect and validate where supported
     loop Each selected query
@@ -152,7 +147,7 @@ sequenceDiagram
     R->>R: Write reports and exit
 ```
 
-Queries run sequentially in deterministic order, with a fresh context for every invocation. Timing starts immediately before the query and includes result materialization; normalization and hashing occur afterward while the context remains open. Warm-up results are discarded. Failed warm-up skips measurements for that query; other work continues when possible. Failures are reported and produce a nonzero exit code.
+The runner launches registered queries through a JUnit dynamic test factory. Queries run sequentially in deterministic order, with a fresh context for every invocation. Timing starts immediately before the query and includes result materialization; normalization and hashing occur afterward while the context remains open. Warm-up results are discarded. Failed warm-up skips measurements for that query; other work continues when possible. Failures are reported and produce a nonzero exit code.
 
 Fresh contexts reduce context-level cache carry-over but do not clear database, operating-system or JIT caches. Backend timeouts may not stop arbitrary Java code. Schema validation and diagnostic metrics depend on backend capabilities.
 
@@ -164,6 +159,6 @@ Cross-backend result comparison uses a shared canonical projection format. Unord
 
 ## Runtime
 
-Mount the submission, `oxm_config.yaml` and `params.yaml` read-only and provide a writable output directory. Database volumes must retain the data imported before the runner starts. External databases need addresses reachable from the runner container.
+Mount `oxm_config.yaml` and `params.yaml` read-only and provide a writable output directory. Submission classes are already in the image. Database volumes must retain the data imported before the runner starts. External databases need addresses reachable from the runner container.
 
-Submissions are **trusted code**: classloaders and containers are not security sandboxes, and read-only ORM settings cannot prevent arbitrary code from writing. Use dedicated databases and least-privilege accounts where possible.
+Submissions are **trusted code**: containers are not security sandboxes, and read-only ORM settings cannot prevent arbitrary code from writing. Use dedicated databases and least-privilege accounts where possible.

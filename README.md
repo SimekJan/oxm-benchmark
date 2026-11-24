@@ -75,3 +75,15 @@ mvn clean generate-sources
 
 in root directory. This will generate API endpoints interfaces to be implemented by the code and model for data transfer
 in the API methods.
+
+## Standalone runner
+
+The standalone runner is built independently with `mvn -f runner/pom.xml package`. Java sources under
+`runner/example-submission/src/main/java` are compiled into the runner. Replace the placeholder Hibernate entity and
+query with your own classes and update `HibernateRegistration` before rebuilding. All classes share one classpath.
+
+In IntelliJ IDEA, link `runner/pom.xml` as a Maven project (right-click the file and select **Add as Maven Project**),
+then reload Maven projects. This imports the runner's dependencies and example source root without combining the builds.
+
+Run the packaged application with `java -jar runner/target/oxm-benchmark-runner-1.0-SNAPSHOT.jar [oxm_config.yaml]`.
+The optional configuration path defaults to `CONFIG_FILE` or `oxm_config.yaml`.
