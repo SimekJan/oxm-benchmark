@@ -35,7 +35,7 @@ Important code-level locations:
 
 - `src/main/java/cz/cuni/mff/simekjan/generator/` contains dataset generation logic (`Generator`, `LegacyGenerator`, `DataProvider`, `DataPools`).
 - `src/main/java/cz/cuni/mff/simekjan/importer/` contains database-specific importers (`MongoImporter`, `Neo4jImporter`, `PostgresImporter`, `EmbeddedMongoImporter`).
-- `src/main/java/cz/cuni/mff/simekjan/runner/` contains the benchmark execution orchestration (`Runner`, query execution classes, result handling).
+- `src/main/java/cz/cuni/mff/simekjan/runner/` contains the benchmark execution orchestration (`LegacyRunner`, query execution classes, result handling).
 - `src/main/java/cz/cuni/mff/simekjan/document/`, `document_embedded/`, `graph/`, and `relational/` hold DB-specific queries, session managers, and adapters.
 - `src/main/java/cz/cuni/mff/simekjan/application/dataset/` is the Spring dataset/application layer backed by SQLite (`data/app.db`), configured in `src/main/resources/application.yaml`.
 
@@ -50,7 +50,7 @@ The project uses a root `oxm_config.yaml` as the source of truth.
 Concrete examples from the codebase:
 
 - `Importer.main()` reads `databaseToUse` and conditionally calls `MongoImporter.run()`, `EmbeddedMongoImporter.run()`, `Neo4jImporter.run()`, and `PostgresImporter.run()`.
-- `Runner.main()` does the same for query execution, selecting `DocumentQueriesRun`, `EmbeddedDocumentQueriesRun`, `GraphQueriesRun`, and `RelationalQueriesRun` based on the enabled database names.
+- `LegacyRunner.main()` does the same for query execution, selecting `DocumentQueriesRun`, `EmbeddedDocumentQueriesRun`, `GraphQueriesRun`, and `RelationalQueriesRun` based on the enabled database names.
 - `ConfigLoader` resolves `outputDir` under the generator config and maps it to `data/csv` and `data/json` by default.
 
 ## Project-specific conventions

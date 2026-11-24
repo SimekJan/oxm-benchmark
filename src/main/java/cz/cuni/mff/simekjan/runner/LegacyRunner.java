@@ -1,7 +1,6 @@
 package cz.cuni.mff.simekjan.runner;
 
 import cz.cuni.mff.simekjan.ConfigLoader;
-
 import com.fasterxml.jackson.core.JsonGenerator;
 import cz.cuni.mff.simekjan.generator.LegacyGenerator;
 // import cz.cuni.mff.simekjan.graph.Neo4jSessionManager;
@@ -19,7 +18,7 @@ import java.util.Objects;
  * Main entrypoint for the query execution
  */
 @Slf4j
-public class Runner {
+public class LegacyRunner {
 
     private static final int DEFAULT_NUMBER_OF_RUNS = 20;
     private static final String DEFAULT_PRINT_OPTION = "quiet";
