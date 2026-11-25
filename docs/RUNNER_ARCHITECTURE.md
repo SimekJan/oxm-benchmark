@@ -44,6 +44,11 @@ runner/example-submission/src/main/java/
 
 `HibernateRegistration` explicitly registers the example's entity and query classes. To use different classes, replace the example sources and update the registration, then rebuild the runner. Submission and runner classes share a classpath and must have distinct fully qualified names.
 
+`RegistrationRegistry` maps backend IDs to query registrations. The test factory selects a registration for each
+configured `runner.databases` entry, in configuration order, and creates a separate test for each entry and query.
+This allows multiple OXMs (or multiple entries using one OXM) in one sequential run without hardcoding them in the
+test factory. Only configured entries are selected.
+
 ```java
 public interface Query<C, P> {
     String id();
