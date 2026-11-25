@@ -1,7 +1,5 @@
 package cz.cuni.mff.simekjan.runner;
 
-import cz.cuni.mff.simekjan.query_params.params.*;
-
 import java.time.LocalDate;
 import java.util.List;
 
@@ -9,7 +7,7 @@ import java.util.List;
  * Common interface for definition of series of Queries to run for given OXM
  */
 public interface QueriesRun {
-
+/*
     QX_No_Params qx_no_params = new QX_No_Params();
     Q1_Params q1_params = new Q1_Params(1L);
     Q2_Params q2_params = new Q2_Params("Steven");
@@ -24,6 +22,7 @@ public interface QueriesRun {
         LocalDate.of(2000, 1, 1),
         LocalDate.of(2014, 1, 1));
     CQ10_Params cq10_params = new CQ10_Params(LocalDate.of(2026, 10, 1));
+*/
 
     /**
      * Returns predefined list of Queries to be run in benchmark for given OXM
