@@ -51,7 +51,8 @@ Generated files in `/data` are not automatically deleted ofter Docker ends runni
 
 ## Config options
 
-All config can be changed in `oxm_config.yaml` in root of the project.
+Generator, importer and legacy pipeline settings are in `oxm_config.yaml` at the project root. The standalone
+runner uses `runner/runner-config.yaml`; its database connections are configured independently.
 
 ### Mongo
 
@@ -85,5 +86,8 @@ query with your own classes and update `HibernateRegistration` before rebuilding
 In IntelliJ IDEA, link `runner/pom.xml` as a Maven project (right-click the file and select **Add as Maven Project**),
 then reload Maven projects. This imports the runner's dependencies and example source root without combining the builds.
 
-Run the packaged application with `java -jar runner/target/oxm-benchmark-runner-1.0-SNAPSHOT.jar [oxm_config.yaml]`.
-The optional configuration path defaults to `CONFIG_FILE` or `oxm_config.yaml`.
+From the repository root, set `PG_PASSWORD` and run the packaged application with
+`java -jar runner/target/oxm-benchmark-runner-1.0-SNAPSHOT.jar [runner-config.yaml]`.
+The optional configuration path defaults to `CONFIG_FILE` or `runner/runner-config.yaml`. Paths inside the
+configuration are relative to the working directory. The standalone runner's Hibernate backend and benchmark
+execution are not yet implemented.

@@ -16,7 +16,7 @@ public class HibernateBackend implements Backend {
 
     /** {@inheritDoc} */
     @Override
-    public ContextFactory createContextFactory(Map<String, Object> options) {
+    public ContextFactory createContextFactory(Map<String, String> connection) {
         throw new UnsupportedOperationException("Hibernate backend is not implemented");
     }
 }

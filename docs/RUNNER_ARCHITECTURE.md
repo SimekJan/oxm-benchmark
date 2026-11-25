@@ -10,7 +10,7 @@ flowchart LR
     SRC["Submitted<br/>Java sources"] --> BUILD["Maven build"]
     BUILD --> RUN["Standalone runner"]
     PARAMS["params.yaml<br/>query parameters"] --> RUN
-    CONFIG["oxm_config.yaml"] -. Defines usage .-> DB
+    CONFIG["runner/runner-config.yaml"] -. Defines usage .-> DB
     CONFIG --> RUN
     RUN -->|execute queries| DB
     RUN --> OUT["Result report, JUnit XML and log"]
@@ -75,58 +75,37 @@ incompatible types are rejected. The example submission provides `runner/example
 
 ## Configuration
 
-The app, import tooling and runner share `oxm_config.yaml`. Runner settings select databases and backends, repetitions, warm-up, queries, timeout, parameter file and output directory.
+The standalone runner uses its own `runner/runner-config.yaml`, separate from the root `oxm_config.yaml` used by the
+generator and importer. Its database entries contain independent connection settings, so they must point to databases
+populated by the importer. Add only the entries to run; their order determines the execution order.
 
 ```yaml
-databaseToUse: [postgres, mongo, mongoEmbedded, neo4j]
-
-generator:
-  outputDir: ./generatedData
-
-importer:
-  postgres:
-    connection: jdbc:postgresql://postgres:5432/oxm_benchmark
-    username: postgres
-    password: ${PG_PASSWORD}
-  mongo:
-    connection: mongodb://mongo:27017
-    db_name: oxm_benchmark
-    db_name_embedded: oxm_benchmark_embedded
-  neo4j:
-    connection: bolt://neo4j:7687
-    username: neo4j
-    password: ${NEO_PASSWORD}
-
 runner:
   numberOfRuns: 20
   warmup: true
   queries: []                     # Empty selects all registered queries.
-  paramsFile: ./params.yaml
+  paramsFile: ./runner/example-submission/params.yaml
   timeoutMs: 30000
-  outputDir: ./out
+  outputDir: ./runner/out
   databases:
     - id: pg-hibernate
       database: postgres
       backend: hibernate
-      connectionOverrides:
-        username: benchmark_reader
-        password: ${PG_READER_PASSWORD}
-      options: {}
-    - id: mongo-springdata
-      database: mongo
-      backend: springdata-mongodb
-      options: {}
-    - id: mongo-embedded-springdata
-      database: mongoEmbedded
-      backend: springdata-mongodb
-      options: {}
-    - id: neo4j-springdata
-      database: neo4j
-      backend: springdata-neo4j
-      options: {}
+      connection:
+        connection: jdbc:postgresql://localhost:5433/oxm_benchmark
+        username: postgres
+        password: ${PG_PASSWORD}
 ```
 
-Each runner database entry references an enabled `databaseToUse` name and a backend. Connection settings come from `importer`, with optional per-entry overrides. `mongo` and `mongoEmbedded` share a connection but use `db_name` and `db_name_embedded` respectively; the latter denotes an embedded-document layout, not an embedded server. Relative runner paths resolve from its working directory. Credentials can use environment variables and must not appear in reports or logs.
+`databases` is required and must contain at least one entry with a unique ID, database name, backend ID, and
+`connection` mapping containing a non-empty `connection` address. Other connection fields are backend-specific;
+string values may reference environment variables as `${NAME}`. Undefined variables are errors. Never put credentials
+in reports or logs.
+
+All fields shown above are required. An empty `queries` list selects all registered queries.
+Relative paths resolve from the runner's working directory, not the configuration file's directory. The provided
+example paths assume the repository root as the working directory. The `database` name is independent of the
+importer's `databaseToUse`; the loader does not check whether data has been imported.
 
 ## Execution
 
@@ -136,9 +115,9 @@ sequenceDiagram
     participant R as Runner
     participant B as Backend
     participant D as Populated database
-    U->>R: Start with oxm_config.yaml and params.yaml
+    U->>R: Start with runner-config.yaml and params.yaml
     R->>R: Load configuration and registered classes
-    R->>B: Initialize with resolved connection and options
+    R->>B: Initialize with resolved connection settings
     B->>D: Connect and validate where supported
     loop Each selected query
         opt Warm-up enabled
@@ -166,6 +145,6 @@ Cross-backend result comparison uses a shared canonical projection format. Unord
 
 ## Runtime
 
-Mount `oxm_config.yaml` and `params.yaml` read-only and provide a writable output directory. Submission classes are already in the image. Database volumes must retain the data imported before the runner starts. External databases need addresses reachable from the runner container.
+Mount the runner configuration and `params.yaml` read-only and provide a writable output directory. Submission classes are already in the image. Database volumes must retain the data imported before the runner starts. External databases need addresses reachable from the runner container; the example's `localhost` address is for running on the host.
 
 Submissions are **trusted code**: containers are not security sandboxes, and read-only ORM settings cannot prevent arbitrary code from writing. Use dedicated databases and least-privilege accounts where possible.

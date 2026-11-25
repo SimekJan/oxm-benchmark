@@ -1,0 +1,15 @@
+runner:
+  numberOfRuns: 20
+  warmup: true
+  queries: []
+  paramsFile: ./runner/example-submission/params.yaml
+  timeoutMs: 30000
+  outputDir: ./runner/out
+  databases:
+    - id: pg-hibernate
+      database: postgres
+      backend: hibernate
+      connection:
+        connection: jdbc:postgresql://localhost:5433/oxm_benchmark
+        username: postgres
+        password: ${PG_PASSWORD}

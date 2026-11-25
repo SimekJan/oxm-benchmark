@@ -1,5 +1,7 @@
 package cz.cuni.mff.simekjan.runner.config;
 
+import org.jspecify.annotations.NonNull;
+
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
@@ -31,15 +33,19 @@ public record RunnerConfig(
      * @param id                  unique runner database entry identifier
      * @param database            enabled logical database name
      * @param backend             backend identifier
-     * @param connectionOverrides overrides for shared connection settings
-     * @param options             backend-specific options
+     * @param connection          backend connection settings
      */
     public record Database(
         String id,
         String database,
         String backend,
-        Map<String, Object> connectionOverrides,
-        Map<String, Object> options
+        Map<String, String> connection
     ) {
+        @Override
+        @NonNull
+        public String toString() {
+            return "Database[id=" + id + ", database=" + database + ", backend=" + backend
+                + ", connection=<redacted>]";
+        }
     }
 }

@@ -5,17 +5,24 @@ import cz.cuni.mff.simekjan.runner.spi.ContextFactory;
 
 import java.util.Map;
 
-/** Spring Data Neo4j backend implementation. */
+/**
+ * Spring Data Neo4j backend implementation.
+ */
 public class Neo4jBackend implements Backend {
-    /** {@inheritDoc} */
+
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String id() {
         return "springdata-neo4j";
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public ContextFactory createContextFactory(Map<String, Object> options) {
+    public ContextFactory createContextFactory(Map<String, String> connection) {
         throw new UnsupportedOperationException("Neo4j backend is not implemented");
     }
 }

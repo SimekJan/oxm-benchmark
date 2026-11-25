@@ -15,8 +15,8 @@ public interface Backend {
     /**
      * Creates a factory for query contexts.
      *
-     * @param options resolved backend connection and configuration options
+     * @param connection resolved backend connection settings
      * @return context factory
      */
-    ContextFactory createContextFactory(Map<String, Object> options);
+    ContextFactory createContextFactory(Map<String, String> connection);
 }

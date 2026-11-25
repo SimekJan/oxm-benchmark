@@ -5,17 +5,24 @@ import cz.cuni.mff.simekjan.runner.spi.ContextFactory;
 
 import java.util.Map;
 
-/** Spring Data MongoDB backend implementation. */
+/**
+ * Spring Data MongoDB backend implementation.
+ */
 public class MongoBackend implements Backend {
-    /** {@inheritDoc} */
+
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String id() {
         return "springdata-mongodb";
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public ContextFactory createContextFactory(Map<String, Object> options) {
+    public ContextFactory createContextFactory(Map<String, String> connection) {
         throw new UnsupportedOperationException("MongoDB backend is not implemented");
     }
 }
