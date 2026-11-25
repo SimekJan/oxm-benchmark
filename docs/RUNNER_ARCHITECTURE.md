@@ -65,6 +65,8 @@ q1:
 ```
 
 The runner binds each entry to the query's `parameterType()`. Parameterless queries use `NoParams` and have no entry in `params.yaml`. Missing or invalid parameters, duplicate IDs and missing selected queries are errors.
+For record parameter types, every field must be present and non-null; unknown fields, duplicate YAML keys, and
+incompatible types are rejected. The example submission provides `runner/example-submission/params.yaml`.
 
 ## Configuration
 
