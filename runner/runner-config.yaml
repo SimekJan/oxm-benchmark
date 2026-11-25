@@ -1,8 +1,9 @@
 runner:
   numberOfRuns: 20
   warmup: true
-  queries: []
+  queries: [ ]
   paramsFile: ./runner/example-submission/params.yaml
+  sourceDir: ./runner/example-submission/src/main/java
   timeoutMs: 30000
   outputDir: ./runner/out
   databases:
@@ -12,4 +13,4 @@ runner:
       connection:
         connection: jdbc:postgresql://localhost:5433/oxm_benchmark
         username: postgres
-        password: ${PG_PASSWORD}
+        password: oxm_password

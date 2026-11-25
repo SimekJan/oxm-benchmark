@@ -1,14 +1,13 @@
 # Runner architecture
 
-The runner is a standalone application in this repository. Java entities and queries are compiled into the runner at build time. The runner measures them against populated databases, writes reports and exits.
+The runner is a standalone application in this repository. Hibernate submission sources are compiled at startup; database execution and result reporting are not yet implemented.
 
 ## Workflow
 
 ```mermaid
 flowchart LR
     DB[("Populated databases")]
-    SRC["Submitted<br/>Java sources"] --> BUILD["Maven build"]
-    BUILD --> RUN["Standalone runner"]
+    SRC["Submitted<br/>Java sources"] --> RUN["Standalone runner"]
     PARAMS["params.yaml<br/>query parameters"] --> RUN
     CONFIG["runner/runner-config.yaml"] -. Defines usage .-> DB
     CONFIG --> RUN
@@ -36,13 +35,20 @@ Each backend supplies its typed query API, ORM dependencies, context lifecycle, 
 
 ## Submission
 
-The submission consists of Java sources compiled into the runner during the Maven build. The first iteration uses a Hibernate example in:
+The submission consists of Java sources compiled by the runner at startup. The default Hibernate example is in:
 
 ```text
 runner/example-submission/src/main/java/
 ```
 
-`HibernateRegistration` explicitly registers the example's entity and query classes. To use different classes, replace the example sources and update the registration, then rebuild the runner. Submission and runner classes share a classpath and must have distinct fully qualified names.
+Set `runner.sourceDir` to use another source root. Paths under that root must match the Java packages, all of which
+must begin with `queries` (for example `queries/sales/Orders.java` declares `queries.sales.Orders`). Each concrete
+query implements `HibernateQuery` and has a public no-argument constructor; classes annotated with
+`jakarta.persistence.Entity` are discovered as entities. Helpers and parameter classes belong in the same tree.
+The runner compiles all sources together with the application runtime classpath, including Lombok's explicitly
+enabled processor, and loads them with a parent-first class loader. Submission class names must not collide with
+application classes. A compilation failure rejects the submission with file and line diagnostics; per-class
+discovery and constructor failures are reported independently. A JDK is required.
 
 `RegistrationRegistry` maps backend IDs to query registrations. The test factory selects a registration for each
 configured `runner.databases` entry, in configuration order, and creates a separate test for each entry and query.
@@ -85,6 +91,7 @@ runner:
   warmup: true
   queries: []                     # Empty selects all registered queries.
   paramsFile: ./runner/example-submission/params.yaml
+  sourceDir: ./runner/example-submission/src/main/java
   timeoutMs: 30000
   outputDir: ./runner/out
   databases:
@@ -102,7 +109,8 @@ runner:
 string values may reference environment variables as `${NAME}`. Undefined variables are errors. Never put credentials
 in reports or logs.
 
-All fields shown above are required. An empty `queries` list selects all registered queries.
+All fields shown above except `sourceDir` are required; its default is
+`runner/example-submission/src/main/java`. An empty `queries` list selects all registered queries.
 Relative paths resolve from the runner's working directory, not the configuration file's directory. The provided
 example paths assume the repository root as the working directory. The `database` name is independent of the
 importer's `databaseToUse`; the loader does not check whether data has been imported.
@@ -133,7 +141,12 @@ sequenceDiagram
     R->>R: Write reports and exit
 ```
 
-The runner launches registered queries through a JUnit dynamic test factory. Queries run sequentially in deterministic order, with a fresh context for every invocation. Timing starts immediately before the query and includes result materialization; normalization and hashing occur afterward while the context remains open. Warm-up results are discarded. Failed warm-up skips measurements for that query; other work continues when possible. Failures are reported and produce a nonzero exit code.
+The runner currently creates a JUnit dynamic test for each discovered query and each configured database entry,
+plus tests for discovery failures. Query instances are distinct per database entry and failures are reported without
+preventing other cases from running. **Actual Hibernate execution is not implemented**, so the example cases
+currently fail with an explicit unsupported-operation error. The sequence above describes the intended execution.
+When implemented, queries are intended to run sequentially with a fresh context per invocation, discarded warm-ups,
+and timing that includes result materialization.
 
 Fresh contexts reduce context-level cache carry-over but do not clear database, operating-system or JIT caches. Backend timeouts may not stop arbitrary Java code. Schema validation and diagnostic metrics depend on backend capabilities.
 
@@ -145,6 +158,9 @@ Cross-backend result comparison uses a shared canonical projection format. Unord
 
 ## Runtime
 
-Mount the runner configuration and `params.yaml` read-only and provide a writable output directory. Submission classes are already in the image. Database volumes must retain the data imported before the runner starts. External databases need addresses reachable from the runner container; the example's `localhost` address is for running on the host.
+Mount the runner configuration, `params.yaml`, and the configured submission source directory read-only and provide a
+writable output directory and temporary directory. The image uses a JDK to compile submission classes at startup.
+Database volumes must retain the data imported before the runner starts. External databases need addresses reachable
+from the runner container; the example's `localhost` address is for running on the host.
 
 Submissions are **trusted code**: containers are not security sandboxes, and read-only ORM settings cannot prevent arbitrary code from writing. Use dedicated databases and least-privilege accounts where possible.

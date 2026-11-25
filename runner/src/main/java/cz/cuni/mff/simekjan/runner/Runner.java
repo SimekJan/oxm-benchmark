@@ -13,7 +13,7 @@ public final class Runner {
     }
 
     /**
-     * Starts the benchmark using the classes compiled into the runner.
+     * Starts the benchmark using classes compiled from the configured submission.
      *
      * @param args optional configuration path
      */

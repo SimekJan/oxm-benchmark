@@ -1,4 +1,4 @@
-package cz.cuni.mff.simekjan.example.northwind.params;
+package queries.northwind.params;
 
 public record CQ5_Params(
     String productCategory,

@@ -1,4 +1,4 @@
-package cz.cuni.mff.simekjan.example.northwind.hibernate.entities;
+package queries.northwind.hibernate.entities;
 
 import jakarta.persistence.*;
 import lombok.*;

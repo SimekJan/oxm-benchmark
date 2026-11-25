@@ -5,7 +5,7 @@ import cz.cuni.mff.simekjan.runner.api.Query;
 import java.util.List;
 
 /**
- * Query classes submitted for one backend.
+ * Queries submitted for one backend.
  */
 public interface QueryRegistration {
 
@@ -15,7 +15,7 @@ public interface QueryRegistration {
     String backendId();
 
     /**
-     * @return query classes registered for this backend
+     * @return queries registered for this backend
      */
-    List<? extends Class<? extends Query<?, ?>>> queries();
+    List<? extends Query<?, ?>> queries();
 }

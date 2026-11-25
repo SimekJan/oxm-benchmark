@@ -15,7 +15,7 @@ public final class MongoRegistration implements QueryRegistration {
     }
 
     @Override
-    public List<Class<? extends MongoQuery<?>>> queries() {
+    public List<MongoQuery<?>> queries() {
         throw new UnsupportedOperationException("Spring Data MongoDB query registration is not implemented");
     }
 }

@@ -1,35 +1,58 @@
 package cz.cuni.mff.simekjan.runner.registration;
 
-import cz.cuni.mff.simekjan.example.northwind.hibernate.entities.*;
-import cz.cuni.mff.simekjan.example.northwind.hibernate.queries.*;
 import cz.cuni.mff.simekjan.runner.backend.hibernate.HibernateQuery;
 
+import java.nio.file.Path;
 import java.util.List;
 
 /**
- * Entity and query classes compiled into the Hibernate example.
+ * Hibernate classes discovered from a submitted source tree.
  */
-public final class HibernateRegistration implements QueryRegistration {
+public final class HibernateRegistration implements QueryRegistration, AutoCloseable {
+    
+    private final Path sourceDir;
+    private HibernateSubmission submission;
+    private HibernateSubmission.Batch batch;
+
+    public HibernateRegistration(Path sourceDir) {
+        this.sourceDir = sourceDir;
+    }
 
     @Override
     public String backendId() {
         return "hibernate";
     }
 
-    /**
-     * @return registered Hibernate entity classes
-     */
-    public static List<Class<?>> entities() {
-        return List.of(Customer.class, Employee.class, Order.class, Product.class, Supplier.class);
+    @Override
+    public List<HibernateQuery<?>> queries() {
+        batch = submission().newBatch();
+        return batch.queries();
     }
 
-    /**
-     * @return registered Hibernate query classes
-     */
+    public List<Class<?>> entities() {
+        return submission().entities();
+    }
+
+    public List<HibernateSubmission.Failure> failures() {
+        if (batch == null) {
+            throw new IllegalStateException("Queries have not been registered");
+        }
+        return batch.failures();
+    }
+
+    private HibernateSubmission submission() {
+        if (submission == null) {
+            submission = HibernateSubmission.load(sourceDir);
+        }
+        return submission;
+    }
+
     @Override
-    public List<Class<? extends HibernateQuery<?>>> queries() {
-        return List.of(Query01_select_indexed.class, Query02_select_non_indexed.class,
-            Query03_range_query_indexed.class, Query04_range_query_non_indexed.class,
-            Query07_join_indexed.class, Query08_join_non_indexed.class);
+    public void close() {
+        if (submission != null) {
+            submission.close();
+            submission = null;
+            batch = null;
+        }
     }
 }

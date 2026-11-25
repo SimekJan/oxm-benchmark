@@ -79,12 +79,22 @@ in the API methods.
 
 ## Standalone runner
 
-The standalone runner is built independently with `mvn -f runner/pom.xml package`. Java sources under
-`runner/example-submission/src/main/java` are compiled into the runner. Replace the placeholder Hibernate entity and
-query with your own classes and update `HibernateRegistration` before rebuilding. All classes share one classpath.
+The standalone runner is built independently with `mvn -f runner/pom.xml package` and requires a JDK at runtime.
+Hibernate submissions are compiled at startup from `runner.sourceDir` (default:
+`runner/example-submission/src/main/java`); changing a submission does not require rebuilding the runner.
+
+The submission contract:
+1. Put each Java source under `sourceDir/queries/`, with its path matching its `queries.*` package and class name.
+2. Implement `HibernateQuery<P>` for each query, including its ID, parameter type, ordering and `run` method.
+3. Give every concrete query class a public no-argument constructor.
+4. Put `@Entity` classes and any helper or parameter classes in the same source tree.
+5. Use dependencies on the runner's runtime classpath; Lombok annotation processing is supported.
+
+Compilation errors report their source files and line numbers. Each query's discovery or execution failure is reported
+independently. Submissions are trusted Java code, not sandboxed.
 
 In IntelliJ IDEA, link `runner/pom.xml` as a Maven project (right-click the file and select **Add as Maven Project**),
-then reload Maven projects. This imports the runner's dependencies and example source root without combining the builds.
+then reload Maven projects. This imports the runner's dependencies without combining the builds.
 
 From the repository root, set `PG_PASSWORD` and run the packaged application with
 `java -jar runner/target/oxm-benchmark-runner-1.0-SNAPSHOT.jar [runner-config.yaml]`.

@@ -13,6 +13,7 @@ import java.util.Map;
  * @param warmup       whether to run a discarded warm-up
  * @param queries      selected query IDs; empty selects all
  * @param paramsFile   path to query parameters
+ * @param sourceDir    root of submitted Java sources
  * @param timeoutMs    requested query timeout in milliseconds
  * @param outputDir    report directory
  * @param databases    selected database entries
@@ -22,6 +23,7 @@ public record RunnerConfig(
     boolean warmup,
     List<String> queries,
     Path paramsFile,
+    Path sourceDir,
     long timeoutMs,
     Path outputDir,
     List<Database> databases

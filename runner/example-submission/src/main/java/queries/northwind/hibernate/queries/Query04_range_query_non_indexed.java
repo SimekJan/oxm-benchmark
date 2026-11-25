@@ -1,7 +1,7 @@
-package cz.cuni.mff.simekjan.example.northwind.hibernate.queries;
+package queries.northwind.hibernate.queries;
 
-import cz.cuni.mff.simekjan.example.northwind.hibernate.entities.Product;
-import cz.cuni.mff.simekjan.example.northwind.params.Q4_Params;
+import queries.northwind.hibernate.entities.Product;
+import queries.northwind.params.Q4_Params;
 import cz.cuni.mff.simekjan.runner.backend.hibernate.HibernateQuery;
 import org.hibernate.Session;
 

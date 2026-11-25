@@ -1,17 +1,17 @@
-package cz.cuni.mff.simekjan.example.northwind.hibernate.queries;
+package queries.northwind.hibernate.queries;
 
 import cz.cuni.mff.simekjan.runner.api.NoParams;
 import cz.cuni.mff.simekjan.runner.backend.hibernate.HibernateQuery;
 import org.hibernate.Session;
 
 /**
- * Join orders with employees on employee ID (indexed).
+ * Join customers and employees on city (non-indexed)
  */
-public class Query07_join_indexed implements HibernateQuery<NoParams> {
+public class Query08_join_non_indexed implements HibernateQuery<NoParams> {
 
     @Override
     public String id() {
-        return "Q7";
+        return "Q8";
     }
 
     @Override
@@ -27,10 +27,10 @@ public class Query07_join_indexed implements HibernateQuery<NoParams> {
     @Override
     public Object run(Session session, NoParams params) {
 
-        String hql = "SELECT o.orderId, e.firstName, e.lastName " +
-            "FROM Orders o " +
+        String hql = "SELECT c.companyName, c.city, e.firstName, e.lastName " +
+            "FROM Customers c " +
             "       INNER JOIN Employees e " +
-            "       ON o.employee = e.id ";
+            "       ON c.city = e.city ";
 
         return session.createQuery(hql, Object[].class).getResultList();
     }

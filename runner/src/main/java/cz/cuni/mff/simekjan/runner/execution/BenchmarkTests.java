@@ -4,9 +4,13 @@ import cz.cuni.mff.simekjan.runner.api.Query;
 import cz.cuni.mff.simekjan.runner.config.ParameterLoader;
 import cz.cuni.mff.simekjan.runner.config.RunnerConfig;
 import cz.cuni.mff.simekjan.runner.config.RunnerConfigLoader;
+import cz.cuni.mff.simekjan.runner.registration.HibernateRegistration;
+import cz.cuni.mff.simekjan.runner.registration.HibernateSubmission;
 import cz.cuni.mff.simekjan.runner.registration.RegistrationRegistry;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
+import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
@@ -21,7 +25,10 @@ import java.util.stream.Stream;
  */
 @ExtendWith(BenchmarkParameters.class)
 @Execution(ExecutionMode.SAME_THREAD)
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public final class BenchmarkTests {
+
+    private RegistrationRegistry registry;
 
     /**
      * Creates one benchmark case for each registered query.
@@ -32,7 +39,15 @@ public final class BenchmarkTests {
     @TestFactory
     public Stream<DynamicTest> queries(Path configFile) {
         RunnerConfig config = new RunnerConfigLoader().load(configFile);
-        return queries(config, new RegistrationRegistry());
+        registry = new RegistrationRegistry(config.sourceDir());
+        return queries(config, registry);
+    }
+
+    @AfterAll
+    void closeRegistry() throws Exception {
+        if (registry != null) {
+            registry.close();
+        }
     }
 
     Stream<DynamicTest> queries(RunnerConfig config, RegistrationRegistry registry) {
@@ -44,30 +59,40 @@ public final class BenchmarkTests {
             if (!ids.add(database.id())) {
                 throw new IllegalArgumentException("Duplicate runner database entry: " + database.id());
             }
-            var registeredQueries = registry.get(database.backend()).queries();
-            if (registeredQueries.isEmpty()) {
+            var registration = registry.get(database.backend());
+            var registeredQueries = registration.queries();
+            registeredQueries.forEach(query ->
+                System.out.println("Loaded query for " + database.id() + ": " + query.getClass().getName()));
+            var failures = registration instanceof HibernateRegistration hibernate
+                ? hibernate.failures() : List.<HibernateSubmission.Failure>of();
+            if (registeredQueries.isEmpty() && failures.isEmpty()) {
                 throw new IllegalArgumentException("No queries registered for backend: " + database.backend());
             }
-            return queries(config, database, registeredQueries);
+            Stream<DynamicTest> failedTests = failures.stream().map(failure -> DynamicTest.dynamicTest(
+                database.id() + " / " + failure.className(),
+                () -> {
+                    throw new AssertionError("Cannot load or instantiate " + failure.className(), failure.cause());
+                }));
+            return Stream.concat(queries(config, database, registeredQueries), failedTests);
         }).toList();
         return tests.stream();
     }
 
     Stream<DynamicTest> queries(RunnerConfig config, RunnerConfig.Database database,
-                                List<? extends Class<? extends Query<?, ?>>> queries) {
+                                List<? extends Query<?, ?>> queries) {
         return queries.stream()
             .map(query -> DynamicTest.dynamicTest(
-                database.id() + " / " + query.getName(),
-                () -> execute(database, query, config.paramsFile())));
+                database.id() + " / " + query.getClass().getName(),
+                () -> {
+                    try {
+                        execute(database, query, config.paramsFile());
+                    } catch (Throwable failure) {
+                        throw new AssertionError("Query failed: " + query.getClass().getName(), failure);
+                    }
+                }));
     }
 
-    private void execute(RunnerConfig.Database database, Class<? extends Query<?, ?>> queryClass, Path paramsFile) {
-        Query<?, ?> query;
-        try {
-            query = queryClass.getDeclaredConstructor().newInstance();
-        } catch (ReflectiveOperationException e) {
-            throw new IllegalArgumentException("Cannot instantiate query " + queryClass.getName(), e);
-        }
+    private void execute(RunnerConfig.Database database, Query<?, ?> query, Path paramsFile) {
         PreparedQuery<?, ?> prepared = prepare(query, paramsFile);
         throw new UnsupportedOperationException(
             "Benchmark execution is not implemented for query '" + prepared.query().id()

@@ -4,6 +4,8 @@ import com.fasterxml.jackson.core.StreamReadFeature;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 
@@ -23,6 +25,7 @@ import java.util.regex.Pattern;
 public final class RunnerConfigLoader {
     
     private static final Pattern ENVIRONMENT_VARIABLE = Pattern.compile("\\$\\{([A-Za-z_][A-Za-z0-9_]*)}");
+    private static final String DEFAULT_SOURCE_DIR = "runner/example-submission/src/main/java";
     private final ObjectMapper mapper = YAMLMapper.builder(
             YAMLFactory.builder().enable(StreamReadFeature.STRICT_DUPLICATE_DETECTION).build())
         .enable(DeserializationFeature.FAIL_ON_MISSING_CREATOR_PROPERTIES)
@@ -52,7 +55,11 @@ public final class RunnerConfigLoader {
     public RunnerConfig load(Path configFile) {
         ConfigFile file;
         try (var input = Files.newInputStream(configFile)) {
-            file = mapper.readValue(input, ConfigFile.class);
+            JsonNode root = mapper.readTree(input);
+            if (root != null && root.path("runner") instanceof ObjectNode runner && !runner.has("sourceDir")) {
+                runner.put("sourceDir", DEFAULT_SOURCE_DIR);
+            }
+            file = mapper.treeToValue(root, ConfigFile.class);
         } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
             // Jackson's error messages can include connection values and credentials.
             throw new IllegalArgumentException("Invalid runner configuration: " + configFile);
@@ -66,8 +73,9 @@ public final class RunnerConfigLoader {
         if (config.numberOfRuns() <= 0 || config.timeoutMs() <= 0) {
             throw new IllegalArgumentException("numberOfRuns and timeoutMs must be positive");
         }
-        if (config.paramsFile().toString().isBlank() || config.outputDir().toString().isBlank()) {
-            throw new IllegalArgumentException("paramsFile and outputDir must not be blank");
+        if (config.paramsFile().toString().isBlank() || config.sourceDir().toString().isBlank()
+            || config.outputDir().toString().isBlank()) {
+            throw new IllegalArgumentException("paramsFile, sourceDir and outputDir must not be blank");
         }
         if (config.databases().isEmpty()) {
             throw new IllegalArgumentException("runner.databases must not be empty");
@@ -105,7 +113,7 @@ public final class RunnerConfigLoader {
         }).toList();
 
         return new RunnerConfig(config.numberOfRuns(), config.warmup(), List.copyOf(config.queries()),
-            config.paramsFile(), config.timeoutMs(), config.outputDir(), databases);
+            config.paramsFile(), config.sourceDir(), config.timeoutMs(), config.outputDir(), databases);
     }
 
     private String expandEnvironment(String value) {

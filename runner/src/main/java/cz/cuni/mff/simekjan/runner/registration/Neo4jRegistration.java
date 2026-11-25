@@ -15,7 +15,7 @@ public final class Neo4jRegistration implements QueryRegistration {
     }
 
     @Override
-    public List<Class<? extends Neo4jQuery<?>>> queries() {
+    public List<Neo4jQuery<?>> queries() {
         throw new UnsupportedOperationException("Spring Data Neo4j query registration is not implemented");
     }
 }
