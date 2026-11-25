@@ -1,13 +1,13 @@
 package cz.cuni.mff.simekjan.example.northwind.hibernate.queries;
 
-import cz.cuni.mff.simekjan.example.northwind.params.QX_No_Params;
+import cz.cuni.mff.simekjan.runner.api.NoParams;
 import cz.cuni.mff.simekjan.runner.backend.hibernate.HibernateQuery;
 import org.hibernate.Session;
 
 /**
  * Join customers and employees on city (non-indexed)
  */
-public class Query08_join_non_indexed implements HibernateQuery<QX_No_Params> {
+public class Query08_join_non_indexed implements HibernateQuery<NoParams> {
 
     @Override
     public String id() {
@@ -15,8 +15,8 @@ public class Query08_join_non_indexed implements HibernateQuery<QX_No_Params> {
     }
 
     @Override
-    public Class<QX_No_Params> parameterType() {
-        return QX_No_Params.class;
+    public Class<NoParams> parameterType() {
+        return NoParams.class;
     }
 
     @Override
@@ -25,7 +25,7 @@ public class Query08_join_non_indexed implements HibernateQuery<QX_No_Params> {
     }
 
     @Override
-    public Object run(Session session, QX_No_Params params) {
+    public Object run(Session session, NoParams params) {
 
         String hql = "SELECT c.companyName, c.city, e.firstName, e.lastName " +
             "FROM Customers c " +
