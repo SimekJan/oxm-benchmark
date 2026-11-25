@@ -1,18 +1,31 @@
 # Runner architecture
 
-The runner is a standalone application in this repository. Hibernate submission sources are compiled at startup; database execution and result reporting are not yet implemented.
+The runner is a standalone application in this repository. It compiles Hibernate submission sources at startup,
+executes queries against populated databases, and reports the results.
 
 ## Workflow
 
 ```mermaid
-flowchart LR
+flowchart TB
     DB[("Populated databases")]
-    SRC["Submitted<br/>Java sources"] --> RUN["Standalone runner"]
-    PARAMS["params.yaml<br/>query parameters"] --> RUN
-    CONFIG["runner/runner-config.yaml"] -. Defines usage .-> DB
+    SRC["Submitted<br/>Java sources"] 
+    RUN(["Standalone runner"])
+    PARAMS["params.yaml"]
+    CONFIG["runner-config.yaml"]
+    OUT["Result report"]
+    SRC --> RUN
     CONFIG --> RUN
+    PARAMS --> RUN
     RUN -->|execute queries| DB
-    RUN --> OUT["Result report, JUnit XML and log"]
+    RUN --> OUT
+
+    classDef inputs fill: #111111, stroke: #1d5bdf
+    classDef runner fill: #111111, stroke: #11550f
+    classDef outputs fill: #111111, stroke: #f86363
+
+    class SRC,PARAMS,CONFIG inputs
+    class RUN runner
+    class DB,OUT outputs
 ```
 
 The user exports data from the Spring Boot app, imports it into the target databases, then starts the runner. The runner does not import data or alter schemas. Comparable runs require equivalent data, schemas and query semantics across databases.
@@ -21,17 +34,55 @@ The user exports data from the Spring Boot app, imports it into the target datab
 
 ```mermaid
 flowchart TB
-    SUB["Submission"] --> API["Generic and backend-specific query APIs"]
-    CORE["Runner core"] --> API
-    CORE --> SPI["Backend SPI"]
-    SPI --> H["Hibernate"]
-    SPI --> M["Spring Data MongoDB"]
-    SPI --> N["Spring Data Neo4j"]
+    subgraph USER["User submission"]
+        SRC["Java source folder"]
+        UQ["Query implementations"]
+        ENT["@Entity classes"]
+        SRC --- UQ
+        SRC --- ENT
+    end
+
+    subgraph RUNNER["Runner"]
+        CORE["Runner core"]
+        REG["RegistrationRegistry"]
+        HR["HibernateRegistration"]
+        LOAD["HibernateSubmission"]
+        HQ["HibernateQuery interface"]
+        Q["Query interface"]
+        SPI["Backend SPI"]
+        H["Hibernate backend"]
+        CTX["Hibernate session<br/>(query context)"]
+
+        CORE --> REG --> HR --> LOAD
+        Q -->|narrows| HQ
+        CORE --> SPI
+        SPI --> H
+        H -.->|planned: creates| CTX
+    end
+
+    LOAD -->|compiles and discovers| SRC
+    HQ -.->|fulfills| UQ
+    CORE -.->|planned: invokes run| UQ
+    CORE -.->|planned: supplies| CTX
+    UQ -.->|planned: uses| CTX
+    CTX -.->|planned: connects to| DB[("Database")]
+
+    classDef inputs fill: #111111, stroke: #1d5bdf
+    classDef runner fill: #111111, stroke: #11550f
+    classDef outputs fill: #111111, stroke: #f86363
+
+    class USER,PARAMS,CONFIG inputs
+    class RUNNER runner
+    class DB,OUT outputs
 ```
 
-The runner has its own `runner/pom.xml` and Docker image. It is a single Maven project, independent of the Spring Boot build. Its core handles configuration, execution and reporting through the generic `Query` and `Backend` interfaces, so it does not reference ORM types directly. Entities, ORM queries and ORM dependencies live in the backend packages and the submission. Backends are ordinary classes in the runner, one subpackage each, selected from configuration by id; adding a backend is a project update.
+The runner has its own `runner/pom.xml` and Docker image. It is a single Maven project, independent of the Spring
+Boot build. Its core loads configuration, creates JUnit cases from registered queries, and handles execution and
+reporting through the generic `Query` and `Backend` interfaces. ORM-specific types belong to backend packages and
+submissions. Registrations are selected from configuration by backend ID; adding a backend is a project update.
 
-Each backend supplies its typed query API, ORM dependencies, context lifecycle, schema validation and metrics. The runner ships as one image and JVM with compatible dependency versions.
+Each backend supplies its typed query API, ORM dependencies, context lifecycle, schema validation and
+metrics where supported. The runner ships as one image and JVM with compatible dependency versions.
 
 ## Submission
 
@@ -52,8 +103,8 @@ discovery and constructor failures are reported independently. A JDK is required
 
 `RegistrationRegistry` maps backend IDs to query registrations. The test factory selects a registration for each
 configured `runner.databases` entry, in configuration order, and creates a separate test for each entry and query.
-This allows multiple OXMs (or multiple entries using one OXM) in one sequential run without hardcoding them in the
-test factory. Only configured entries are selected.
+This supports multiple database entries in one sequential run without hardcoding them in the test factory.
+Only configured entries are selected.
 
 ```java
 public interface Query<C, P> {
@@ -64,7 +115,9 @@ public interface Query<C, P> {
 }
 ```
 
-Queries have a no-argument constructor and declare their ID, parameter type and result ordering. The same ID represents the same logical query across backends, with matching ordering. The runner supplies and closes the context. Queries return results for reporting and comparison.
+Queries have a public no-argument constructor and declare their ID, parameter type and result ordering. The same ID
+represents the same logical query across backends, with matching ordering. The runner supplies and closes the context,
+and queries return results for reporting and comparison.
 
 ### Parameters
 
@@ -75,7 +128,8 @@ q1:
   employeeId: 42
 ```
 
-The runner binds each entry to the query's `parameterType()`. Parameterless queries use `NoParams` and have no entry in `params.yaml`. Missing or invalid parameters, duplicate IDs and missing selected queries are errors.
+The runner binds each entry to the query's `parameterType()`. Parameterless queries use `NoParams` and have no entry
+in `params.yaml`. Missing or invalid parameters, duplicate submitted query IDs, and missing selected queries are errors.
 For record parameter types, every field must be present and non-null; unknown fields, duplicate YAML keys, and
 incompatible types are rejected. The example submission provides `runner/example-submission/params.yaml`.
 
@@ -110,12 +164,15 @@ string values may reference environment variables as `${NAME}`. Undefined variab
 in reports or logs.
 
 All fields shown above except `sourceDir` are required; its default is
-`runner/example-submission/src/main/java`. An empty `queries` list selects all registered queries.
+`runner/example-submission/src/main/java`. The `queries` list contains unique, non-empty IDs; an empty list selects
+all registered queries.
 Relative paths resolve from the runner's working directory, not the configuration file's directory. The provided
 example paths assume the repository root as the working directory. The `database` name is independent of the
 importer's `databaseToUse`; the loader does not check whether data has been imported.
 
 ## Execution
+
+The runner invokes each submitted query with a context created by the backend.
 
 ```mermaid
 sequenceDiagram
@@ -141,20 +198,24 @@ sequenceDiagram
     R->>R: Write reports and exit
 ```
 
-The runner currently creates a JUnit dynamic test for each discovered query and each configured database entry,
+The runner creates a JUnit dynamic test for each selected query and each configured database entry,
 plus tests for discovery failures. Query instances are distinct per database entry and failures are reported without
-preventing other cases from running. **Actual Hibernate execution is not implemented**, so the example cases
-currently fail with an explicit unsupported-operation error. The sequence above describes the intended execution.
-When implemented, queries are intended to run sequentially with a fresh context per invocation, discarded warm-ups,
-and timing that includes result materialization.
+preventing other cases from running. Queries run sequentially with a fresh context per invocation, discarded warm-ups,
+and timing that includes result materialization. The runner invokes `Query.run` with that context and the bound
+parameters; the backend manages the context rather than running the submitted query itself.
 
 Fresh contexts reduce context-level cache carry-over but do not clear database, operating-system or JIT caches. Backend timeouts may not stop arbitrary Java code. Schema validation and diagnostic metrics depend on backend capabilities.
 
 ## Results
 
-The runner writes `result.json`, `junit.xml` and `run.log`. Reports include the backend and database entry, query ID, repetition, status, duration, result information and errors. Backend-specific metrics remain separate from comparable measurements.
+The runner prints loaded query class names and a JUnit summary with failures to the console. It writes `result.json`,
+`junit.xml` and `run.log`, with backend and database entry, query ID, repetition, status, duration, result information
+and errors. Backend-specific metrics remain
+separate from comparable measurements.
 
-Cross-backend result comparison uses a shared canonical projection format. Unordered results are sorted before hashing, preserving duplicates; ordered results retain their order. Backend-specific entity hashes are not automatically comparable.
+Cross-backend result comparison uses a shared canonical projection format. Unordered results are sorted
+before hashing, preserving duplicates; ordered results retain their order. Backend-specific entity hashes are
+not automatically comparable.
 
 ## Runtime
 
