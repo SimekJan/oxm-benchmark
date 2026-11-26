@@ -9,4 +9,9 @@ import org.hibernate.Session;
  * @param <P> query parameter type
  */
 public interface HibernateQuery<P> extends Query<Session, P> {
+
+    @Override
+    default Class<Session> contextType() {
+        return Session.class;
+    }
 }

@@ -9,4 +9,9 @@ import org.springframework.data.mongodb.core.MongoTemplate;
  * @param <P> query parameter type
  */
 public interface MongoQuery<P> extends Query<MongoTemplate, P> {
+
+    @Override
+    default Class<MongoTemplate> contextType() {
+        return MongoTemplate.class;
+    }
 }

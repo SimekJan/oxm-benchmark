@@ -114,6 +114,7 @@ The runner closes each query session and closes the factories before releasing t
 public interface Query<C, P> {
     String id();
     Class<P> parameterType();
+    Class<C> contextType();
     boolean isOrdered();
     Object run(C context, P params);
 }
@@ -202,11 +203,10 @@ sequenceDiagram
     R->>R: Write reports and exit
 ```
 
-The runner creates a JUnit dynamic test for each selected query and each configured database entry,
-plus tests for discovery failures. Query instances are distinct per database entry and failures are reported without
-preventing other cases from running. Queries run sequentially with a fresh context per invocation, discarded warm-ups,
-and timing that includes result materialization. The runner invokes `Query.run` with that context and the bound
-parameters; the backend manages the context rather than running the submitted query itself.
+The runner creates a JUnit dynamic test for each discovered query and each configured database entry, plus tests for
+discovery failures. Query instances are distinct per database entry and failures are reported without preventing other
+cases from running. Queries run sequentially with a fresh context and bound parameters; the backend manages the context
+rather than running the submitted query itself.
 
 Fresh contexts reduce context-level cache carry-over but do not clear database, operating-system or JIT caches. Backend timeouts may not stop arbitrary Java code. Schema validation and diagnostic metrics depend on backend capabilities.
 

@@ -100,4 +100,4 @@ From the repository root, set `PG_PASSWORD` and run the packaged application wit
 `java -jar runner/target/oxm-benchmark-runner-1.0-SNAPSHOT.jar [runner-config.yaml]`.
 The optional configuration path defaults to `CONFIG_FILE` or `runner/runner-config.yaml`. Paths inside the
 configuration are relative to the working directory. The Hibernate backend creates a session factory using the
-configured JDBC connection and discovered entities; the runner opens a session for each query.
+configured JDBC connection and discovered entities; the runner opens a session and executes each query.

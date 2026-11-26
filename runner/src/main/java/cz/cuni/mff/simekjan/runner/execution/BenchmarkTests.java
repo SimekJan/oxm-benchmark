@@ -118,7 +118,7 @@ public final class BenchmarkTests {
                             id -> backends.get(database.backend())
                                 .createContextFactory(database.connection(), mappedClasses));
                         try (var context = factory.open()) {
-                            execute(database, query, config.paramsFile(), context.value());
+                            execute(query, config.paramsFile(), context.value());
                         }
                     } catch (Throwable failure) {
                         throw new AssertionError("Query failed: " + query.getClass().getName(), failure);
@@ -126,12 +126,9 @@ public final class BenchmarkTests {
                 }));
     }
 
-    private void execute(RunnerConfig.Database database, Query<?, ?> query, Path paramsFile, Object context) {
-        PreparedQuery<?, ?> prepared = prepare(query, paramsFile);
-        throw new UnsupportedOperationException(
-            "Benchmark execution is not implemented for query '" + prepared.query().id()
-                + "' on database entry '" + database.id() + "'"
-        );
+    private <C, P> void execute(Query<C, P> query, Path paramsFile, Object context) {
+        PreparedQuery<C, P> prepared = prepare(query, paramsFile);
+        prepared.query().run(query.contextType().cast(context), prepared.params());
     }
 
     <C, P> PreparedQuery<C, P> prepare(Query<C, P> query, Path paramsFile) {

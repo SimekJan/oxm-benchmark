@@ -9,4 +9,9 @@ import org.springframework.data.neo4j.core.Neo4jClient;
  * @param <P> query parameter type
  */
 public interface Neo4jQuery<P> extends Query<Neo4jClient, P> {
+
+    @Override
+    default Class<Neo4jClient> contextType() {
+        return Neo4jClient.class;
+    }
 }
