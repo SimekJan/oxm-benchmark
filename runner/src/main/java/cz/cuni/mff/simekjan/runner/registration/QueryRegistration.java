@@ -18,4 +18,11 @@ public interface QueryRegistration {
      * @return queries registered for this backend
      */
     List<? extends Query<?, ?>> queries();
+
+    /**
+     * @return submission classes needed to configure the backend
+     */
+    default List<Class<?>> mappedClasses() {
+        return List.of();
+    }
 }

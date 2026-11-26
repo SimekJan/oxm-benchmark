@@ -1,12 +1,14 @@
 package cz.cuni.mff.simekjan.runner.execution;
 
 import cz.cuni.mff.simekjan.runner.api.Query;
+import cz.cuni.mff.simekjan.runner.backend.BackendRegistry;
 import cz.cuni.mff.simekjan.runner.config.ParameterLoader;
 import cz.cuni.mff.simekjan.runner.config.RunnerConfig;
 import cz.cuni.mff.simekjan.runner.config.RunnerConfigLoader;
 import cz.cuni.mff.simekjan.runner.registration.HibernateRegistration;
 import cz.cuni.mff.simekjan.runner.registration.HibernateSubmission;
 import cz.cuni.mff.simekjan.runner.registration.RegistrationRegistry;
+import cz.cuni.mff.simekjan.runner.spi.ContextFactory;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
@@ -17,7 +19,9 @@ import org.junit.jupiter.api.parallel.ExecutionMode;
 
 import java.nio.file.Path;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Stream;
 
 /**
@@ -29,6 +33,8 @@ import java.util.stream.Stream;
 public final class BenchmarkTests {
 
     private RegistrationRegistry registry;
+    private final BackendRegistry backends = new BackendRegistry();
+    private final Map<String, ContextFactory> contextFactories = new LinkedHashMap<>();
 
     /**
      * Creates one benchmark case for each registered query.
@@ -45,8 +51,31 @@ public final class BenchmarkTests {
 
     @AfterAll
     void closeRegistry() throws Exception {
-        if (registry != null) {
-            registry.close();
+        Exception failure = null;
+        for (ContextFactory factory : contextFactories.values()) {
+            try {
+                factory.close();
+            } catch (Exception e) {
+                if (failure == null) {
+                    failure = e;
+                } else {
+                    failure.addSuppressed(e);
+                }
+            }
+        }
+        try {
+            if (registry != null) {
+                registry.close();
+            }
+        } catch (Exception e) {
+            if (failure == null) {
+                failure = e;
+            } else {
+                failure.addSuppressed(e);
+            }
+        }
+        if (failure != null) {
+            throw failure;
         }
     }
 
@@ -73,26 +102,31 @@ public final class BenchmarkTests {
                 () -> {
                     throw new AssertionError("Cannot load or instantiate " + failure.className(), failure.cause());
                 }));
-            return Stream.concat(queries(config, database, registeredQueries), failedTests);
+            return Stream.concat(queries(config, database, registeredQueries, registration.mappedClasses()), failedTests);
         }).toList();
         return tests.stream();
     }
 
     Stream<DynamicTest> queries(RunnerConfig config, RunnerConfig.Database database,
-                                List<? extends Query<?, ?>> queries) {
+                                List<? extends Query<?, ?>> queries, List<Class<?>> mappedClasses) {
         return queries.stream()
             .map(query -> DynamicTest.dynamicTest(
                 database.id() + " / " + query.getClass().getName(),
                 () -> {
                     try {
-                        execute(database, query, config.paramsFile());
+                        ContextFactory factory = contextFactories.computeIfAbsent(database.id(),
+                            id -> backends.get(database.backend())
+                                .createContextFactory(database.connection(), mappedClasses));
+                        try (var context = factory.open()) {
+                            execute(database, query, config.paramsFile(), context.value());
+                        }
                     } catch (Throwable failure) {
                         throw new AssertionError("Query failed: " + query.getClass().getName(), failure);
                     }
                 }));
     }
 
-    private void execute(RunnerConfig.Database database, Query<?, ?> query, Path paramsFile) {
+    private void execute(RunnerConfig.Database database, Query<?, ?> query, Path paramsFile, Object context) {
         PreparedQuery<?, ?> prepared = prepare(query, paramsFile);
         throw new UnsupportedOperationException(
             "Benchmark execution is not implemented for query '" + prepared.query().id()

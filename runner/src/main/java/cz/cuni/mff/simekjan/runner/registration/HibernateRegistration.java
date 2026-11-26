@@ -33,6 +33,11 @@ public final class HibernateRegistration implements QueryRegistration, AutoClose
         return submission().entities();
     }
 
+    @Override
+    public List<Class<?>> mappedClasses() {
+        return entities();
+    }
+
     public List<HibernateSubmission.Failure> failures() {
         if (batch == null) {
             throw new IllegalStateException("Queries have not been registered");

@@ -106,6 +106,10 @@ configured `runner.databases` entry, in configuration order, and creates a separ
 This supports multiple database entries in one sequential run without hardcoding them in the test factory.
 Only configured entries are selected.
 
+`BackendRegistry` resolves each configured backend independently of query registration. For Hibernate, the
+discovered entity classes and resolved JDBC connection settings configure a session factory per database entry.
+The runner closes each query session and closes the factories before releasing the submission class loader.
+
 ```java
 public interface Query<C, P> {
     String id();

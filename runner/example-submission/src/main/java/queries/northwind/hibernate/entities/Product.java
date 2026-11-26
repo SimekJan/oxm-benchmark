@@ -26,7 +26,7 @@ public class Product implements java.io.Serializable {
     @Column(name = "product_name", nullable = false, length = 40)
     private String productName;
 
-    @Column(name = "unit_price", precision = 10, scale = 2)
+    @Column(name = "unit_price")
     private Double unitPrice;
 
     @ManyToOne(fetch = FetchType.LAZY)

@@ -99,5 +99,5 @@ then reload Maven projects. This imports the runner's dependencies without combi
 From the repository root, set `PG_PASSWORD` and run the packaged application with
 `java -jar runner/target/oxm-benchmark-runner-1.0-SNAPSHOT.jar [runner-config.yaml]`.
 The optional configuration path defaults to `CONFIG_FILE` or `runner/runner-config.yaml`. Paths inside the
-configuration are relative to the working directory. The standalone runner's Hibernate backend and benchmark
-execution are not yet implemented.
+configuration are relative to the working directory. The Hibernate backend creates a session factory using the
+configured JDBC connection and discovered entities; the runner opens a session for each query.
