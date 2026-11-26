@@ -39,6 +39,7 @@ flowchart LR
     subgraph ZIP_PROJECT["Zip of user's project"]
         QUERIES_IN_CODE([Queries implemented in given OXMs])
         ENTITIES_IN_CODE([Entities implemented for given OXMs])
+        PARAMETERS([Parameters for queries to be used])
     end
 
     subgraph CONFIG["2 - User configuration and Data generation"]
@@ -67,6 +68,7 @@ flowchart LR
     RUN --> RESULTS
     QUERIES_IN_CODE --> RUN
     ENTITIES_IN_CODE --> IMPORTER
+    PARAMETERS --> RUN
     
     style INPUTS_DATASET fill: #000000, stroke: #93C5FD
     style INPUTS_QUERIES fill: #000000, stroke: #93C5FD

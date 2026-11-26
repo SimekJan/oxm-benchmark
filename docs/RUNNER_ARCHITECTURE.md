@@ -221,6 +221,10 @@ Cross-backend result comparison uses a shared canonical projection format. Unord
 before hashing, preserving duplicates; ordered results retain their order. Backend-specific entity hashes are
 not automatically comparable.
 
+The runner records and exposes query results for reporting and comparison, but it does not currently verify
+their correctness or assert that results match expected values across backends. Correctness checking is out
+of scope for the current architecture and could be added as a future expansion.
+
 ## Runtime
 
 Mount the runner configuration, `params.yaml`, and the configured submission source directory read-only and provide a

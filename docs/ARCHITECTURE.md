@@ -18,7 +18,7 @@ flowchart TD
         Metadata[(SQLite metadata)]
     end
 
-    RunInputs([Zipped app with entities and queries])
+    RunInputs([Zipped entities,</br>queries and parameters])
     Runner[Runner]
     RunInputs --> Runner
 
