@@ -30,7 +30,7 @@ public class Query07_join_indexed implements HibernateQuery<NoParams> {
         String hql = "SELECT o.orderId, e.firstName, e.lastName " +
             "FROM Orders o " +
             "       INNER JOIN Employees e " +
-            "       ON o.employee = e.id ";
+            "       ON o.employee = e";
 
         return session.createQuery(hql, Object[].class).getResultList();
     }
