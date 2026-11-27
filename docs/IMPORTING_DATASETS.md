@@ -45,6 +45,13 @@
     CREATE INDEX ON orders (order_id);
     ```
 
+### Copy-paste command to use prepared SQL script
+```shell
+docker compose exec -T postgres psql -U postgres -d postgres \
+  -v ON_ERROR_STOP=1 --single-transaction \
+  < runner/example-submission/src/main/java/queries/northwind/hibernate/import/CreateTables.sql
+```
+
 ### Possible improvements to importing speed got PostgreSQL
 
 ```sql
