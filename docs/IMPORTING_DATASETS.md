@@ -26,8 +26,9 @@
    ```
 4. Copy generated data into the table:
    ```sql
-   COPY employees FROM '/generatedData/csv/employees.csv'
-   WITH (FORMAT csv, HEADER true);
+   COPY employees (id, employee_id, last_name, first_name, birth_date, hire_date, city, reports_to)
+   FROM '/generatedData/csv/employees.csv'
+   WITH (FORMAT csv, HEADER MATCH);
    ```
 5. Repeat for all tables in dataset.
 6. Add foreign key constraints, do not validate here:
@@ -46,11 +47,27 @@
     ```
 
 ### Copy-paste command to use prepared SQL script
+
+The prepared script creates and loads all seven example-submission tables from `./generatedData/csv`, then adds
+foreign keys and indexes. Generate CSV files named after those tables, with headers matching the column lists in the
+script. The PostgreSQL container mounts `./generatedData` read-only at `/generatedData`; start or recreate it with
+`docker compose up -d postgres` after changing the mount. Server-side `COPY` requires files readable by PostgreSQL.
+
 ```shell
 docker compose exec -T postgres psql -U postgres -d postgres \
   -v ON_ERROR_STOP=1 --single-transaction \
   < runner/example-submission/src/main/java/queries/northwind/hibernate/import/CreateTables.sql
 ```
+
+To delete the seven example-submission tables and their data, run this against the same database used for import:
+
+```shell
+docker compose exec -T postgres psql -U postgres -d postgres \
+  -v ON_ERROR_STOP=1 --single-transaction \
+  < runner/example-submission/src/main/java/queries/northwind/hibernate/import/DropTables.sql
+```
+
+The script does not use `CASCADE`; it fails rather than removing dependencies belonging to other tables.
 
 ### Possible improvements to importing speed got PostgreSQL
 

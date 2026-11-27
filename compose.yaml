@@ -45,6 +45,7 @@ services:
       POSTGRES_DB: oxm_benchmark
     volumes:
       - postgres_data:/var/lib/postgresql
+      - ./generatedData:/generatedData:ro
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U postgres -d oxm_benchmark" ]
       interval: 5s

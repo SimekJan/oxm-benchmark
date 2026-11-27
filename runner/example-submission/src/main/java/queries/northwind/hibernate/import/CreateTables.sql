@@ -40,19 +40,6 @@ CREATE TABLE orders (
     customer_id bigint
 );
 
---- Add foreign key constraints
-ALTER TABLE employees ADD CONSTRAINT employees_reports_to_fk
-    FOREIGN KEY (reports_to) REFERENCES employees(id) NOT VALID;
-
-ALTER TABLE orders ADD CONSTRAINT orders_customers_fk
-    FOREIGN KEY (customer_id) REFERENCES customers(id) NOT VALID;
-
-ALTER TABLE orders ADD CONSTRAINT orders_employees_fk
-    FOREIGN KEY (employee_id) REFERENCES employees(id) NOT VALID;
-
-ALTER TABLE products ADD CONSTRAINT products_suppliers_fk
-    FOREIGN KEY (supplier_id) REFERENCES suppliers(id) NOT VALID;
-
 --- many-to-many relationships
 CREATE TABLE supplier_relationship (
     supplier_id bigint NOT NULL,
@@ -66,7 +53,35 @@ CREATE TABLE order_product (
     PRIMARY KEY (order_id, product_id)
 );
 
---- Add foreign key constraints many-to-many relationships
+-- Import CSV files whose headers match the column lists.
+COPY employees (id, employee_id, last_name, first_name, birth_date, hire_date, city, reports_to)
+    FROM '/generatedData/csv/employees.csv' WITH (FORMAT csv, HEADER MATCH);
+COPY customers (id, customer_id, company_name, city)
+    FROM '/generatedData/csv/customers.csv' WITH (FORMAT csv, HEADER MATCH);
+COPY suppliers (id, supplier_id, company_name, city)
+    FROM '/generatedData/csv/suppliers.csv' WITH (FORMAT csv, HEADER MATCH);
+COPY products (id, product_id, product_name, unit_price, supplier_id, category)
+    FROM '/generatedData/csv/products.csv' WITH (FORMAT csv, HEADER MATCH);
+COPY orders (id, order_id, order_date, employee_id, customer_id)
+    FROM '/generatedData/csv/orders.csv' WITH (FORMAT csv, HEADER MATCH);
+COPY supplier_relationship (supplier_id, supplied_to_id)
+    FROM '/generatedData/csv/supplier_relationship.csv' WITH (FORMAT csv, HEADER MATCH);
+COPY order_product (order_id, product_id)
+    FROM '/generatedData/csv/order_product.csv' WITH (FORMAT csv, HEADER MATCH);
+
+-- Add foreign key constraints after loading.
+ALTER TABLE employees ADD CONSTRAINT employees_reports_to_fk
+    FOREIGN KEY (reports_to) REFERENCES employees(id) NOT VALID;
+
+ALTER TABLE orders ADD CONSTRAINT orders_customers_fk
+    FOREIGN KEY (customer_id) REFERENCES customers(id) NOT VALID;
+
+ALTER TABLE orders ADD CONSTRAINT orders_employees_fk
+    FOREIGN KEY (employee_id) REFERENCES employees(id) NOT VALID;
+
+ALTER TABLE products ADD CONSTRAINT products_suppliers_fk
+    FOREIGN KEY (supplier_id) REFERENCES suppliers(id) NOT VALID;
+
 ALTER TABLE supplier_relationship
     ADD CONSTRAINT supplier_relationship_supplier_fk
     FOREIGN KEY (supplier_id) REFERENCES suppliers(id) NOT VALID;
